@@ -1,0 +1,142 @@
+version: '3.8'
+
+services:
+  # Frontend WP2 - Interface utilisateur
+  frontend:
+    build: ./frontend
+    container_name: diable-frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - REACT_APP_API_URL=http://localhost:5000
+      - REACT_APP_ENV=development
+    networks:
+      - diable-network
+    restart: unless-stopped
+
+  # Backend WP1 - API de gestion
+  backend:
+    build: ./backend
+    container_name: diable-backend
+    ports:
+      - "5000:5000"
+    environment:
+      - NODE_ENV=development
+      - DATABASE_URL=postgresql://diable:password@db:5432/diable
+      - JWT_SECRET=your-secret-key-change-in-production
+    depends_on:
+      - db
+    networks:
+      - diable-network
+    restart: unless-stopped
+
+  # Database PostgreSQL
+  db:
+    image: postgres:15-alpine
+    container_name: diable-db
+    environment:
+      - POSTGRES_DB=diable
+      - POSTGRES_USER=diable
+      - POSTGRES_PASSWORD=password
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - diable-network
+    restart: unless-stopped
+
+  # SQL Injection Lab
+  sqli-lab:
+    build: ./attacks/sqli-lab
+    container_name: sqli-lab
+    ports:
+      - "8080:80"
+    environment:
+      - DEBUG_MODE=false
+      - DB_PATH=/var/www/html/database.db
+    labels:
+      - "diable.lab=sqli-comments"
+      - "diable.difficulty=medium"
+      - "diable.tag=DB"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/health.php"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
+    networks:
+      - diable-network
+    restart: unless-stopped
+
+  # XPath Injection Lab
+  xpath-lab:
+    build: ./attacks/xpath-lab
+    container_name: xpath-lab
+    ports:
+      - "8081:80"
+    environment:
+      - DEBUG_MODE=false
+      - DATA_PATH=/var/www/html/data
+    labels:
+      - "diable.lab=xpath-injection"
+      - "diable.difficulty=medium"
+      - "diable.tag=XML"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/health.php"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
+    networks:
+      - diable-network
+    restart: unless-stopped
+
+  # XXE Lab (à venir)
+  # xxe-lab:
+  #   build: ./attacks/xxe-lab
+  #   container_name: xxe-lab
+  #   ports:
+  #     - "8090:80"
+  #   labels:
+  #     - "diable.lab=xxe"
+  #     - "diable.difficulty=hard"
+  #     - "diable.tag=XML"
+  #   networks:
+  #     - diable-network
+  #   restart: unless-stopped
+
+  # XSS Lab (à venir)
+  # xss-lab:
+  #   build: ./attacks/xss-lab
+  #   container_name: xss-lab
+  #   ports:
+  #     - "8100:80"
+  #   labels:
+  #     - "diable.lab=xss"
+  #     - "diable.difficulty=medium"
+  #     - "diable.tag=WEB"
+  #   networks:
+  #     - diable-network
+  #   restart: unless-stopped
+
+  # CSRF Lab (à venir)
+  # csrf-lab:
+  #   build: ./attacks/csrf-lab
+  #   container_name: csrf-lab
+  #   ports:
+  #     - "8110:80"
+  #   labels:
+  #     - "diable.lab=csrf"
+  #     - "diable.difficulty=medium"
+  #     - "diable.tag=WEB"
+  #   networks:
+  #     - diable-network
+  #   restart: unless-stopped
+
+networks:
+  diable-network:
+    name: diable-network
+    driver: bridge
+
+volumes:
+  postgres-data:
+    name: diable-postgres-data
