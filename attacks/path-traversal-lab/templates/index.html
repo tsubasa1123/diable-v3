@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Directory Traversal - Plateforme Pédagogique</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #f5f7fa;
+            color: #333;
+            line-height: 1.6;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: white;
+            border-radius: 12px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+            overflow: hidden;
+        }
+
+        header {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+
+        header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .nav-tabs {
+            display: flex;
+            background-color: #2c3e50;
+            overflow-x: auto;
+        }
+
+        .tab-button {
+            padding: 15px 25px;
+            background: none;
+            border: none;
+            color: #ecf0f1;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: all 0.3s;
+            white-space: nowrap;
+        }
+
+        .tab-button:hover {
+            background-color: #34495e;
+        }
+
+        .tab-button.active {
+            background-color: #3498db;
+            color: white;
+        }
+
+        .tab-content {
+            display: none;
+            padding: 30px;
+        }
+
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        h2 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #3498db;
+        }
+
+        h3 {
+            color: #3498db;
+            margin: 25px 0 15px 0;
+        }
+
+        .problem-card {
+            background-color: #f8f9fa;
+            border-left: 4px solid #e74c3c;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 0 8px 8px 0;
+        }
+
+        .problem-card h4 {
+            color: #e74c3c;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .problem-card h4::before {
+            content: "⚠️";
+        }
+
+        .attack-step {
+            background-color: #e8f4fc;
+            border-left: 4px solid #3498db;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 0 8px 8px 0;
+        }
+
+        .attack-step h4 {
+            color: #2980b9;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .attack-step h4::before {
+            content: "🔍";
+        }
+
+        .example-box {
+            background-color: #2c3e50;
+            color: #ecf0f1;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            font-family: 'Courier New', monospace;
+            overflow-x: auto;
+        }
+
+        .example-box.green {
+            background-color: #27ae60;
+        }
+
+        .example-box.red {
+            background-color: #c0392b;
+        }
+
+        .url-example {
+            background-color: #8c9fb1;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 15px 0;
+            font-family: 'Courier New', monospace;
+        }
+
+        .practice-area {
+            background-color: #f8f9fa;
+            border: 2px dashed #3498db;
+            border-radius: 10px;
+            padding: 25px;
+            margin: 30px 0;
+            text-align: center;
+        }
+
+        .practice-btn {
+            display: inline-block;
+            background-color: #3498db;
+            color: white;
+            padding: 12px 25px;
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: 600;
+            margin: 10px;
+            transition: background-color 0.3s;
+        }
+
+        .practice-btn:hover {
+            background-color: #2980b9;
+        }
+
+        .practice-btn.danger {
+            background-color: #e74c3c;
+        }
+
+        .practice-btn.danger:hover {
+            background-color: #c0392b;
+        }
+
+        .explanation-box {
+            background-color: #fffde7;
+            border: 1px solid #ffd54f;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        .conclusion-box {
+            background-color: #e8f5e9;
+            border: 1px solid #4caf50;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 30px 0;
+        }
+
+        .conclusion-box h3 {
+            color: #2e7d32;
+        }
+
+        .file-structure {
+            background-color: #f5f5f5;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            font-family: monospace;
+        }
+
+        .info-icon {
+            display: inline-block;
+            background-color: #3498db;
+            color: white;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 24px;
+            margin-right: 10px;
+            font-size: 14px;
+        }
+
+        ul, ol {
+            margin-left: 25px;
+            margin-bottom: 20px;
+        }
+
+        li {
+            margin-bottom: 10px;
+        }
+
+        .warning {
+            color: #e74c3c;
+            font-weight: bold;
+        }
+
+        .success {
+            color: #27ae60;
+            font-weight: bold;
+        }
+
+        .code {
+            font-family: 'Courier New', monospace;
+            background-color: #f1f1f1;
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+
+        footer {
+            text-align: center;
+            padding: 20px;
+            margin-top: 30px;
+            color: #7f8c8d;
+            font-size: 0.9rem;
+            border-top: 1px solid #eee;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                border-radius: 0;
+            }
+            
+            header {
+                padding: 20px;
+            }
+            
+            header h1 {
+                font-size: 1.8rem;
+            }
+            
+            .tab-button {
+                padding: 12px 15px;
+                font-size: 0.9rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Directory Traversal</h1>
+            <p>Comprenez, expérimentez et protégez-vous contre cette vulnérabilité web critique</p>
+        </header>
+
+        <div class="nav-tabs">
+            <button class="tab-button active" data-tab="general">Problématique générale</button>
+            <button class="tab-button" data-tab="specific">Problématique spécifique</button>
+            <button class="tab-button" data-tab="principle">Principe de l'attaque</button>
+            <button class="tab-button" data-tab="steps">Étapes de l'attaque</button>
+            <button class="tab-button" data-tab="practice">Zone de pratique</button>
+            <button class="tab-button" data-tab="protection">Protections</button>
+        </div>
+
+        <div class="tab-content active" id="general">
+            <h2>Problématique générale (sécurité des applications web)</h2>
+            
+            <p>Les applications web modernes manipulent fréquemment des fichiers côté serveur :</p>
+            
+            <ul>
+                <li>Documents utilisateurs</li>
+                <li>Images et ressources statiques</li>
+                <li>Fichiers de logs système</li>
+                <li>Fichiers de configuration</li>
+            </ul>
+            
+            <p>Pour cela, elles utilisent souvent des paramètres fournis par l'utilisateur afin de désigner les fichiers à traiter.</p>
+            
+            <div class="problem-card">
+                <h4>Problème majeur</h4>
+                <p>Si ces paramètres ne sont pas correctement validés, ils peuvent être manipulés à des fins malveillantes.</p>
+                <p>Le serveur fait <span class="warning">trop confiance aux entrées utilisateur</span> sans vérifier leur légitimité.</p>
+            </div>
+            
+            <div class="example-box">
+                <h4>Exemple de code vulnérable :</h4>
+                <pre><code>@app.route("/view")
+def view_file():
+    filename = request.args.get("file")  # Entrée utilisateur non validée
+    filepath = os.path.join("files", filename)  # Construction du chemin
+    with open(filepath, "r") as f:  # Lecture du fichier
+        return f.read()</code></pre>
+            </div>
+        </div>
+
+        <div class="tab-content" id="specific">
+            <h2>Problématique spécifique du Directory Traversal</h2>
+            
+            <h3>Problématique centrale :</h3>
+            <p>Comment empêcher un utilisateur d'accéder à des fichiers sensibles en dehors du répertoire autorisé lorsque le chemin du fichier est contrôlé par l'utilisateur ?</p>
+            
+            <div class="file-structure">
+                <h4>Structure de fichiers typique :</h4>
+                <pre>/var/www/myapp/
+├── app.py
+├── files/
+│   ├── public.txt
+│   └── document.pdf
+├── secret/
+│   └── flag.txt
+├── etc/
+│   └── passwd
+└── logs/
+    └── system.log</pre>
+            </div>
+            
+            <h3>Contexte typique :</h3>
+            <p>Une application propose une fonctionnalité comme :</p>
+            <div class="url-example">
+                /view?file=public.txt
+            </div>
+            
+            <p>Le serveur interprète cette requête comme :</p>
+            <div class="example-box green">
+                <p>Lire le fichier : <strong>/files/public.txt</strong></p>
+            </div>
+            
+            <div class="problem-card">
+                <h4>Problème fondamental</h4>
+                <p>L'application fait confiance au paramètre <span class="code">file</span> fourni par l'utilisateur sans vérifier :</p>
+                <ul>
+                    <li>s'il sort du dossier autorisé</li>
+                    <li>s'il référence un fichier sensible</li>
+                    <li>s'il tente une remontée dans l'arborescence</li>
+                </ul>
+                <p class="warning">👉 Cela ouvre la porte à une attaque Directory Traversal.</p>
+            </div>
+        </div>
+
+        <div class="tab-content" id="principle">
+            <h2>Principe de l'attaque Directory Traversal</h2>
+            
+            <p>Le Directory Traversal consiste à manipuler les chemins relatifs (../) afin de :</p>
+            
+            <ul>
+                <li>Sortir du dossier prévu par l'application</li>
+                <li>Accéder à des fichiers internes au serveur</li>
+                <li>Lire des données sensibles</li>
+            </ul>
+            
+            <div class="explanation-box">
+                <h4><span class="info-icon">i</span> Principe clé :</h4>
+                <p><span class="code">../</span> → remonte d'un dossier dans l'arborescence</p>
+                <p>En répétant ce mécanisme, l'attaquant peut remonter jusqu'à la racine du système.</p>
+            </div>
+            
+            <div class="example-box">
+                <h4>Exemple de manipulation :</h4>
+                <pre>Dossier autorisé : /var/www/myapp/files/
+
+Requête normale :
+file = public.txt → /var/www/myapp/files/public.txt
+
+Requête malveillante :
+file = ../../secret/flag.txt → /var/www/myapp/secret/flag.txt</pre>
+            </div>
+            
+            <h3>Pourquoi cela fonctionne-t-il ?</h3>
+            <p>La fonction <span class="code">os.path.join()</span> en Python combine simplement les chemins :</p>
+            
+            <div class="example-box red">
+                <pre>base = "/var/www/myapp/files"
+filename = "../../secret/flag.txt"
+result = os.path.join(base, filename)
+# Résultat : "/var/www/myapp/files/../../secret/flag.txt"
+# Qui se simplifie en : "/var/www/myapp/secret/flag.txt"</pre>
+            </div>
+        </div>
+
+        <div class="tab-content" id="steps">
+            <h2>Étapes de l'attaque Directory Traversal</h2>
+            <p>On relie ici chaque étape à la problématique de confiance excessive dans l'entrée utilisateur.</p>
+            
+            <div class="attack-step">
+                <h4>Étape 1 — Identification du point vulnérable</h4>
+                <p><strong>Problématique :</strong> L'application accepte un paramètre utilisateur pour accéder à un fichier.</p>
+                <p>L'attaquant repère un endpoint comme :</p>
+                <div class="url-example">
+                    /view?file=public.txt
+                </div>
+                <p>➡️ Ce paramètre est suspect car il est directement lié à un accès fichier.</p>
+            </div>
+            
+            <div class="attack-step">
+                <h4>Étape 2 — Test de la vulnérabilité</h4>
+                <p><strong>Problématique :</strong> L'application ne vérifie pas si le chemin reste dans le dossier autorisé.</p>
+                <p>L'attaquant teste :</p>
+                <div class="url-example">
+                    /view?file=../test.txt
+                </div>
+                <p><strong>Objectif :</strong> Observer la réaction du serveur et déterminer si les chemins relatifs sont interprétés.</p>
+                <p>➡️ Si une erreur différente apparaît, la vulnérabilité est confirmée.</p>
+            </div>
+            
+            <div class="attack-step">
+                <h4>Étape 3 — Exploration de l'arborescence</h4>
+                <p><strong>Problématique :</strong> Le serveur ne restreint pas la navigation dans les répertoires.</p>
+                <p>L'attaquant augmente progressivement la profondeur :</p>
+                <ul>
+                    <li><span class="code">../</span></li>
+                    <li><span class="code">../../</span></li>
+                    <li><span class="code">../../../</span></li>
+                </ul>
+                <p>Puis teste l'accès à des dossiers connus :</p>
+                <div class="url-example">
+                    /view?file=../secret/
+                </div>
+                <p>➡️ Cette phase permet de cartographier la structure du serveur.</p>
+            </div>
+            
+            <div class="attack-step">
+                <h4>Étape 4 — Exploitation de la faille</h4>
+                <p><strong>Problématique :</strong> L'accès aux fichiers sensibles n'est pas protégé.</p>
+                <p>L'attaquant tente :</p>
+                <div class="url-example">
+                    /view?file=../secret/flag.txt
+                </div>
+                <p>➡️ Le serveur lit le fichier et renvoie son contenu.</p>
+                <p class="success">🎯 Attaque réussie : fuite de données sensibles</p>
+            </div>
+        </div>
+
+        <div class="tab-content" id="practice">
+            <h2>Zone de pratique</h2>
+            <p>Expérimentez l'attaque Directory Traversal sur cette application pédagogique.</p>
+            
+            <div class="practice-area">
+                <h3>Structure simulée de l'application :</h3>
+                <div class="file-structure">
+                    <pre>/ (racine du projet)
+├── app.py (votre application Flask)
+├── files/
+│   └── public.txt (fichier public)
+└── secret/
+    └── flag.txt (fichier confidentiel)</pre>
+                </div>
+                
+                <h3>Accès normal (autorisé) :</h3>
+                <a href="/view?file=public.txt" class="practice-btn" target="_blank">
+                    Tester : /view?file=public.txt
+                </a>
+                
+                <h3>Test d'attaque Directory Traversal :</h3>
+                <p>Essayez d'accéder au fichier confidentiel :</p>
+                <a href="/view?file=../secret/flag.txt" class="practice-btn danger" target="_blank">
+                    Attaquer : /view?file=../secret/flag.txt
+                </a>
+                
+                <h3>Expérimentez avec d'autres chemins :</h3>
+                <div style="margin: 20px 0;">
+                    <input type="text" id="customPath" placeholder="Ex: ../../etc/passwd" style="padding: 10px; width: 300px; max-width: 80%;">
+                    <button onclick="testCustomPath()" class="practice-btn">Tester ce chemin</button>
+                </div>
+                
+                <div class="explanation-box">
+                    <h4><span class="info-icon">i</span> Analyse de votre attaque :</h4>
+                    <p id="attackAnalysis">Cliquez sur un lien d'attaque pour voir l'analyse ici...</p>
+                </div>
+            </div>
+            
+            <div class="conclusion-box">
+                <h3>Illustration concrète </h3>
+                <p><strong>Accès normal :</strong></p>
+                <div class="url-example">
+                    /view?file=public.txt
+                </div>
+                <p>➡️ fichier autorisé</p>
+                
+                <p><strong>Exploitation de la vulnérabilité :</strong></p>
+                <div class="url-example">
+                    /view?file=../secret/flag.txt
+                </div>
+                <p>➡️ accès à un fichier confidentiel</p>
+                
+                <p class="warning">Cette démonstration montre clairement pourquoi la validation des entrées utilisateur est essentielle !</p>
+            </div>
+        </div>
+
+        <div class="tab-content" id="protection">
+            <h2>Protections contre le Directory Traversal</h2>
+            
+            <h3>Solutions techniques :</h3>
+            
+            <div class="explanation-box">
+                <h4>1. Validation stricte du chemin</h4>
+                <p>Utiliser <span class="code">os.path.normpath()</span> et vérifier que le chemin ne sort pas du répertoire autorisé :</p>
+                <div class="example-box green">
+                    <pre>def view_file():
+    filename = request.args.get("file")
+    
+    # Chemin de base sécurisé
+    base = os.path.abspath("files")
+    
+    # Construction et normalisation du chemin
+    filepath = os.path.normpath(os.path.join(base, filename))
+    
+    # Vérification que le chemin est dans le dossier autorisé
+    if not filepath.startswith(base):
+        return "Accès interdit", 403
+    
+    # Lecture sécurisée
+    with open(filepath, "r") as f:
+        return f.read()</pre>
+                </div>
+            </div>
+            
+            <div class="explanation-box">
+                <h4>2. Utiliser une liste blanche de fichiers autorisés</h4>
+                <p>Ne permettre que l'accès à des fichiers spécifiques :</p>
+                <div class="example-box green">
+                    <pre>ALLOWED_FILES = {"public.txt", "document.pdf", "image.jpg"}
+
+def view_file():
+    filename = request.args.get("file")
+    
+    # Vérification dans la liste blanche
+    if filename not in ALLOWED_FILES:
+        return "Fichier non autorisé", 403
+    
+    # Accès sécurisé
+    filepath = os.path.join("files", filename)
+    with open(filepath, "r") as f:
+        return f.read()</pre>
+                </div>
+            </div>
+            
+            <div class="explanation-box">
+                <h4>3. Sanitisation des entrées utilisateur</h4>
+                <p>Supprimer les séquences dangereuses :</p>
+                <div class="example-box green">
+                    <pre>def sanitize_filename(filename):
+    # Supprime les séquences de remontée de dossier
+    filename = filename.replace("../", "").replace("..\\", "")
+    
+    # Supprime les chemins absolus
+    if filename.startswith("/") or filename.startswith("\\"):
+        filename = filename[1:]
+    
+    return filename
+
+def view_file():
+    filename = request.args.get("file")
+    filename = sanitize_filename(filename)
+    
+    # Suite du traitement sécurisé...</pre>
+                </div>
+            </div>
+            
+            <div class="conclusion-box">
+                <h3>Bonnes pratiques de sécurité</h3>
+                <ul>
+                    <li><strong>Principe du moindre privilège :</strong> L'application ne doit avoir accès qu'aux fichiers strictement nécessaires</li>
+                    <li><strong>Validation des entrées :</strong> Toujours valider et sanitizer les entrées utilisateur</li>
+                    <li><strong>Défense en profondeur :</strong> Implémenter plusieurs couches de sécurité</li>
+                    <li><strong>Surveillance :</strong> Journaliser les tentatives d'accès non autorisées</li>
+                </ul>
+            </div>
+        </div>
+        
+        <footer>
+            <p>Plateforme pédagogique - Directory Traversal - Application Flask</p>
+            <p>À des fins éducatives uniquement. N'utilisez pas ces techniques sur des systèmes sans autorisation.</p>
+        </footer>
+    </div>
+
+    <script>
+        // Gestion des onglets
+        document.querySelectorAll('.tab-button').forEach(button => {
+            button.addEventListener('click', () => {
+                // Retirer la classe active de tous les boutons et contenus
+                document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+                
+                // Activer le bouton cliqué
+                button.classList.add('active');
+                
+                // Afficher le contenu correspondant
+                const tabId = button.getAttribute('data-tab');
+                document.getElementById(tabId).classList.add('active');
+            });
+        });
+        
+        // Fonction pour tester un chemin personnalisé
+        function testCustomPath() {
+            const input = document.getElementById('customPath');
+            const path = input.value.trim();
+            
+            if (!path) {
+                alert('Veuillez entrer un chemin à tester');
+                return;
+            }
+            
+            // Construction de l'URL
+            const url = `/view?file=${encodeURIComponent(path)}`;
+            
+            // Analyse de l'attaque
+            const analysis = document.getElementById('attackAnalysis');
+            analysis.innerHTML = `
+                <p><strong>Chemin testé :</strong> <code>${path}</code></p>
+                <p><strong>URL générée :</strong> <a href="${url}" target="_blank">${url}</a></p>
+                <p><strong>Analyse :</strong></p>
+                <ul>
+                    <li>Ce chemin utilise ${(path.match(/\.\.\//g) || []).length} remontée(s) de dossier</li>
+                    <li>Il tente d'accéder à un fichier en dehors du répertoire autorisé</li>
+                    <li>Cliquez sur le lien pour voir si l'attaque fonctionne</li>
+                </ul>
+            `;
+            
+            // Ouvrir dans un nouvel onglet
+            window.open(url, '_blank');
+        }
+        
+        // Analyse automatique pour les liens d'attaque
+        document.querySelectorAll('a[href*="/view?file="]').forEach(link => {
+            link.addEventListener('click', function(e) {
+                const url = this.getAttribute('href');
+                const filename = url.split('file=')[1];
+                
+                // Décodage pour l'analyse
+                const decodedFilename = decodeURIComponent(filename);
+                
+                const analysis = document.getElementById('attackAnalysis');
+                if (analysis && decodedFilename.includes('..')) {
+                    e.preventDefault();
+                    
+                    analysis.innerHTML = `
+                        <p><strong>Attaque Directory Traversal détectée !</strong></p>
+                        <p><strong>Chemin utilisé :</strong> <code>${decodedFilename}</code></p>
+                        <p><strong>Mécanisme :</strong> Utilisation de <code>../</code> pour remonter dans l'arborescence</p>
+                        <p><strong>Objectif :</strong> Sortir du dossier <code>/files</code> pour accéder à <code>/secret/flag.txt</code></p>
+                        <p><strong>Résultat attendu :</strong> Fuite de données sensibles</p>
+                        <p><a href="${url}" target="_blank" class="practice-btn danger" style="margin-top: 10px;">Exécuter l'attaque</a></p>
+                    `;
+                    
+                    // Ouvrir dans un nouvel onglet après un court délai
+                    setTimeout(() => {
+                        window.open(url, '_blank');
+                    }, 500);
+                }
+            });
+        });
+        
+        // Détecter si nous sommes sur la page de pratique
+        if (window.location.hash === '#practice') {
+            document.querySelector('[data-tab="practice"]').click();
+        }
+    </script>
+</body>
+</html>
