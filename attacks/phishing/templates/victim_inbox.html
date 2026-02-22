@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Gmail - Boîte de réception</title>
+  <link rel="stylesheet" href="/static/css/gmail.css">
+</head>
+<body>
+  <div class="topbar">
+    <div class="glogo">Gmail</div>
+    <div class="search">
+      <input placeholder="Rechercher dans les messages" aria-label="Recherche">
+    </div>
+    <div class="top-icons">
+      <div class="icon"></div><div class="icon"></div><div class="avatar">U</div>
+    </div>
+  </div>
+
+  <div class="layout">
+    <aside class="sidebar">
+      <button class="compose">+ Nouveau message</button>
+      <div class="side-item active">Boîte de réception</div>
+      <div class="side-item">Spam</div>
+      <div class="side-item">Brouillons</div>
+      <div class="side-item">Envoyés</div>
+      <div class="side-item">Corbeille</div>
+    </aside>
+
+    <main class="content">
+      <div class="tabs">
+        <div class="tab active">Principale</div>
+        <div class="tab">Réseaux sociaux</div>
+        <div class="tab">Promotions</div>
+      </div>
+
+<div class="mail-list" id="mailList">
+  <div class="mail-row">
+    <div class="from">LinkedIn</div>
+    <div class="snippet"><b>2 nouvelles vues</b> — Votre profil a été consulté cette semaine…</div>
+    <div class="time">09:14</div>
+  </div>
+
+  <div class="mail-row">
+    <div class="from">Université</div>
+    <div class="snippet"><b>Rappel</b> — Dépôt du projet Docker avant vendredi 18h.</div>
+    <div class="time">08:02</div>
+  </div>
+
+  <div class="mail-row">
+    <div class="from">GitHub</div>
+    <div class="snippet"><b>Security alert</b> — Dependabot a détecté une mise à jour…</div>
+    <div class="time">Hier</div>
+  </div>
+
+  <div class="mail-row">
+    <div class="from">Amazon</div>
+    <div class="snippet"><b>Votre commande est expédiée</b> — Suivi disponible.</div>
+    <div class="time">Hier</div>
+  </div>
+
+  <!-- le spam sera injecté ici par le JS -->
+</div>
+    </main>
+  </div>
+
+  <!-- Modal mail auto-open -->
+  <div class="modal-backdrop hidden" id="modalBackdrop">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="subject" id="mailSubject">...</div>
+        <button class="close" id="closeModal">✕</button>
+      </div>
+      <div class="modal-meta">
+        <div><b>De :</b> FedEx &lt;tokenpass414948@730535.aquarealm.journey.gatetrack.ultrabonus.jimvendu.com&gt;</div>
+        <div><b>À :</b> vous</div>
+        <div class="badge">Spam</div>
+      </div>
+      <div class="modal-body">
+        <div class="spam-banner">
+          Pourquoi ce message est dans le spam ? Il ressemble à d’autres messages identifiés comme spam.
+          <button class="btn-ghost">Signaler comme non spam</button>
+        </div>
+
+        <div class="fake-mail">
+          <div class="brand">FedEx</div>
+          <h2>Mise à jour concernant votre livraison</h2>
+          <p>Une tentative de livraison n’a pas pu être finalisée. Merci de confirmer vos préférences afin de poursuivre l’acheminement.</p>
+          <div class="track">
+            <div>Colis en attente : <b>1</b></div>
+            <div class="row">
+              <div class="code">Numéro de suivi : <b>AIPD 1512 KL10</b></div>
+              <button class="btn">Suivre</button>
+            </div>
+            <button class="btn primary" id="planBtn">Planifier la livraison</button>
+            <div class="tiny">Lien suspect • orthographe étrange • domaine bizarre</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="/static/js/victim.js"></script>
+</body>
+</html>

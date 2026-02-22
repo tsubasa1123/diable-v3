@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Attacker Dashboard
+  </title>
+  <link rel="stylesheet" href="/static/css/attacker.css">
+</head>
+<body>
+  <header class="hdr">
+    <div class="title">Dashboard</div>
+  </header>
+
+  <div style="display:flex;gap:10px;align-items:center">
+  <a class="pill" href="/">Victime</a>
+  <a class="pill" href="/api/events">API Events</a>
+  <a class="pill" href="/api/metrics">API Metrics</a>
+</div>
+
+  <section class="grid">
+    <div class="card">
+      <div class="k">Emails reçus</div><div class="v" id="mReceived">-</div>
+    </div>
+    <div class="card">
+      <div class="k">Ouvertures</div><div class="v" id="mOpened">-</div>
+    </div>
+    <div class="card">
+      <div class="k">Clics</div><div class="v" id="mClicked">-</div>
+    </div>
+    <div class="card">
+      <div class="k">Soumissions</div><div class="v" id="mSubmitted">-</div>
+    </div>
+    <div class="card">
+      <div class="k">Open rate</div><div class="v" id="mOpenRate">-</div>
+    </div>
+    <div class="card">
+      <div class="k">Click rate</div><div class="v" id="mClickRate">-</div>
+    </div>
+    <div class="card">
+      <div class="k">Submit rate (après clic)</div><div class="v" id="mSubmitRate">-</div>
+    </div>
+  </section>
+
+  <section class="panel">
+    <div class="panel-h">Événements récents</div>
+    <table>
+      <thead>
+        <tr>
+          <th>TS (UTC)</th>
+          <th>Type</th>
+          <th>Page</th>
+          <th>Username</th>
+          <th>Force MDP (0-4)</th>
+          <th>User-Agent</th>
+          <th>IP</th>
+          <th>OS</th>
+          <th>Navigateur</th>
+        </tr>
+      </thead>
+      <tbody id="eventsBody"></tbody>
+    </table>
+  </section>
+
+  <script src="/static/js/attacker.js"></script>
+</body>
+</html>

