@@ -1,0 +1,46 @@
+services:
+  mongodb:
+    image: mongo:7.0
+    container_name: nosql_mongodb
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_DATABASE: vulnerable_app
+    networks:
+      - diable-network
+    volumes:
+      - ./init-mongo.js:/docker-entrypoint-initdb.d/init-mongo.js:ro
+    ports:
+      - "27017:27017"
+
+  app:
+    build: .
+    image: diable/nosql-injection-lab:latest
+    container_name: nosql-lab
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - MONGODB_URI=mongodb://mongodb:27017/vulnerable_app
+      - NODE_ENV=development
+      - DEBUG_MODE=false
+    depends_on:
+      - mongodb
+    networks:
+      - diable-network
+    volumes:
+      - ./src:/app/src
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
+    labels:
+      - "diable.lab=nosql-injection"
+      - "diable.difficulty=medium"
+      - "diable.tag=DB"
+
+networks:
+  diable-network:
+    name: diable-network
+    driver: bridge
