@@ -1,0 +1,11 @@
+version: '3.8'
+
+services:
+  xss-lab:
+    build: .
+    container_name: xss-lab
+    ports:
+      - "8100:80"
+    volumes:
+      - ./app:/var/www/html
+    restart: unless-stopped
