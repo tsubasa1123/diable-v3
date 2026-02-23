@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MFA Verification</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #0B0F14;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: #0F1A2B;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.4);
+            max-width: 450px;
+            width: 100%;
+            border: 1px solid rgba(31, 106, 255, 0.1);
+        }
+
+        .lab-banner {
+            background: #D41414;
+            color: #F2F4F8;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        h1 {
+            color: #F2F4F8;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        .subtitle {
+            color: #8A8F98;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+
+        .user-info {
+            background: rgba(11, 15, 20, 0.6);
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .user-info p {
+            color: #F2F4F8;
+            font-weight: 500;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #F2F4F8;
+            font-weight: 500;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid rgba(138, 143, 152, 0.3);
+            border-radius: 5px;
+            font-size: 24px;
+            text-align: center;
+            letter-spacing: 10px;
+            font-weight: bold;
+            transition: border-color 0.3s, box-shadow 0.3s;
+            background: rgba(11, 15, 20, 0.6);
+            color: #F2F4F8;
+        }
+
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #00C2FF;
+            box-shadow: 0 0 10px rgba(0, 194, 255, 0.2);
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            background: #D41414;
+            color: #F2F4F8;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.3s, transform 0.2s, box-shadow 0.3s;
+            margin-bottom: 10px;
+        }
+
+        button:hover {
+            background: #FF2A2A;
+            transform: translateY(-2px);
+            box-shadow: 0 0 15px rgba(212, 20, 20, 0.4);
+        }
+
+        .resend-btn {
+            background: rgba(138, 143, 152, 0.3);
+        }
+
+        .resend-btn:hover {
+            background: rgba(138, 143, 152, 0.5);
+            box-shadow: 0 0 10px rgba(0, 194, 255, 0.2);
+        }
+
+        .message {
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            text-align: center;
+            display: none;
+        }
+
+        .message.error {
+            background: #D41414;
+            color: #F2F4F8;
+            display: block;
+        }
+
+        .message.success {
+            background: rgba(0, 194, 255, 0.2);
+            color: #00C2FF;
+            border: 1px solid #00C2FF;
+            display: block;
+        }
+
+        .hint-box {
+            background: rgba(31, 106, 255, 0.1);
+            border-left: 4px solid #1F6AFF;
+            padding: 15px;
+            margin-top: 20px;
+            border-radius: 5px;
+        }
+
+        .hint-box h4 {
+            color: #1F6AFF;
+            margin-bottom: 10px;
+        }
+
+        .hint-box ul {
+            margin-left: 20px;
+            color: #8A8F98;
+        }
+
+        .hint-box li {
+            margin: 5px 0;
+            font-size: 14px;
+        }
+
+        .hint-box code {
+            background: rgba(11, 15, 20, 0.6);
+            padding: 2px 5px;
+            border-radius: 3px;
+            font-family: monospace;
+            color: #00C2FF;
+        }
+
+        .logout-link {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .logout-link a {
+            color: #1F6AFF;
+            text-decoration: none;
+            transition: color 0.3s, text-shadow 0.3s;
+        }
+
+        .logout-link a:hover {
+            color: #00C2FF;
+            text-shadow: 0 0 8px rgba(0, 194, 255, 0.3);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="lab-banner">
+            NO RATE LIMITING - VULNERABLE TO MITM
+        </div>
+
+        <h1>Two-Factor Authentication</h1>
+        <p class="subtitle">Enter the 4-digit OTP to continue</p>
+
+        <div class="user-info">
+            <p>Logged in as: <strong>{{ username }}</strong></p>
+        </div>
+
+        <div id="message" class="message"></div>
+
+        <form id="otpForm">
+            <div class="form-group">
+                <label for="otp">One-Time Password (OTP)</label>
+                <input type="text" id="otp" name="otp" maxlength="4" pattern="\d{4}" required autocomplete="off">
+            </div>
+
+            <button type="submit">Verify OTP</button>
+            <button type="button" class="resend-btn" onclick="resendOTP()">Resend OTP</button>
+        </form>
+
+        <div class="hint-box">
+            <h4>Hints for Bypass:</h4>
+            <ul>
+                <li>OTP is only <strong>4 digits</strong> (0000-9999)</li>
+                <li>No rate limiting on verification attempts</li>
+                <li>No rate limiting on OTP resend requests</li>
+                <li>Multiple OTPs can be valid simultaneously</li>
+                <li>Consider using <code>/debug/otps</code> endpoint</li>
+                <li>Think: Meet-In-The-Middle attack</li>
+            </ul>
+        </div>
+
+        <div class="logout-link">
+            <a href="/logout">&larr; Back to Login</a>
+        </div>
+    </div>
+
+    <script>
+        const otpForm = document.getElementById('otpForm');
+        const messageDiv = document.getElementById('message');
+        const otpInput = document.getElementById('otp');
+
+        // Auto-focus on OTP input
+        otpInput.focus();
+
+        // Only allow numbers
+        otpInput.addEventListener('input', function(e) {
+            this.value = this.value.replace(/[^0-9]/g, '');
+        });
+
+        otpForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const otp = otpInput.value;
+
+            if (otp.length !== 4) {
+                showMessage('Please enter a 4-digit OTP', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch('/verify_otp', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: `otp=${otp}`
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showMessage('OTP verified! Redirecting...', 'success');
+                    setTimeout(() => {
+                        window.location.href = data.redirect;
+                    }, 1000);
+                } else {
+                    showMessage(data.message, 'error');
+                    otpInput.value = '';
+                    otpInput.focus();
+                }
+            } catch (error) {
+                showMessage('An error occurred. Please try again.', 'error');
+            }
+        });
+
+        async function resendOTP() {
+            try {
+                const response = await fetch('/resend_otp', {
+                    method: 'POST'
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showMessage(data.message, 'success');
+                } else {
+                    showMessage(data.message, 'error');
+                }
+            } catch (error) {
+                showMessage('An error occurred. Please try again.', 'error');
+            }
+        }
+
+        function showMessage(text, type) {
+            messageDiv.textContent = text;
+            messageDiv.className = 'message ' + type;
+            messageDiv.style.display = 'block';
+
+            setTimeout(() => {
+                messageDiv.style.display = 'none';
+            }, 3000);
+        }
+    </script>
+</body>
+</html>

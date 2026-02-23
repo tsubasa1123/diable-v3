@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Error - IDOR Lab</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #0B0F14;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: #0F1A2B;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.4);
+            max-width: 500px;
+            width: 100%;
+            text-align: center;
+            border: 1px solid rgba(31, 106, 255, 0.1);
+        }
+
+        .error-icon {
+            font-size: 80px;
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            color: #F2F4F8;
+            margin-bottom: 10px;
+        }
+
+        p {
+            color: #8A8F98;
+            margin-bottom: 30px;
+            font-size: 16px;
+        }
+
+        .btn {
+            padding: 12px 30px;
+            background: #D41414;
+            color: #F2F4F8;
+            text-decoration: none;
+            border-radius: 5px;
+            font-size: 16px;
+            display: inline-block;
+            transition: background 0.3s, box-shadow 0.3s;
+        }
+
+        .btn:hover {
+            background: #FF2A2A;
+            box-shadow: 0 0 15px rgba(212, 20, 20, 0.4);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="error-icon">&#10060;</div>
+        <h1>Error</h1>
+        <p>{{ message }}</p>
+        <a href="/" class="btn">Back to Home</a>
+    </div>
+</body>
+</html>

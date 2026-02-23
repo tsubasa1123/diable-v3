@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IDOR Lab - Login</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #0B0F14;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: #0F1A2B;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.4);
+            max-width: 450px;
+            width: 100%;
+            border: 1px solid rgba(31, 106, 255, 0.1);
+        }
+
+        .lab-banner {
+            background: #D41414;
+            color: #F2F4F8;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        h1 {
+            color: #F2F4F8;
+            margin-bottom: 10px;
+            text-align: center;
+            font-size: 28px;
+        }
+
+        .subtitle {
+            color: #8A8F98;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+
+        .credentials-box {
+            background: rgba(11, 15, 20, 0.6);
+            border: 2px dashed #1F6AFF;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+
+        .credentials-box h3 {
+            color: #1F6AFF;
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+
+        .credentials-box p {
+            color: #F2F4F8;
+            font-family: monospace;
+            margin: 5px 0;
+            font-size: 14px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #F2F4F8;
+            font-weight: 500;
+        }
+
+        input[type="text"],
+        input[type="password"] {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid rgba(138, 143, 152, 0.3);
+            border-radius: 5px;
+            font-size: 14px;
+            transition: border-color 0.3s, box-shadow 0.3s;
+            background: rgba(11, 15, 20, 0.6);
+            color: #F2F4F8;
+        }
+
+        input[type="text"]:focus,
+        input[type="password"]:focus {
+            outline: none;
+            border-color: #00C2FF;
+            box-shadow: 0 0 10px rgba(0, 194, 255, 0.2);
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            background: #D41414;
+            color: #F2F4F8;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.3s, transform 0.2s, box-shadow 0.3s;
+        }
+
+        button:hover {
+            background: #FF2A2A;
+            transform: translateY(-2px);
+            box-shadow: 0 0 15px rgba(212, 20, 20, 0.4);
+        }
+
+        .error {
+            background: #D41414;
+            color: #F2F4F8;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .info-box {
+            background: rgba(11, 15, 20, 0.6);
+            border-left: 4px solid #1F6AFF;
+            padding: 15px;
+            margin-top: 20px;
+            border-radius: 5px;
+        }
+
+        .info-box h4 {
+            color: #1F6AFF;
+            margin-bottom: 10px;
+        }
+
+        .info-box ul {
+            margin-left: 20px;
+            color: #F2F4F8;
+        }
+
+        .info-box li {
+            margin: 5px 0;
+            font-size: 14px;
+        }
+
+        .vulnerability-hint {
+            background: rgba(31, 106, 255, 0.1);
+            border-left: 4px solid #1F6AFF;
+            padding: 15px;
+            margin-top: 15px;
+            border-radius: 5px;
+        }
+
+        .vulnerability-hint h4 {
+            color: #1F6AFF;
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+
+        .vulnerability-hint p {
+            color: #8A8F98;
+            font-size: 13px;
+            line-height: 1.5;
+        }
+
+        .vulnerability-hint code {
+            background: rgba(11, 15, 20, 0.6);
+            padding: 2px 5px;
+            border-radius: 3px;
+            font-family: monospace;
+            color: #00C2FF;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="lab-banner">
+            VULNERABLE LAB ENVIRONMENT - IDOR
+        </div>
+
+        <h1>IDOR Lab</h1>
+        <p class="subtitle">Insecure Direct Object Reference Challenge</p>
+
+        <div class="credentials-box">
+            <h3>Student Credentials:</h3>
+            <p><strong>Username:</strong> student</p>
+            <p><strong>Password:</strong> password123</p>
+        </div>
+
+        {% if error %}
+        <div class="error">
+            {{ error }}
+        </div>
+        {% endif %}
+
+        <form method="POST" action="/login">
+            <div class="form-group">
+                <label for="username">Username</label>
+                <input type="text" id="username" name="username" value="student" required>
+            </div>
+
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" name="password" value="password123" required>
+            </div>
+
+            <button type="submit">Login</button>
+        </form>
+
+        <div class="info-box">
+            <h4>Lab Objective:</h4>
+            <ul>
+                <li>Login with provided credentials</li>
+                <li>Exploit the IDOR vulnerability</li>
+                <li>Access the admin profile (ID = 0)</li>
+                <li>Retrieve the FLAG</li>
+            </ul>
+        </div>
+
+        <div class="vulnerability-hint">
+            <h4>Hint:</h4>
+            <p>After logging in, pay attention to the URL parameters. Your profile URL might look like: <code>/profile?user_id=1</code></p>
+            <p>What happens if you change that number?</p>
+        </div>
+    </div>
+</body>
+</html>

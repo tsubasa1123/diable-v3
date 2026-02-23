@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - FLAG</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #0B0F14;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: #0F1A2B;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.4);
+            max-width: 600px;
+            width: 100%;
+            text-align: center;
+            border: 1px solid rgba(31, 106, 255, 0.1);
+        }
+
+        .success-banner {
+            background: rgba(0, 194, 255, 0.1);
+            border: 2px solid #00C2FF;
+            color: #00C2FF;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            font-size: 48px;
+        }
+
+        h1 {
+            color: #F2F4F8;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: #8A8F98;
+            margin-bottom: 30px;
+        }
+
+        .user-info {
+            background: rgba(11, 15, 20, 0.6);
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 30px;
+        }
+
+        .user-info p {
+            color: #F2F4F8;
+            font-size: 16px;
+        }
+
+        .flag-container {
+            background: linear-gradient(135deg, #D41414 0%, #FF2A2A 100%);
+            padding: 30px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+        }
+
+        .flag-label {
+            color: #F2F4F8;
+            font-size: 18px;
+            margin-bottom: 15px;
+            font-weight: bold;
+        }
+
+        .flag {
+            background: #0F1A2B;
+            color: #00C2FF;
+            padding: 20px;
+            border-radius: 5px;
+            font-family: monospace;
+            font-size: 20px;
+            font-weight: bold;
+            word-break: break-all;
+            user-select: all;
+        }
+
+        .congratulations {
+            background: rgba(0, 194, 255, 0.1);
+            border-left: 4px solid #00C2FF;
+            padding: 20px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        .congratulations h3 {
+            color: #00C2FF;
+            margin-bottom: 15px;
+        }
+
+        .congratulations p {
+            color: #F2F4F8;
+            margin: 10px 0;
+            line-height: 1.6;
+        }
+
+        .vulnerability-info {
+            background: rgba(31, 106, 255, 0.1);
+            border-left: 4px solid #1F6AFF;
+            padding: 20px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        .vulnerability-info h3 {
+            color: #1F6AFF;
+            margin-bottom: 15px;
+        }
+
+        .vulnerability-info ul {
+            margin-left: 20px;
+            color: #8A8F98;
+        }
+
+        .vulnerability-info li {
+            margin: 8px 0;
+        }
+
+        .mitigation {
+            background: rgba(0, 194, 255, 0.05);
+            border-left: 4px solid #00C2FF;
+            padding: 20px;
+            border-radius: 5px;
+            text-align: left;
+        }
+
+        .mitigation h3 {
+            color: #00C2FF;
+            margin-bottom: 15px;
+        }
+
+        .mitigation ul {
+            margin-left: 20px;
+            color: #8A8F98;
+        }
+
+        .mitigation li {
+            margin: 8px 0;
+        }
+
+        button {
+            padding: 12px 30px;
+            background: #D41414;
+            color: #F2F4F8;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.3s, transform 0.2s, box-shadow 0.3s;
+            margin-top: 20px;
+        }
+
+        button:hover {
+            background: #FF2A2A;
+            transform: translateY(-2px);
+            box-shadow: 0 0 15px rgba(212, 20, 20, 0.4);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="success-banner">
+            🎉
+        </div>
+
+        <h1>Congratulations!</h1>
+        <p class="subtitle">You've successfully bypassed the MFA protection</p>
+
+        <div class="user-info">
+            <p>Welcome, <strong>{{ username }}</strong>!</p>
+        </div>
+
+        <div class="flag-container">
+            <div class="flag-label">YOUR FLAG:</div>
+            <div class="flag">{{ flag }}</div>
+        </div>
+
+        <div class="congratulations">
+            <h3>Challenge Completed!</h3>
+            <p>You've successfully demonstrated the <strong>Meet-In-The-Middle (MITM) attack</strong> on a vulnerable MFA implementation.</p>
+            <p>This attack exploited the lack of rate limiting and the ability to have multiple valid OTPs simultaneously active.</p>
+        </div>
+
+        <div class="vulnerability-info">
+            <h3>Vulnerabilities Exploited:</h3>
+            <ul>
+                <li><strong>Weak OTP:</strong> Only 4 digits (10,000 possible combinations)</li>
+                <li><strong>No Rate Limiting:</strong> Unlimited verification attempts</li>
+                <li><strong>No Resend Throttling:</strong> Unlimited OTP generation requests</li>
+                <li><strong>Multiple Valid OTPs:</strong> System allowed multiple OTPs to be valid simultaneously</li>
+                <li><strong>Long Expiration:</strong> 5-minute validity window enabled accumulation of valid OTPs</li>
+            </ul>
+        </div>
+
+        <div class="mitigation">
+            <h3>How to Prevent This:</h3>
+            <ul>
+                <li><strong>Use Strong OTPs:</strong> Minimum 6-8 digits</li>
+                <li><strong>Implement Rate Limiting:</strong> Max 3-5 attempts per OTP, lockout after failures</li>
+                <li><strong>Throttle Resend Requests:</strong> Limit to 1 request per 30-60 seconds</li>
+                <li><strong>Invalidate Previous OTPs:</strong> Only one OTP should be valid at a time</li>
+                <li><strong>Short Expiration:</strong> 30-90 seconds validity window</li>
+                <li><strong>Account Lockout:</strong> Temporary lock after multiple failed attempts</li>
+                <li><strong>Monitor Anomalies:</strong> Detect and alert on suspicious patterns</li>
+            </ul>
+        </div>
+
+        <button onclick="window.location.href='/logout'">Logout</button>
+    </div>
+</body>
+</html>
