@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Dashboard Attaquant</title>
+  <link rel="stylesheet" href="/static/css/attacker.css">
+</head>
+<body>
+  <header class="hdr">
+    <div class="title">Dashboard — Email Header Injection (CRLF)</div>
+    <div class="pill">campaign: {{ campaign_id }}</div>
+  </header>
+
+  <section class="grid">
+    <div class="card"><div class="k">Inbox views</div><div class="v" id="mInbox">-</div></div>
+    <div class="card"><div class="k">Mail opened</div><div class="v" id="mMailOpened">-</div></div>
+    <div class="card"><div class="k">Images loaded (pixel)</div><div class="v" id="mPixel">-</div></div>
+
+    <div class="card"><div class="k">Reply opened</div><div class="v" id="mReplyOpened">-</div></div>
+    <div class="card"><div class="k">Reply submitted</div><div class="v" id="mReplySubmitted">-</div></div>
+
+    <div class="card"><div class="k">Injection observée</div><div class="v" id="mObserved">-</div></div>
+    <div class="card"><div class="k">Replies</div><div class="v" id="mReplyOk">-</div></div>
+  </section>
+
+  <section class="panel">
+    <div class="panel-h">Événements récents</div>
+    <table>
+      <thead>
+        <tr>
+          <th>UTC</th><th>Type</th><th>Page</th><th>Détail</th><th>IP</th><th>OS</th><th>Navigateur</th><th>UA</th>
+        </tr>
+      </thead>
+      <tbody id="eventsBody"></tbody>
+    </table>
+  </section>
+
+  <script src="/static/js/attacker.js" defer></script>
+</body>
+</html>

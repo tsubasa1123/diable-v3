@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Gmail - Boîte de réception</title>
+  <link rel="stylesheet" href="/static/css/gmail.css">
+</head>
+<body>
+  <div class="topbar">
+    <div class="glogo">Gmail</div>
+    <div class="search">
+      <input placeholder="Rechercher dans les messages" aria-label="Recherche">
+    </div>
+    <div class="top-icons">
+      <div class="icon"></div><div class="icon"></div><div class="avatar">U</div>
+    </div>
+  </div>
+
+  <div class="layout">
+    <aside class="sidebar">
+      <button class="compose">+ Nouveau message</button>
+      <div class="side-item active">Boîte de réception</div>
+      <div class="side-item">Spam</div>
+      <div class="side-item">Brouillons</div>
+      <div class="side-item">Envoyés</div>
+      <div class="side-item">Corbeille</div>
+    </aside>
+
+    <main class="content">
+      <div class="tabs">
+        <div class="tab active">Principale</div>
+        <div class="tab">Réseaux sociaux</div>
+        <div class="tab">Promotions</div>
+      </div>
+
+      <div class="mail-list" id="mailList">
+        <div class="mail-row">
+          <div class="from">LinkedIn</div>
+          <div class="snippet"><b>2 nouvelles vues</b> — Votre profil a été consulté cette semaine…</div>
+          <div class="time">09:14</div>
+        </div>
+
+        <div class="mail-row">
+          <div class="from">Université</div>
+          <div class="snippet"><b>Rappel</b> — Dépôt du projet Docker avant vendredi 18h.</div>
+          <div class="time">08:02</div>
+        </div>
+
+        <div class="mail-row">
+          <div class="from">GitHub</div>
+          <div class="snippet"><b>Security alert</b> — Dependabot a détecté une mise à jour…</div>
+          <div class="time">Hier</div>
+        </div>
+
+        <div class="mail-row">
+          <div class="from">Amazon</div>
+          <div class="snippet"><b>Votre commande est expédiée</b> — Suivi disponible.</div>
+          <div class="time">Hier</div>
+        </div>
+
+        <!-- le spam sera injecté ici par le JS (et auto-ouvert) -->
+      </div>
+    </main>
+  </div>
+
+  <!-- Modal mail auto-open -->
+  <div class="modal-backdrop hidden" id="modalBackdrop">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="subject" id="mailSubject">...</div>
+        <button class="close" id="closeModal">✕</button>
+      </div>
+
+      <div class="modal-meta">
+        <div><b>De :</b> FedEx &lt;tokenpass414948@730535.aquarealm.journey.gatetrack.ultrabonus.jimvendu.com&gt;</div>
+        <div><b>À :</b> vous</div>
+        <div class="badge">Spam</div>
+      </div>
+
+<div style="display:flex; gap:8px; align-items:center; margin-bottom:12px;">
+  <button class="btn-ghost" id="replyBtn">Répondre</button>
+</div>
+
+<p>
+  Une tentative de livraison n’a pas pu être finalisée.
+</p>
+
+<p>
+  <b>Action requise :</b> pour reprogrammer la livraison, merci de
+  <b>répondre à cet email</b> avec les informations suivantes :
+</p>
+
+<ul class="tiny" style="margin-top:8px;">
+  <li>Un créneau : <b>Matin</b> / <b>Après-midi</b> / <b>Soir</b></li>
+  <li>Le choix : <b>Adresse</b> / <b>Point relais</b> / <b>Voisin</b></li>
+  <li>Le code de confirmation : <b>AIPD 1512</b></li>
+</ul>
+
+<p class="tiny" style="margin-top:10px;">
+  Sans réponse sous <b>24 heures</b>, le colis sera renvoyé à l’expéditeur.
+</p>
+
+          <!-- ZONE REPONSE (Email Header Injection se passe côté serveur ici) -->
+          <div id="replyZone" class="small hidden" style="margin-top:12px;">
+            <div style="margin-bottom:8px; color: var(--muted);">
+            </div>
+
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+              <div>
+                <div style="color: var(--muted); margin-bottom:6px;">À</div>
+                <input id="replyTo" type="text" value="tokenpass414948@730535.aquarealm.journey.gatetrack.ultrabonus.jimvendu.com">
+              </div>
+              <div>
+                <div style="color: var(--muted); margin-bottom:6px;">Objet</div>
+                <textarea id="replySubject" rows="2">Re: Mise à jour concernant votre livraison</textarea>
+
+              </div>
+            </div>
+
+            <div style="margin-top:10px;">
+              <div style="color: var(--muted); margin-bottom:6px;">Message</div>
+              <textarea id="replyMessage" rows="4">Bonjour, merci de reprogrammer la livraison.</textarea>
+            </div>
+
+<div style="display:flex; gap:12px; align-items:center; margin-top:10px;">
+  <button class="btn" id="sendReplyBtn">Envoyer</button>
+
+            <div id="rawBox" class="hidden" style="margin-top:12px;">
+              <div style="color: var(--muted); margin-bottom:6px;"><b>Raw email preview</b></div>
+              <pre id="rawPreview" style="white-space:pre-wrap;"></pre>
+              <div style="margin-top:10px;">
+                <a class="btn-ghost" href="/attacker" target="_blank" rel="noreferrer">Ouvrir le dashboard attaquant</a>
+              </div>
+            </div>
+          </div>
+
+          <div class="track" style="margin-top:12px;">
+            <div>Colis en attente : <b>1</b></div>
+            <div class="row">
+              <div class="code">Numéro de suivi : <b>AIPD 1512 KL10</b></div>
+              <button class="btn">Suivre</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    window.CAMPAIGN_ID = "{{ campaign_id }}";
+  </script>
+  <script src="/static/js/victim.js" defer></script>
+</body>
+</html>
