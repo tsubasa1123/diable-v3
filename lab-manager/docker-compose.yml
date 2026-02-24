@@ -1,0 +1,24 @@
+version: '3.8'
+
+services:
+  lab-manager:
+    build: .
+    container_name: lab-manager
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./data:/app/data                           # Persistance SQLite
+      #- /var/run/docker.sock:/var/run/docker.sock  # Accès au daemon Docker de l'hôte (ubuntu)
+      - //var/run/docker.sock:/var/run/docker.sock #windows à modifier
+      - ../labs:/opt/labs:ro       # Labs en lecture seule
+    env_file:
+      - .env
+    restart: unless-stopped
+    networks:
+      - lab-network
+
+networks:
+  lab-network:
+    name: lab-network
+    driver: bridge
+    external: true  # Réseau partagé avec les conteneurs labs
