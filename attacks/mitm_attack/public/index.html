@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Man-in-the-Middle Attack Lab - DIABLE v3.0</title>
+    <link rel="stylesheet" href="/style.css">
+</head>
+
+<body>
+    <header>
+        <div class="container">
+            <h1>🕵️ Man-in-the-Middle Attack Lab</h1>
+            <p class="subtitle">Projet DIABLE v3.0 - DSI ISFA 2025-2026</p>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="warning">
+            <strong>⚠️ Avertissement</strong>
+            Cette application contient des vulnérabilités intentionnelles à des fins pédagogiques.
+            <strong>Ne JAMAIS déployer en production ou sur un réseau public.</strong>
+        </div>
+
+        <div class="section">
+            <h2>📚 Description</h2>
+            <p>
+                Ce lab démontre les vulnérabilités liées aux attaques Man-in-the-Middle (MITM) dans les applications
+                web.
+                L'architecture comprend un serveur victime communiquant en HTTP non chiffré et un proxy intercepteur
+                qui capture et peut modifier tout le trafic, incluant les credentials, sessions et données sensibles.
+            </p>
+        </div>
+
+        <div class="section">
+            <h2>🎯 Objectifs Pédagogiques</h2>
+            <ol>
+                <li>Comprendre comment les attaques MITM fonctionnent</li>
+                <li>Identifier les risques de la communication HTTP non chiffrée</li>
+                <li>Observer l'interception de credentials et sessions</li>
+                <li>Apprendre à sécuriser les applications avec HTTPS et autres protections</li>
+            </ol>
+        </div>
+
+        <div class="section">
+            <h2>🏗️ Architecture</h2>
+            <div class="architecture">
+                <pre><code>Client → MITM Proxy (Port 8888) → Victim Server (Port 8080)
+                    ↓
+            Intercepted Data Storage
+            (credentials, sessions, cookies)</code></pre>
+            </div>
+
+            <p><strong>Flux normal :</strong> Client → Server (HTTP non chiffré)</p>
+            <p><strong>Flux attaqué :</strong> Client → Attacker Proxy → Server</p>
+            <p class="highlight">L'attaquant voit et peut modifier TOUT le trafic!</p>
+        </div>
+
+        <div class="section">
+            <h2>🚀 Services Disponibles</h2>
+
+            <div class="endpoint">
+                <strong>Victim Server (Port 8080)</strong><br>
+                Serveur web vulnérable simulant une banque en ligne<br>
+                <code>http://localhost:8080</code>
+            </div>
+
+            <div class="endpoint">
+                <strong>MITM Proxy (Port 8888)</strong><br>
+                Proxy intercepteur qui capture tout le trafic<br>
+                <code>http://localhost:8888</code>
+            </div>
+
+            <div class="endpoint">
+                <strong>MITM Admin API (Port 8889)</strong><br>
+                API pour consulter les données interceptées<br>
+                <code>http://localhost:8889/intercepted/all</code>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>🔌 Endpoints de l'API Victime</h2>
+
+            <div class="endpoint">
+                <strong>POST /api/login</strong><br>
+                Authentification utilisateur (VULNÉRABLE)<br>
+                <code>{"username": "alice", "password": "alice2024"}</code>
+            </div>
+
+            <div class="endpoint">
+                <strong>GET /api/account</strong><br>
+                Récupérer les informations du compte (VULNÉRABLE)<br>
+                Nécessite une session active
+            </div>
+
+            <div class="endpoint">
+                <strong>POST /api/transfer</strong><br>
+                Effectuer un transfert bancaire (VULNÉRABLE)<br>
+                <code>{"to": "bob", "amount": 100}</code>
+            </div>
+
+            <div class="endpoint">
+                <strong>GET /api/transactions</strong><br>
+                Liste des transactions de l'utilisateur<br>
+                Nécessite une session active
+            </div>
+
+            <div class="endpoint">
+                <strong>POST /api/logout</strong><br>
+                Déconnexion de l'utilisateur
+            </div>
+
+            <div class="endpoint">
+                <strong>GET /health</strong><br>
+                Health check endpoint (DIABLE standard)
+            </div>
+
+            <div class="endpoint">
+                <strong>POST /reset</strong><br>
+                Réinitialiser la base de données (DIABLE standard)
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>🔌 Endpoints de l'API MITM</h2>
+
+            <div class="endpoint">
+                <strong>GET /intercepted/credentials</strong><br>
+                Liste des credentials interceptés<br>
+                <code>http://localhost:8889/intercepted/credentials</code>
+            </div>
+
+            <div class="endpoint">
+                <strong>GET /intercepted/sessions</strong><br>
+                Liste des sessions hijackées<br>
+                <code>http://localhost:8889/intercepted/sessions</code>
+            </div>
+
+            <div class="endpoint">
+                <strong>GET /intercepted/cookies</strong><br>
+                Liste des cookies capturés<br>
+                <code>http://localhost:8889/intercepted/cookies</code>
+            </div>
+
+            <div class="endpoint">
+                <strong>GET /intercepted/all</strong><br>
+                Toutes les données interceptées<br>
+                <code>http://localhost:8889/intercepted/all</code>
+            </div>
+
+            <div class="endpoint">
+                <strong>POST /intercepted/clear</strong><br>
+                Effacer toutes les données interceptées<br>
+                <code>POST http://localhost:8889/intercepted/clear</code>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>👥 Utilisateurs de Test</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Username</th>
+                        <th>Password</th>
+                        <th>Rôle</th>
+                        <th>Balance</th>
+                        <th>Secret</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>admin</td>
+                        <td>Admin123!</td>
+                        <td>admin</td>
+                        <td>$50,000</td>
+                        <td>FLAG{mitm_attack_master}</td>
+                    </tr>
+                    <tr>
+                        <td>alice</td>
+                        <td>alice2024</td>
+                        <td>user</td>
+                        <td>$2,500</td>
+                        <td>Numéro de carte: 4532-1234-5678-9010</td>
+                    </tr>
+                    <tr>
+                        <td>bob</td>
+                        <td>bobsecure</td>
+                        <td>user</td>
+                        <td>$1,800</td>
+                        <td>CVV: 123</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="section">
+            <h2>💡 Exemples d'Exploitation</h2>
+
+            <h3>1. Connexion directe (trafic en clair)</h3>
+            <p>Connexion au serveur victime - les credentials sont visibles !</p>
+            <pre><code>curl -X POST http://localhost:8080/api/login \
+  -H "Content-Type: application/json" \
+  -d '{"username":"alice","password":"alice2024"}'</code></pre>
+
+            <h3>2. Connexion via le proxy MITM</h3>
+            <p>L'attaquant intercepte TOUT le trafic</p>
+            <pre><code>curl -X POST http://localhost:8888/api/login \
+  -H "Content-Type: application/json" \
+  -d '{"username":"alice","password":"alice2024"}'</code></pre>
+
+            <h3>3. Voir les credentials interceptés</h3>
+            <pre><code>curl http://localhost:8889/intercepted/credentials</code></pre>
+
+            <h3>4. Voir les sessions hijackées</h3>
+            <pre><code>curl http://localhost:8889/intercepted/sessions</code></pre>
+
+            <h3>5. Réutiliser une session volée</h3>
+            <p>Utiliser le session ID et cookie interceptés pour se faire passer pour la victime</p>
+            <pre><code>curl http://localhost:8888/api/account \
+  -H "Cookie: connect.sid=s%3A[SESSION_ID_INTERCEPTE]"</code></pre>
+
+            <h3>6. Voir toutes les données interceptées</h3>
+            <pre><code>curl http://localhost:8889/intercepted/all</code></pre>
+        </div>
+
+        <div class="section">
+            <h2>⚠️ Vulnérabilités Démontrées</h2>
+
+            <h3>1. Communication HTTP non chiffrée</h3>
+            <p>Toutes les données transitent en clair, facilement lisibles par un attaquant sur le réseau.</p>
+
+            <h3>2. Absence de flag Secure sur les cookies</h3>
+            <p>Les cookies peuvent être transmis sur HTTP, exposant les sessions.</p>
+
+            <h3>3. Absence de flag HttpOnly</h3>
+            <p>Les cookies sont accessibles via JavaScript, facilitant le vol.</p>
+
+            <h3>4. Pas de validation de l'intégrité</h3>
+            <p>L'attaquant peut modifier les requêtes et réponses sans détection.</p>
+
+            <h3>5. Session ID exposé</h3>
+            <p>Le serveur renvoie le session ID dans la réponse JSON.</p>
+
+            <h3>6. Données sensibles en clair</h3>
+            <p>Mots de passe, numéros de carte, secrets transitent sans chiffrement.</p>
+        </div>
+
+        <div class="section">
+            <h2>🛡️ Comment se Protéger</h2>
+
+            <h3>1. Utiliser HTTPS partout</h3>
+            <pre><code>// Forcer HTTPS en production
+if (process.env.NODE_ENV === 'production') {
+  app.use((req, res, next) => {
+    if (!req.secure) {
+      return res.redirect('https://' + req.headers.host + req.url);
+    }
+    next();
+  });
+}</code></pre>
+
+            <h3>2. Configurer les cookies sécurisés</h3>
+            <pre><code>app.use(session({
+  secret: 'strong-random-secret',
+  cookie: { 
+    secure: true,      // HTTPS uniquement
+    httpOnly: true,    // Pas accessible via JS
+    sameSite: 'strict' // Protection CSRF
+  }
+}));</code></pre>
+
+            <h3>3. HSTS (HTTP Strict Transport Security)</h3>
+            <pre><code>app.use((req, res, next) => {
+  res.setHeader('Strict-Transport-Security', 
+    'max-age=31536000; includeSubDomains');
+  next();
+});</code></pre>
+
+            <h3>4. Certificate Pinning</h3>
+            <p>Épingler le certificat SSL/TLS pour éviter les attaques MITM avec certificats falsifiés.</p>
+
+            <h3>5. Mutual TLS (mTLS)</h3>
+            <p>Authentification bidirectionnelle avec certificats client et serveur.</p>
+        </div>
+
+        <div class="section">
+            <h2>📖 Commandes PowerShell</h2>
+
+            <h3>Login via proxy MITM</h3>
+            <pre><code>Invoke-RestMethod -Uri http://localhost:8888/api/login -Method Post `
+  -ContentType "application/json" `
+  -Body '{"username":"alice","password":"alice2024"}'</code></pre>
+
+            <h3>Voir les credentials interceptés</h3>
+            <pre><code>Invoke-RestMethod -Uri http://localhost:8889/intercepted/credentials</code></pre>
+
+            <h3>Voir toutes les données interceptées</h3>
+            <pre><code>Invoke-RestMethod -Uri http://localhost:8889/intercepted/all</code></pre>
+
+            <h3>Reset des données</h3>
+            <pre><code>Invoke-RestMethod -Uri http://localhost:8080/reset -Method Post</code></pre>
+        </div>
+
+        <div class="section">
+            <h2>📊 Informations Lab</h2>
+            <ul>
+                <li><strong>Tag:</strong> WEB (Sécurité Web)</li>
+                <li><strong>Difficulté:</strong> Moyen</li>
+                <li><strong>Technologie:</strong> Node.js 20 + HTTP Proxy</li>
+                <li><strong>Ports:</strong> 3000 (Lab), 8080 (Victim), 8888 (Proxy), 8889 (Admin)</li>
+                <li><strong>Conteneurs:</strong> 3 (app, victim-server, mitm-proxy)</li>
+            </ul>
+        </div>
+    </div>
+
+    <footer>
+        <div class="container">
+            <p>DIABLE v3.0 - Lab pédagogique de sécurité web</p>
+            <p>⚠️ À des fins éducatives uniquement - Ne jamais utiliser sur des systèmes réels</p>
+        </div>
+    </footer>
+</body>
+
+</html>
