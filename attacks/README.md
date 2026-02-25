@@ -75,6 +75,12 @@ Dossier contenant tous les labs de cybersécurité conteneurisés. Chaque lab es
 2. CSRF avec token bypassable
 3. CSRF avec SameSite cookies
 
+### ✅ nosql-injection-lab/ - NoSQL Injection
+**Auteur:** Celia IMAKHLOUFEN
+**Difficulté:** Moyen  
+**Tag:** WEB  
+**Port:** 3000
+
 ---
 
 ## 🏗️ Structure Standard d'un Lab
