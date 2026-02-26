@@ -1,0 +1,25 @@
+{
+  "name": "mitm-attack-lab",
+  "version": "1.0.0",
+  "description": "Lab pédagogique pour apprendre les attaques Man-in-the-Middle",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "start:victim": "node src/victim-server.js",
+    "start:proxy": "node src/mitm-proxy.js",
+    "dev": "nodemon src/server.js"
+  },
+  "keywords": ["mitm", "man-in-the-middle", "security", "proxy", "https"],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.18.2",
+    "body-parser": "^1.20.2",
+    "http-proxy": "^1.18.1",
+    "cookie-parser": "^1.4.6",
+    "express-session": "^1.17.3"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.2"
+  }
+}
