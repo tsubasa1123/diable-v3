@@ -133,6 +133,49 @@ services:
       - diable-network
     restart: unless-stopped
 
+  # Shellshock Lab - CVE-2014-6287 (HFS RCE)
+  shellshock-lab:
+    build: ./attacks/Shellshock
+    container_name: shellshock-lab
+    ports:
+      - "8086:80"
+    environment:
+      - DEBUG_MODE=false
+      - FLASK_ENV=production
+    labels:
+      - "diable.lab=cve-2014-6287"
+      - "diable.difficulty=medium"
+      - "diable.tag=RCE"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80/health"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
+    networks:
+      - diable-network
+    restart: unless-stopped
+
+  # Heartbleed Lab - CVE-2014-0160 (OpenSSL heartbeat)
+  heartbleed-lab:
+    image: vulhub/heartbleed:latest
+    container_name: heartbleed-lab
+    ports:
+      - "8087:4443"
+    labels:
+      - "diable.lab=cve-2014-0160"
+      - "diable.difficulty=medium"
+      - "diable.tag=TLS"
+    healthcheck:
+      test: ["CMD", "curl", "-k", "-f", "https://localhost:4443/" ]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
+    networks:
+      - diable-network
+    restart: unless-stopped
+
   # XXE Lab (à venir)
   # xxe-lab:
   #   build: ./attacks/xxe-lab
