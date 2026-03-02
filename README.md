@@ -133,6 +133,20 @@ diable/
 
 ---
 
+### 6. JWT Vulnerabilities Lab (`attacks/jwt-lab/`)
+**Difficulté:** Moyen → Difficile  
+**Tag:** JWT  
+**Auteur:** Thiané DIA  
+
+**Scénarios:**
+- alg:none Bypass (CVE-2015-9235)
+- Weak Secret Brute Force
+- RS256 → HS256 Algorithm Confusion
+- kid Header Injection
+```
+
+---
+
 ## 🚀 Installation Complète
 
 ### Prérequis
@@ -157,7 +171,9 @@ docker-compose up -d
 http://localhost:3000  # Frontend
 http://localhost:5000  # Backend API
 http://localhost:8080  # SQL Injection Lab
-http://localhost:8081  # XPath Injection Lab
+http://localhost:8081  # XPath 
+http://localhost:8084  # JWT Vulnerabilities Lab
+Injection Lab
 ```
 
 ### Installation d'un Lab Individuel
@@ -308,6 +324,18 @@ services:
     networks:
       - diable-network
 
+  # JWT Vulnerabilities Lab
+  jwt-lab:
+    build: ./attacks/jwt-lab
+    ports:
+      - "8084:3000"
+    labels:
+      - "diable.lab=jwt-vulnerabilities"
+      - "diable.difficulty=medium-hard"
+      - "diable.tag=JWT"
+    networks:
+      - diable-network
+
 networks:
   diable-network:
     driver: bridge
@@ -406,7 +434,7 @@ Projet pédagogique - DSI ISFA 2025-2026
 
 ## 📊 Statistiques
 
-- **Labs disponibles:** 2
+- **Labs disponibles:** 3
 - **Labs en développement:** 3+
 - **Work Packages:** 3
 - **Contributeurs:** 10+

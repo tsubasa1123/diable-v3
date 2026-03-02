@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Scénario 2 — Data Exfiltration</title>
+<style>
+  :root { --bg-global:#0B0F14; --bg-header:#0F1A2B; --bg-card:#141B26; --btn-primary:#D41414; --btn-primary-hover:#FF2A2A; --glow-color:#00C2FF; --text-primary:#F2F4F8; --text-secondary:#8A8F98; --border:#1E2A3A; }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { background:var(--bg-global); color:var(--text-primary); font-family:'Segoe UI',system-ui,sans-serif; min-height:100vh; }
+  header { background:var(--bg-header); border-bottom:1px solid var(--border); padding:1rem 2rem; display:flex; align-items:center; gap:1rem; }
+  header a { color:var(--glow-color); text-decoration:none; font-size:0.85rem; }
+  main { max-width:950px; margin:0 auto; padding:2rem; }
+  h2 { font-size:1.6rem; margin-bottom:0.5rem; }
+  h2 span { color:var(--glow-color); }
+  .subtitle { color:var(--text-secondary); margin-bottom:2rem; line-height:1.6; }
+  .panel { background:var(--bg-card); border:1px solid var(--border); border-radius:12px; padding:1.5rem; margin-bottom:1.5rem; }
+  .panel h3 { color:var(--glow-color); margin-bottom:1rem; }
+  .code { background:#0a0a0a; border:1px solid #222; border-left:3px solid var(--btn-primary); border-radius:6px; padding:1rem; font-family:'Courier New',monospace; font-size:0.8rem; margin:0.8rem 0; overflow-x:auto; white-space:pre; color:#a0f0a0; cursor:pointer; transition:border-color 0.2s; }
+  .code:hover { border-left-color:var(--glow-color); }
+  .code::before { content:'▶ Cliquer pour utiliser'; display:block; color:var(--text-secondary); font-size:0.72rem; margin-bottom:0.5rem; }
+  .btn { background:var(--btn-primary); color:white; padding:0.65rem 1.4rem; border-radius:6px; font-weight:600; font-size:0.9rem; cursor:pointer; border:none; transition:background 0.2s; }
+  .btn:hover { background:var(--btn-primary-hover); }
+  textarea { width:100%; background:#0F1A2B; border:1px solid var(--border); color:#a0f0a0; padding:0.8rem; border-radius:6px; font-family:'Courier New',monospace; font-size:0.8rem; resize:vertical; min-height:140px; }
+  .result { margin-top:1rem; padding:1rem; border-radius:8px; font-size:0.8rem; display:none; word-break:break-all; font-family:'Courier New',monospace; max-height:350px; overflow-y:auto; white-space:pre; }
+  .result.success { background:#001A15; border:1px solid #00AA77; color:#00FF99; display:block; }
+  .result.error { background:#1A0000; border:1px solid #AA0000; color:#FF6666; display:block; }
+  .result.info { background:#001220; border:1px solid #003366; color:#66AAFF; display:block; }
+  .flag { background:#001A15; border:1px solid #00AA77; border-radius:8px; padding:1rem; margin-top:1rem; font-family:monospace; color:#00FF99; font-size:1rem; text-align:center; display:none; }
+  .hint { background:#1A1500; border:1px solid #554400; border-radius:8px; padding:1rem; margin-top:1rem; font-size:0.82rem; color:#FFCC44; }
+  .data-table { width:100%; border-collapse:collapse; font-size:0.8rem; font-family:'Courier New',monospace; margin-top:0.8rem; }
+  .data-table th { background:#141B26; color:var(--glow-color); padding:0.5rem; border:1px solid var(--border); text-align:left; }
+  .data-table td { padding:0.4rem 0.5rem; border:1px solid var(--border); }
+  .data-table tr:nth-child(even) { background:#0F1420; }
+  .sensitive-val { color:#FF6666; font-weight:bold; }
+  .layout { display:grid; grid-template-columns:1fr 1fr; gap:1.5rem; }
+</style>
+</head>
+<body>
+<header>
+  <a href="/">← Retour au lab</a>
+  <h1 style="font-size:1.2rem;">🕸️ Scénario 2 — <span style="color:var(--glow-color)">Data Exfiltration</span></h1>
+</header>
+<main>
+  <h2>GraphQL <span>Data Exfiltration</span></h2>
+  <p class="subtitle">GraphQL permet de demander exactement les champs voulus. Un attaquant peut construire des requêtes pour extraire massivement des données sensibles : mots de passe, salaires, CB, documents confidentiels — en une seule requête.</p>
+
+  <div class="layout">
+    <div class="panel">
+      <h3>Cible 1 — Données utilisateurs</h3>
+      <p style="font-size:0.85rem; color:var(--text-secondary); margin-bottom:0.5rem;">Extrayez tous les utilisateurs avec leurs données sensibles :</p>
+      <div class="code" onclick="useQuery(this.querySelector('code').textContent)"><code>{ users { id username email role salary password creditCard } }</code></div>
+      <button class="btn" onclick="runAndShow('users-table', '{ users { id username email role salary password creditCard } }')">⬇ Exfiltrer utilisateurs</button>
+      <div id="users-table"></div>
+    </div>
+
+    <div class="panel">
+      <h3>Cible 2 — Documents confidentiels</h3>
+      <p style="font-size:0.85rem; color:var(--text-secondary); margin-bottom:0.5rem;">Accédez aux documents secrets sans aucune authentification :</p>
+      <div class="code" onclick="useQuery(this.querySelector('code').textContent)"><code>{ documents { id title content classification } }</code></div>
+      <button class="btn" onclick="runAndShow('docs-table', '{ documents { id title content classification } }')">⬇ Exfiltrer documents</button>
+      <div id="docs-table"></div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h3>Requête personnalisée — Tout en une fois</h3>
+    <p style="font-size:0.85rem; color:var(--text-secondary); margin-bottom:0.8rem;">GraphQL permet de combiner plusieurs requêtes en une seule — idéal pour l'exfiltration massive :</p>
+    <textarea id="exfil-query">{
+  users {
+    username
+    email
+    password
+    salary
+    creditCard
+  }
+  documents {
+    title
+    content
+    classification
+  }
+  orders {
+    id
+    product
+    amount
+  }
+}</textarea>
+    <div style="display:flex; gap:0.8rem; margin-top:0.8rem; flex-wrap:wrap;">
+      <button class="btn" onclick="runExfil()">🚀 Exfiltrer tout</button>
+      <button class="btn" style="background:#1A2A3A; color:var(--glow-color); border:1px solid var(--border);" onclick="validateExfil()">🏴 Valider l'exfiltration</button>
+    </div>
+    <div class="result" id="exfil-result"></div>
+    <div class="flag" id="flag2"></div>
+  </div>
+
+  <div class="hint">💡 <strong>Contre-mesure :</strong> Implémenter un système d'autorisation par champ (ex: <code>graphql-shield</code>). Limiter la profondeur et la complexité des requêtes. Ne jamais exposer de champs sensibles dans le schéma.</div>
+</main>
+
+<script>
+async function graphql(query) {
+  const res = await fetch('/graphql', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ query }) });
+  return res.json();
+}
+
+function useQuery(q) {
+  document.getElementById('exfil-query').value = q.trim();
+}
+
+async function runAndShow(containerId, query) {
+  const data = await graphql(query);
+  const container = document.getElementById(containerId);
+  
+  if (data.data.users) {
+    const users = data.data.users;
+    let html = '<table class="data-table"><tr><th>user</th><th>email</th><th>role</th><th class="sensitive-val">salary</th><th class="sensitive-val">password</th><th class="sensitive-val">creditCard</th></tr>';
+    users.forEach(u => {
+      html += `<tr><td>${u.username}</td><td>${u.email}</td><td>${u.role}</td><td class="sensitive-val">${u.salary}€</td><td class="sensitive-val">${u.password}</td><td class="sensitive-val">${u.creditCard}</td></tr>`;
+    });
+    html += '</table>';
+    container.innerHTML = html;
+  }
+  
+  if (data.data.documents) {
+    const docs = data.data.documents;
+    let html = '<table class="data-table"><tr><th>titre</th><th class="sensitive-val">classification</th><th>contenu</th></tr>';
+    docs.forEach(d => {
+      html += `<tr><td>${d.title}</td><td class="sensitive-val">${d.classification}</td><td>${d.content}</td></tr>`;
+    });
+    html += '</table>';
+    container.innerHTML = html;
+  }
+}
+
+async function runExfil() {
+  const query = document.getElementById('exfil-query').value;
+  const data = await graphql(query);
+  const el = document.getElementById('exfil-result');
+  el.className = 'result info';
+  el.textContent = JSON.stringify(data.data, null, 2);
+}
+
+async function validateExfil() {
+  const query = document.getElementById('exfil-query').value;
+  const data = await graphql(query);
+  const raw = JSON.stringify(data);
+  
+  const res = await fetch('/api/check-exfiltration', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({ data: raw })
+  });
+  const result = await res.json();
+  const el = document.getElementById('exfil-result');
+  if (result.success) {
+    el.className = 'result success';
+    el.textContent = '✅ ' + result.message;
+    const flag = document.getElementById('flag2');
+    flag.style.display = 'block';
+    flag.textContent = '🏴 ' + result.flag;
+  } else {
+    el.className = 'result error';
+    el.textContent = '❌ ' + result.message + '\nHint: Essayez d\'extraire les mots de passe ou salaires...';
+  }
+}
+</script>
+</body>
+</html>

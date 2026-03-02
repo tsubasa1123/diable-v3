@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DIABLE v3.0 — JWT Vulnerabilities Lab</title>
+<style>
+  :root {
+    --bg-global: #0B0F14;
+    --bg-header: #0F1A2B;
+    --bg-card: #141B26;
+    --btn-primary: #D41414;
+    --btn-primary-hover: #FF2A2A;
+    --link-color: #1F6AFF;
+    --glow-color: #00C2FF;
+    --text-primary: #F2F4F8;
+    --text-secondary: #8A8F98;
+    --border: #1E2A3A;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg-global); color: var(--text-primary); font-family: 'Segoe UI', system-ui, sans-serif; min-height: 100vh; }
+  header { background: var(--bg-header); border-bottom: 1px solid var(--border); padding: 1rem 2rem; display: flex; align-items: center; gap: 1rem; }
+  header h1 { font-size: 1.4rem; color: var(--glow-color); text-shadow: 0 0 20px var(--glow-color); }
+  header span { color: var(--text-secondary); font-size: 0.85rem; }
+  .badge { background: var(--btn-primary); color: white; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: bold; }
+  main { max-width: 1100px; margin: 0 auto; padding: 3rem 2rem; }
+  .hero { text-align: center; margin-bottom: 3rem; }
+  .hero h2 { font-size: 2.2rem; margin-bottom: 0.8rem; }
+  .hero h2 span { color: var(--glow-color); }
+  .hero p { color: var(--text-secondary); max-width: 600px; margin: 0 auto; line-height: 1.6; }
+  .author-tag { display: inline-block; margin-top: 1rem; background: var(--bg-card); border: 1px solid var(--border); padding: 0.4rem 1rem; border-radius: 20px; font-size: 0.85rem; color: var(--glow-color); }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 1.5rem; margin-top: 2rem; }
+  .card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 1.5rem; transition: border-color 0.2s, transform 0.2s; position: relative; overflow: hidden; }
+  .card:hover { border-color: var(--glow-color); transform: translateY(-2px); }
+  .card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, var(--btn-primary), var(--glow-color)); }
+  .card-num { font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 0.5rem; text-transform: uppercase; letter-spacing: 1px; }
+  .card h3 { font-size: 1.1rem; margin-bottom: 0.5rem; color: var(--text-primary); }
+  .card p { font-size: 0.88rem; color: var(--text-secondary); line-height: 1.5; margin-bottom: 1.2rem; }
+  .tags { display: flex; gap: 0.4rem; flex-wrap: wrap; margin-bottom: 1rem; }
+  .tag { padding: 2px 8px; border-radius: 4px; font-size: 0.72rem; font-weight: 600; }
+  .tag-medium { background: #2A1F00; color: #FFB800; }
+  .tag-hard { background: #2A0000; color: #FF4444; }
+  .tag-jwt { background: #001A2A; color: var(--glow-color); }
+  .btn { display: inline-block; background: var(--btn-primary); color: white; padding: 0.6rem 1.4rem; border-radius: 6px; text-decoration: none; font-weight: 600; font-size: 0.88rem; transition: background 0.2s; }
+  .btn:hover { background: var(--btn-primary-hover); }
+  .section-title { font-size: 1.1rem; color: var(--text-secondary); margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.5rem; }
+  .section-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+  footer { text-align: center; padding: 2rem; color: var(--text-secondary); font-size: 0.8rem; border-top: 1px solid var(--border); margin-top: 4rem; }
+</style>
+</head>
+<body>
+<header>
+  <div>
+    <h1>🔐 DIABLE v3.0</h1>
+  </div>
+  <span>DSI ISFA 2025-2026</span>
+  <span class="badge">JWT Lab</span>
+</header>
+
+<main>
+  <div class="hero">
+    <h2>JWT <span>Vulnerabilities</span> Lab</h2>
+    <p>Explorez les 4 principales vulnérabilités des JSON Web Tokens dans un environnement sécurisé et isolé. Comprenez comment les attaquants contournent l'authentification basée sur les JWT.</p>
+    <span class="author-tag">✍️ Par Thiané DIA — Promo DSI 2025-2026</span>
+  </div>
+
+  <p class="section-title">Scénarios disponibles</p>
+
+  <div class="grid">
+    <div class="card">
+      <div class="card-num">Scénario 01</div>
+      <h3>Algorithm Confusion</h3>
+      <p>Le serveur accepte des tokens avec l'algorithme <code>alg: none</code>, permettant de forger un token admin sans connaître la clé secrète.</p>
+      <div class="tags">
+        <span class="tag tag-medium">Moyen</span>
+        <span class="tag tag-jwt">JWT</span>
+        <span class="tag tag-jwt">Auth Bypass</span>
+      </div>
+      <a href="/scenario1" class="btn">Lancer →</a>
+    </div>
+
+    <div class="card">
+      <div class="card-num">Scénario 02</div>
+      <h3>Weak Secret Brute Force</h3>
+      <p>La clé secrète HMAC est faible. Utilisez un dictionnaire pour la retrouver et générer un token admin valide et signé.</p>
+      <div class="tags">
+        <span class="tag tag-medium">Moyen</span>
+        <span class="tag tag-jwt">JWT</span>
+        <span class="tag tag-jwt">Brute Force</span>
+      </div>
+      <a href="/scenario2" class="btn">Lancer →</a>
+    </div>
+
+    <div class="card">
+      <div class="card-num">Scénario 03</div>
+      <h3>RS256 → HS256 Confusion</h3>
+      <p>Le serveur utilise RS256 mais accepte HS256. Signez votre token avec la clé publique RSA exposée pour vous authentifier en tant qu'admin.</p>
+      <div class="tags">
+        <span class="tag tag-hard">Difficile</span>
+        <span class="tag tag-jwt">JWT</span>
+        <span class="tag tag-jwt">Algo Confusion</span>
+      </div>
+      <a href="/scenario3" class="btn">Lancer →</a>
+    </div>
+
+    <div class="card">
+      <div class="card-num">Scénario 04</div>
+      <h3>kid Header Injection</h3>
+      <p>Manipulez le paramètre <code>kid</code> du header JWT pour forcer le serveur à utiliser une clé vide ou contrôlée via path traversal.</p>
+      <div class="tags">
+        <span class="tag tag-hard">Difficile</span>
+        <span class="tag tag-jwt">JWT</span>
+        <span class="tag tag-jwt">Header Injection</span>
+      </div>
+      <a href="/scenario4" class="btn">Lancer →</a>
+    </div>
+  </div>
+</main>
+
+<footer>
+  DIABLE v3.0 — DSI ISFA 2025-2026 — Usage pédagogique uniquement
+</footer>
+</body>
+</html>
