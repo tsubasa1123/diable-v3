@@ -1,0 +1,364 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <title>Injection SQL basée sur les erreurs</title>
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+  <div class="wrap">
+    <header class="hero">
+      <div class="hero__title">Injection SQL basée sur les erreurs</div>
+      <div class="hero__subtitle">
+        Comprendre l’attaque, l’observer, puis la corriger — avec des étapes simples
+      </div>
+
+      <nav class="menu">
+        <button class="menu__btn active" data-tab="t1">Problématique générale</button>
+        <button class="menu__btn" data-tab="t2">Problème de l’attaque</button>
+        <button class="menu__btn" data-tab="t3">Principe de l’attaque</button>
+        <button class="menu__btn" data-tab="t4">Étapes de l’attaque</button>
+        <button class="menu__btn" data-tab="t5">Zone pratique</button>
+        <button class="menu__btn" data-tab="t6">Protections</button>
+      </nav>
+    </header>
+
+    <main class="content">
+
+      <!-- t1 -->
+      <section class="panel active" id="t1">
+        <h2>Problématique générale (sécurité des applications web)</h2>
+
+        <div class="card">
+          <p>
+            En sécurité des applications web, un principe fondamental est :
+            <b>une entrée utilisateur ne doit jamais être traitée comme du code</b>.
+            Lorsque l’application mélange données et logique (SQL, commandes système, HTML/JS),
+            elle peut devenir vulnérable à des injections.
+          </p>
+
+          <p class="muted" style="margin-top:10px;">
+            Exemple courant : une application e-commerce recherche un produit via un paramètre <code>id</code>.
+            Si la requête est construite par concaténation, une entrée inattendue peut casser la requête,
+            produire une erreur, et parfois divulguer des détails internes.
+          </p>
+
+          <h3 style="margin-top:14px;">Exemple de code vulnérable (à ne pas faire)</h3>
+          <div class="err">
+            <pre><code>
+# Exemple pédagogique (vulnérable) : concaténation SQL
+product_id = request.args.get("id")
+query = "SELECT * FROM products WHERE id = " + product_id
+cursor.execute(query)
+            </code></pre>
+          </div>
+
+          <p class="muted" style="margin-top:10px;">
+            Problème : l’entrée utilisateur est insérée directement dans la requête.
+            Si l’application affiche les erreurs SQL au client, elle divulgue des informations internes
+            (type de base, structure, fragments de requête).
+          </p>
+        </div>
+      </section>
+
+      <!-- t2 -->
+      <section class="panel" id="t2">
+        <h2>Problème de l’attaque</h2>
+
+        <div class="card">
+          <p>
+            Le problème principal d’une Injection SQL apparaît lorsque l’application construit une requête SQL
+            à partir d’une entrée utilisateur sans contrôle strict (concaténation, conversion implicite, filtrage fragile).
+            Dans le cas <b>basé sur les erreurs</b>, l’application affiche au client des messages d’erreur SQL détaillés,
+            ce qui peut révéler des informations internes (moteur de base, structure probable de la requête, tables/colonnes, etc.).
+          </p>
+
+          <h3 style="margin-top:14px;">Contexte typique</h3>
+          <ul>
+            <li>Page e-commerce : <b>recherche produit par ID</b> (ex: <code>/product?id=...</code>)</li>
+            <li>Fonction “recherche” (<code>/search?q=...</code>)</li>
+            <li>Formulaire d’authentification (login) développé rapidement</li>
+            <li>Filtres dynamiques (<code>sort</code>, <code>order</code>)</li>
+            <li>Back-office / outils internes avec contrôles insuffisants</li>
+            <li>Applications laissées en mode debug en production</li>
+          </ul>
+
+          <h3 style="margin-top:14px; margin-bottom:12px;">Structure du projet (lab)</h3>
+          <pre style="margin-top:0;"><code class="language-text">sqli-error-based-lab/
+├── Dockerfile
+├── docker-compose.yml
+├── .dockerignore
+├── README.md
+├── requirements.txt
+├── docs/
+│   └── module.md
+└── src/
+    ├── app.py
+    ├── config.py
+    ├── db.py
+    ├── health.py
+    ├── reset.py
+    ├── static/
+    │   └── style.css
+    └── templates/
+        ├── index.html
+        └── debug.html
+</code></pre>
+
+          <p class="muted" style="margin-top:10px;">
+            Ce lab est volontairement simple : il permet d’observer la différence de comportement entre
+            une version vulnérable (concaténation + erreurs affichées) et une version sécurisée (validation + requête paramétrée).
+          </p>
+        </div>
+      </section>
+
+      <!-- t3 -->
+      <section class="panel" id="t3">
+        <h2>Principe de l’attaque</h2>
+
+        <div class="card">
+          <p>
+            L’<b>Injection SQL basée sur les erreurs</b> consiste à exploiter une requête SQL construite avec une entrée non maîtrisée
+            afin de provoquer une <b>erreur SQL</b> visible. Quand l’application renvoie ces erreurs au navigateur, elles peuvent révéler
+            des informations internes (type de SGBD, structure probable de la requête, indices sur le schéma, etc.).
+          </p>
+
+          <p class="muted" style="margin-top:10px;">
+            Dans ce lab, le principe est simple : la version vulnérable expose l’erreur SQL (fuite d’information),
+            tandis que la version sécurisée rejette l’entrée et renvoie une réponse générique.
+          </p>
+
+          <h3 style="margin-top:14px;">Deux mécanismes “Error-Based”</h3>
+          <div class="grid">
+            <div class="box">
+              <h3>1) Erreurs SQL verbeuses</h3>
+              <ul>
+                <li>L’entrée casse la requête (syntaxe, type, conversion…)</li>
+                <li>La base renvoie un message d’erreur</li>
+                <li>L’application l’affiche au client</li>
+                <li><b>Impact :</b> fuite d’informations techniques</li>
+              </ul>
+            </div>
+
+            <div class="box">
+              <h3>2) Erreurs conditionnelles</h3>
+              <ul>
+                <li>Une erreur survient <b>seulement si</b> une condition est vraie</li>
+                <li>On observe “erreur” vs “pas d’erreur”</li>
+                <li><b>Impact :</b> inférer des informations même sans affichage direct de données</li>
+              </ul>
+            </div>
+          </div>
+
+          <h3 style="margin-top:14px;">Techniques courantes (niveau conceptuel)</h3>
+          <ul>
+            <li><b>Query break</b> : provoquer une erreur de syntaxe/type en perturbant la requête.</li>
+            <li><b>Commentaires / logique</b> : influencer la logique de la requête et observer les différences de réponse.</li>
+            <li><b>Structure</b> : certaines erreurs aident à déduire la structure attendue (ex. colonnes/format).</li>
+            <li><b>UNION-based</b> : fusion de résultats (mentionné comme concept, sans payload).</li>
+            <li><b>Schéma</b> : certaines erreurs peuvent mentionner tables/colonnes (cartographie DB).</li>
+          </ul>
+
+          <h3 style="margin-top:14px;">Ce que tu dois observer dans ce lab</h3>
+          <ul>
+            <li>En vulnérable : message d’erreur SQL détaillé</li>
+            <li>En sécurisé : validation stricte + requête paramétrée + erreur générique</li>
+            <li>Dans Debug : événements “query / error / validation”</li>
+          </ul>
+
+          <p class="muted" style="margin-top:10px;">
+            ⚠️ Aucun payload n’est fourni. Le but est de comprendre le mécanisme et la différence vulnérable vs sécurisé.
+          </p>
+        </div>
+      </section>
+
+      <!-- t4 -->
+      <section class="panel" id="t4">
+        <h2>Étapes de l’attaque</h2>
+
+        <div class="card">
+          <p>
+            Objectif : observer la fuite d’erreur SQL en mode vulnérable, comparer avec le mode sécurisé,
+            puis récupérer le <b>flag</b> dans la zone pratique.
+          </p>
+
+          <div class="step">
+            <div class="step__title">Étape 1 — Reset (repartir propre)</div>
+            <div class="step__body">
+              Va dans <b>Zone pratique</b> et clique sur <b>Réinitialiser</b> pour repartir d’un état propre.
+            </div>
+          </div>
+
+          <div class="step">
+            <div class="step__title">Étape 2 — Baseline (comportement normal)</div>
+            <div class="step__body">
+              Choisis un <b>ID valide</b> (ex: <code>1</code>) puis clique sur <b>Tester en mode vulnérable</b>.
+              Observe le résultat normal (produit affiché ou aucun résultat).
+            </div>
+          </div>
+
+          <div class="step">
+            <div class="step__title">Étape 3 — Provoquer une erreur (mode vulnérable)</div>
+            <div class="step__body">
+              Clique sur <b>Test entrée mal formée</b>, puis clique sur <b>Tester en mode vulnérable</b>.
+              L’objectif est d’observer une <b>erreur SQL détaillée</b> (fuite d’informations).
+            </div>
+          </div>
+
+          <div class="step">
+            <div class="step__title">Étape 4 — Comparer avec le mode sécurisé</div>
+            <div class="step__body">
+              Sans changer la valeur, clique sur <b>Tester en mode sécurisé</b>.
+              Vérifie que l’application rejette l’entrée (validation stricte) et n’affiche pas de détails SQL.
+            </div>
+          </div>
+
+          <div class="step">
+            <div class="step__title">Étape 5 — Vérifier dans le Dashboard</div>
+            <div class="step__body">
+              Clique sur <b>Voir Debug</b> et vérifie la présence d’événements :
+              <b>vuln → error</b> et <b>secure → validation/query</b>.
+            </div>
+          </div>
+
+          <div class="step">
+            <div class="step__title">Étape 6 — Obtenir le flag</div>
+            <div class="step__body">
+              Retourne dans <b>Zone pratique</b> et clique sur <b>Obtenir le Flag</b>.
+              Si le parcours est complété, le flag s’affiche.
+            </div>
+          </div>
+
+          <p class="muted" style="margin-top:10px;">
+            ⚠️ Aucun payload n’est fourni. Le but est d’apprendre la différence entre fuite d’erreurs SQL et correction.
+          </p>
+        </div>
+      </section>
+
+      <!-- t5 (MODIFIÉ) -->
+      <section class="panel" id="t5">
+        <h2>Mini Boutique — Démonstration e-commerce (Lab)</h2>
+        <div class="card">
+          <div class="actions">
+            <button class="btn" onclick="setId('1')">Test normal</button>
+            <button class="btn danger" onclick="setId('invalid')">Test entrée mal formée</button>
+            <a class="btn ghost" href="/debug" target="_blank">Voir Debug</a>
+          </div>
+
+          <div class="form">
+            <label>Choisir notre produit par ID</label>
+            <input id="pid" placeholder="Ex: 1" />
+            <div class="actions">
+              <button class="btn" onclick="searchVuln()">Tester en mode vulnérable</button>
+              <button class="btn success" onclick="searchSecure()">Tester en mode sécurisé</button>
+              <button class="btn ghost" onclick="checkFlag()">Obtenir le Flag</button>
+              <button class="btn ghost" onclick="resetLab()">Réinitialiser</button>
+            </div>
+          </div>
+
+          <div id="result" class="result"></div>
+        </div>
+      </section>
+
+      <!-- t6 -->
+      <section class="panel" id="t6">
+        <h2>Protections (corriger la vulnérabilité)</h2>
+        <div class="card">
+          <ul>
+            <li><b>Requêtes paramétrées</b> (préparées) — ne jamais concaténer une entrée utilisateur</li>
+            <li><b>Validation stricte</b> des entrées (types, formats, whitelists)</li>
+            <li><b>Erreurs génériques</b> côté client + logs côté serveur</li>
+            <li><b>Moindre privilège DB</b> : limiter les droits du compte applicatif</li>
+          </ul>
+
+          <h3 style="margin-top:14px;">Exemple de code sécurisé (recommandé)</h3>
+          <pre><code>
+# Exemple pédagogique (sécurisé) : requête paramétrée
+product_id = int(request.args.get("id"))
+cursor.execute("SELECT * FROM products WHERE id = ?", (product_id,))
+          </code></pre>
+        </div>
+      </section>
+
+    </main>
+
+    <footer class="footer">
+      ⚠️ Vulnérabilités intentionnelles à des fins éducatives. Ne jamais déployer en production.
+    </footer>
+  </div>
+
+<script>
+  const buttons = document.querySelectorAll(".menu__btn");
+  const panels = document.querySelectorAll(".panel");
+
+  buttons.forEach(b => {
+    b.addEventListener("click", () => {
+      buttons.forEach(x => x.classList.remove("active"));
+      panels.forEach(p => p.classList.remove("active"));
+      b.classList.add("active");
+      document.getElementById(b.dataset.tab).classList.add("active");
+    });
+  });
+
+  function setId(v){ document.getElementById("pid").value = v; }
+
+  async function searchVuln(){
+    const pid = document.getElementById("pid").value;
+    const res = await fetch("/api/vuln/product", {
+      method:"POST",
+      headers:{ "Content-Type":"application/json" },
+      body: JSON.stringify({ product_id: pid })
+    });
+    const data = await res.json();
+    render(data, "VULN");
+  }
+
+  async function searchSecure(){
+    const pid = document.getElementById("pid").value;
+    const res = await fetch("/api/secure/product", {
+      method:"POST",
+      headers:{ "Content-Type":"application/json" },
+      body: JSON.stringify({ product_id: pid })
+    });
+    const data = await res.json();
+    render(data, "SECURE");
+  }
+
+  async function checkFlag(){
+    const el = document.getElementById("result");
+    const res = await fetch("/flag");
+    const data = await res.json();
+    if(res.status === 200){
+      el.innerHTML = `<div class="ok">🎉 Congratulations! voici Flag: <code>${data.flag}</code></div>`;
+    } else {
+      el.innerHTML = `<div class="warn">⏳ ${data.message || "Non complété"}</div>`;
+    }
+  }
+
+  async function resetLab(){
+    await fetch("/reset");
+    document.getElementById("result").innerHTML = `<div class="muted">Reset effectué.</div>`;
+  }
+
+  function render(data, mode){
+    const el = document.getElementById("result");
+    if(data.error){
+      el.innerHTML = `<div class="err"><b>${mode}</b><pre>${data.error}</pre></div>`;
+      return;
+    }
+    const rows = data.products || [];
+    if(rows.length === 0){
+      el.innerHTML = `<div class="muted">${mode}: aucun résultat.</div>`;
+      return;
+    }
+    let html = `<div class="ok"><b>${mode}</b> — résultats</div>`;
+    html += `<table><thead><tr><th>ID</th><th>Nom</th><th>Prix</th><th>Catégorie</th></tr></thead><tbody>`;
+    for(const r of rows){
+      html += `<tr><td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td><td>${r[3]}</td></tr>`;
+    }
+    html += `</tbody></table>`;
+    el.innerHTML = html;
+  }
+</script>
+</body>
+</html>
