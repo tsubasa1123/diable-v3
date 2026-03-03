@@ -4,27 +4,27 @@
 # Usage : bash build_lab.sh all
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-LABS_DIR="${LABS_DIR:-$SCRIPT_DIR/../../attacks}"
-LAB=$1
+LABS_DIR="${LABS_DIR:-$SCRIPT_DIR/../../labs}"
 
 build_one() {
     local lab=$1
     local path="$LABS_DIR/$lab"
-    if [ ! -d "$path" ]; then
-        echo "[✗] Lab introuvable : $path"
+    if [ ! -f "$path/Dockerfile" ]; then
+        echo "[✗] Pas de Dockerfile trouvé dans : $path"
         return 1
     fi
     echo "[...] Build de sec-lab-$lab..."
     docker build -t "sec-lab-$lab" "$path" && echo "[✓] sec-lab-$lab buildé"
 }
 
-if [ "$LAB" = "all" ]; then
-    for lab in xss-lab sqli-lab xpath-lab phishing path-traversal-lab nosql-injection-lab; do
+LAB=$1
+
+if [ "$LAB" = "all" ] || [ -z "$LAB" ]; then
+    # Lire automatiquement tous les sous-dossiers de LABS_DIR
+    for lab_path in "$LABS_DIR"/*/; do
+        lab=$(basename "$lab_path")
         build_one "$lab"
     done
 elif [ -n "$LAB" ]; then
     build_one "$LAB"
-else
-    echo "Usage : bash build_lab.sh <lab_id|all>"
-    echo "Labs disponibles : xss-lab, sqli-lab, xpath-lab, phishing, path-traversal-lab, nosql-injection-lab"
 fi

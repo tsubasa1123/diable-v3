@@ -1,6 +1,6 @@
 // src/routes.js — Définition de toutes les routes API
-const express  = require('express');
-const router   = express.Router();
+const express = require('express');
+const router = express.Router();
 const { requireApiKey, validateLabRequest } = require('./middleware');
 const { spawnLab, destroyLab, getLabStatus } = require('./docker');
 const { get, run, all } = require('./db');
@@ -15,8 +15,8 @@ const LAB_TTL = parseInt(process.env.LAB_TTL || '2700');  // secondes
 // ─────────────────────────────────────────────────────────────────────
 router.get('/labs', (req, res) => {
     const list = Object.values(LABS).map(l => ({
-        id:        l.id,
-        title:     l.title,
+        id: l.id,
+        title: l.title,
         exercises: l.exercises,
     }));
     res.json({ labs: list });
@@ -49,10 +49,10 @@ router.post('/spawn', requireApiKey, validateLabRequest, async (req, res) => {
             );
             console.log(`[API] Session réutilisée : user=${user_id} lab=${lab} port=${existing.port}`);
             return res.json({
-                url:        existing.port ? `http://${process.env.BASE_HOST || 'localhost'}:${existing.port}` : null,
+                url: existing.port ? `http://${process.env.BASE_HOST || 'localhost'}:${existing.port}` : null,
                 expires_in: LAB_TTL,
-                status:     'running',
-                reused:     true,
+                status: 'running',
+                reused: true,
             });
         }
 
@@ -67,7 +67,12 @@ router.post('/spawn', requireApiKey, validateLabRequest, async (req, res) => {
             [String(user_id), lab, containerName, port, expiresAt]
         );
 
-        res.json({ url, expires_in: LAB_TTL, status: 'running', reused: false });
+        const urls = { main: url };
+        if (lab.extraPorts) {
+            urls.victim = `http://${process.env.BASE_HOST}:${port + 1}`;
+        }
+
+        res.json({ url, urls, expires_in: LAB_TTL, status: 'running', reused: false });
 
     } catch (err) {
         console.error(`[API] Erreur spawn user=${user_id} lab=${lab}:`, err.message);
@@ -125,9 +130,9 @@ router.get('/status', requireApiKey, async (req, res) => {
         }
 
         // Calculer le temps restant
-        const expiresAt  = new Date(session.expires_at).getTime();
-        const expiresIn  = Math.max(0, Math.round((expiresAt - Date.now()) / 1000));
-        const url        = `http://${process.env.BASE_HOST || 'localhost'}:${session.port}`;
+        const expiresAt = new Date(session.expires_at).getTime();
+        const expiresIn = Math.max(0, Math.round((expiresAt - Date.now()) / 1000));
+        const url = `http://${process.env.BASE_HOST || 'localhost'}:${session.port}`;
 
         // Vérifier aussi côté Docker (le conteneur peut avoir crashé)
         const dockerStatus = await getLabStatus(String(user_id), lab);

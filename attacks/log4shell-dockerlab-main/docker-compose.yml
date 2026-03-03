@@ -1,15 +1,35 @@
-version: "3.9"  # optional since v1.27.0
+# labs/log4shell/docker-compose.yml
+version: '3.8'
+
 services:
-  targetweb:
-    build: 
-      context: .
-      dockerfile: ./log4shell-vulnerable-app/Dockerfile
-    ports:
-      - "8080:8080"
-    
-  jndi:
+  vulnerable:
     build:
       context: .
-      dockerfile: ./marshalsec/Dockerfile
+      dockerfile: Dockerfile.vulnerable
+    container_name: log4shell-vulnerable-user-${USER_ID}
     ports:
-      - "1389:1389"
+      - "${VULN_PORT}:8080"
+    networks:
+      - internal
+      - lab-network
+
+  ldap:
+    build:
+      context: .
+      dockerfile: Dockerfile.ldap
+    container_name: log4shell-ldap-user-${USER_ID}
+    environment:
+      # On remplace le 172.17.0.1 hardcodé par le nom du service
+      - ATTACKER_HOST=vulnerable
+      - ATTACKER_PORT=8888
+    networks:
+      - internal
+
+networks:
+  internal:
+    # Réseau privé entre les deux conteneurs du lab
+    name: log4shell-internal-user-${USER_ID}
+    driver: bridge
+  lab-network:
+    external: true
+    name: lab-network

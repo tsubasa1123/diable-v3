@@ -1,68 +1,47 @@
 services:
   victim-server:
-    build:
-      context: .
-      dockerfile: Dockerfile.victim
     image: diable/mitm-victim-server:latest
-    container_name: mitm-victim-server
-    restart: unless-stopped
+    container_name: mitm-victim-user-${USER_ID}
     ports:
-      - "8080:8080"
+      - "${VICTIM_PORT}:8080"
     environment:
-      - NODE_ENV=development
+      - NODE_ENV=production
     networks:
-      - diable-network
+      - internal
 
   mitm-proxy:
-    build:
-      context: .
-      dockerfile: Dockerfile.proxy
     image: diable/mitm-proxy:latest
-    container_name: mitm-proxy
-    restart: unless-stopped
-    ports:
-      - "8888:8888"
+    container_name: mitm-proxy-user-${USER_ID}
     environment:
       - TARGET_HOST=victim-server
       - TARGET_PORT=8080
-      - DEBUG_MODE=true
+      - DEBUG_MODE=false
     depends_on:
       - victim-server
     networks:
-      - diable-network
+      - internal
 
   app:
-    build: .
     image: diable/mitm-attack-lab:latest
-    container_name: mitm-lab
-    restart: unless-stopped
+    container_name: mitm-app-user-${USER_ID}
     ports:
-      - "3000:3000"
+      - "${LAB_PORT}:3000"
     environment:
       - VICTIM_SERVER=http://victim-server:8080
       - MITM_PROXY=http://mitm-proxy:8888
-      - NODE_ENV=development
+      - NODE_ENV=production
       - DEBUG_MODE=false
     depends_on:
       - victim-server
       - mitm-proxy
     networks:
-      - diable-network
-    volumes:
-      - ./src:/app/src
-      - ./public:/app/public
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
-      interval: 30s
-      timeout: 3s
-      retries: 3
-      start_period: 5s
-    labels:
-      - "diable.lab=mitm-attack"
-      - "diable.difficulty=medium"
-      - "diable.tag=WEB"
+      - internal
+      - lab-network
 
 networks:
-  diable-network:
-    name: diable-network
+  internal:
+    name: mitm-internal-user-${USER_ID}
     driver: bridge
+  lab-network:
+    external: true
+    name: lab-network
