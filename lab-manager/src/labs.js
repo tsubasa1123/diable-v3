@@ -201,6 +201,17 @@ const LABS = {
         composeDir: 'xxe-lab',
         exercises: 3,
     },
+    'api_scanning': {
+        id: 'api_scanning',
+        title: 'Broken Auth / IDOR / Exposed Admin',
+        portSuffix: 23,
+        composeDir: 'api_scanning',
+        internalPort: 5000,
+        env: {
+            FLASK_ENV: 'production',
+            SECRET_KEY: 'dev-secret-change-in-prod',
+        },
+    }
 };
 
 /**
@@ -211,7 +222,7 @@ const LABS = {
  */
 
 function getPort(userId, labId) {
-    const lab    = LABS[labId];
+    const lab = LABS[labId];
     if (!lab) throw new Error(`Lab inconnu : ${labId}`);
 
     const uid = parseInt(userId) % 3000;
