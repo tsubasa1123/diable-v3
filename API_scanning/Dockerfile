@@ -1,0 +1,22 @@
+FROM python:3.11-slim
+
+LABEL maintainer="security-lab"
+LABEL description="Nexcorp Intranet Portal - Intentionally Vulnerable API Lab"
+LABEL version="1.0"
+
+WORKDIR /app
+
+COPY src/requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY src/ .
+
+RUN useradd -m appuser && chown -R appuser:appuser /app
+USER appuser
+
+EXPOSE 5000
+
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+    CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:5000/health')" || exit 1
+
+CMD ["python", "app.py"]

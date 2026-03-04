@@ -1,0 +1,13 @@
+/* style.css — Nexcorp Portal theme overrides */
+/* Main styles are embedded in index.html for portability.
+   Add any component overrides here. */
+
+.lab-warning-banner {
+    background: #7c1d1d;
+    color: #fca5a5;
+    text-align: center;
+    padding: 6px 12px;
+    font-size: 12px;
+    font-family: monospace;
+    letter-spacing: 0.5px;
+}
