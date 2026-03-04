@@ -1,0 +1,1126 @@
+<!DOCTYPE html>
+<html lang="en">
+<!--
+  index.html - Nexcorp Intranet Portal
+  Connects to Flask backend on same origin (localhost:5000)
+  All fetch() calls are real HTTP requests - interceptable via Burp Suite
+  All /api/* URLs are hardcoded in JS - discoverable via GoLinkFinder
+-->
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nexcorp Intranet Portal</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, 'Segoe UI', sans-serif;
+            background: #f0f2f5;
+            color: #1a1a2e;
+        }
+
+        /* ── Login ── */
+        .login-page {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .login-wrap {
+            width: 100%;
+            max-width: 420px;
+            padding: 20px;
+        }
+
+        .login-box {
+            background: #fff;
+            border-radius: 12px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        .logo-area {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            margin-bottom: 32px;
+        }
+
+        .logo-mark {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, #0f3460, #533483);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-size: 22px;
+            font-weight: 900;
+        }
+
+        .logo-text .company {
+            display: block;
+            font-size: 18px;
+            font-weight: 800;
+            color: #0f3460;
+            letter-spacing: 2px;
+        }
+
+        .logo-text .sub {
+            display: block;
+            font-size: 11px;
+            color: #6b7280;
+            margin-top: 2px;
+        }
+
+        .field-group {
+            margin-bottom: 18px;
+        }
+
+        .field-group label {
+            display: block;
+            font-size: 12px;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 6px;
+        }
+
+        .field-group input {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1.5px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 14px;
+            background: #f9fafb;
+            transition: border-color 0.2s;
+        }
+
+        .field-group input:focus {
+            outline: none;
+            border-color: #0f3460;
+            background: #fff;
+        }
+
+        .field-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 22px;
+            font-size: 12px;
+        }
+
+        .forgot {
+            color: #0f3460;
+            font-weight: 600;
+        }
+
+        .btn-login {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, #0f3460, #533483);
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            letter-spacing: 0.5px;
+        }
+
+        .btn-login:hover {
+            opacity: 0.9;
+        }
+
+        .login-error {
+            margin-top: 12px;
+            color: #dc2626;
+            font-size: 12px;
+            text-align: center;
+            min-height: 18px;
+        }
+
+        .login-footer {
+            margin-top: 24px;
+            padding-top: 16px;
+            border-top: 1px solid #f3f4f6;
+            display: flex;
+            justify-content: space-between;
+            font-size: 11px;
+            color: #9ca3af;
+        }
+
+        .login-footer a {
+            color: #0f3460;
+        }
+
+        .login-notice {
+            margin-top: 16px;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 8px;
+            padding: 12px 16px;
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.6);
+            text-align: center;
+            line-height: 1.6;
+        }
+
+        /* ── Portal ── */
+        .portal-page {
+            display: none;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        .portal-page.visible {
+            display: flex;
+        }
+
+        .topnav {
+            background: #fff;
+            border-bottom: 1px solid #e5e7eb;
+            padding: 0 24px;
+            height: 56px;
+            display: flex;
+            align-items: center;
+            gap: 24px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+        }
+
+        .nav-logo {
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, #0f3460, #533483);
+            border-radius: 7px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-size: 15px;
+            font-weight: 900;
+        }
+
+        .nav-title {
+            font-weight: 700;
+            color: #0f3460;
+            font-size: 15px;
+            letter-spacing: 0.5px;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 4px;
+            flex: 1;
+        }
+
+        .nav-links a {
+            padding: 6px 14px;
+            border-radius: 6px;
+            font-size: 13px;
+            color: #6b7280;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.15s;
+            text-decoration: none;
+        }
+
+        .nav-links a:hover,
+        .nav-links a.active {
+            background: #f0f2f5;
+            color: #0f3460;
+            font-weight: 600;
+        }
+
+        .nav-right {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-left: auto;
+        }
+
+        .nav-user {
+            font-size: 13px;
+            color: #374151;
+            font-weight: 500;
+        }
+
+        .btn-sm {
+            padding: 6px 14px;
+            background: #f0f2f5;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            font-size: 12px;
+            cursor: pointer;
+            color: #374151;
+            font-weight: 600;
+        }
+
+        .portal-body {
+            display: flex;
+            flex: 1;
+        }
+
+        .sidebar {
+            width: 220px;
+            background: #fff;
+            border-right: 1px solid #e5e7eb;
+            padding: 20px 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+            flex-shrink: 0;
+        }
+
+        .section-label {
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: #9ca3af;
+            padding: 0 8px;
+            margin-bottom: 4px;
+        }
+
+        .danger-label {
+            color: #ef4444 !important;
+        }
+
+        .sidebar-link {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 10px;
+            border-radius: 7px;
+            font-size: 13px;
+            color: #374151;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.15s;
+            text-decoration: none;
+        }
+
+        .sidebar-link:hover,
+        .sidebar-link.active {
+            background: #eff6ff;
+            color: #0f3460;
+        }
+
+        .sidebar-link.danger {
+            color: #dc2626;
+        }
+
+        .sidebar-link.danger:hover {
+            background: #fef2f2;
+        }
+
+        .main-content {
+            flex: 1;
+            padding: 28px 32px;
+            overflow-y: auto;
+        }
+
+        .page-header {
+            margin-bottom: 24px;
+        }
+
+        .page-header h1 {
+            font-size: 22px;
+            font-weight: 700;
+            color: #111827;
+        }
+
+        .page-sub {
+            font-size: 13px;
+            color: #6b7280;
+            margin-top: 4px;
+        }
+
+        /* ── Cards ── */
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .card {
+            background: #fff;
+            border-radius: 10px;
+            padding: 20px;
+            border: 1px solid #e5e7eb;
+        }
+
+        .card-icon {
+            font-size: 22px;
+            margin-bottom: 8px;
+        }
+
+        .card-label {
+            font-size: 12px;
+            color: #6b7280;
+            font-weight: 500;
+        }
+
+        .card-value {
+            font-size: 26px;
+            font-weight: 800;
+            color: #0f3460;
+            margin-top: 4px;
+        }
+
+        .two-col {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        .panel {
+            background: #fff;
+            border-radius: 10px;
+            border: 1px solid #e5e7eb;
+            overflow: hidden;
+            margin-bottom: 16px;
+        }
+
+        .panel-header {
+            padding: 14px 18px;
+            border-bottom: 1px solid #f3f4f6;
+            font-size: 13px;
+            font-weight: 700;
+            color: #111827;
+        }
+
+        .feed {
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .feed-item {
+            padding: 10px 12px;
+            background: #f9fafb;
+            border-radius: 7px;
+            border: 1px solid #f3f4f6;
+        }
+
+        .feed-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: #111827;
+        }
+
+        .feed-meta {
+            font-size: 11px;
+            color: #9ca3af;
+            margin-top: 2px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+
+        th {
+            padding: 8px 12px;
+            text-align: left;
+            background: #f9fafb;
+            color: #6b7280;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        td {
+            padding: 10px 12px;
+            border-top: 1px solid #f3f4f6;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .badge-open {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .badge-resolved {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .badge-admin {
+            background: #ede9fe;
+            color: #5b21b6;
+        }
+
+        .badge-employee {
+            background: #e0f2fe;
+            color: #0369a1;
+        }
+
+        .badge-manager {
+            background: #fce7f3;
+            color: #9d174d;
+        }
+
+        .link-btn {
+            color: #0f3460;
+            font-size: 12px;
+            cursor: pointer;
+            background: none;
+            border: none;
+            font-weight: 600;
+        }
+
+        .response-box {
+            padding: 16px;
+            font-size: 12px;
+            font-family: monospace;
+            white-space: pre-wrap;
+            background: #f9fafb;
+            min-height: 200px;
+            color: #374151;
+            overflow-y: auto;
+            max-height: 400px;
+        }
+
+        .btn-action {
+            padding: 10px 16px;
+            background: #fff;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+            color: #0f3460;
+            text-align: left;
+            transition: all 0.15s;
+        }
+
+        .btn-action:hover {
+            background: #eff6ff;
+            border-color: #0f3460;
+        }
+
+        .btn-action small {
+            display: block;
+            color: #9ca3af;
+            font-weight: 400;
+            margin-top: 2px;
+            font-family: monospace;
+        }
+
+        .btn-action.danger {
+            color: #dc2626;
+        }
+
+        .btn-action.danger:hover {
+            background: #fef2f2;
+            border-color: #dc2626;
+        }
+
+        .endpoint-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        /* ── Scanner ── */
+        .scanner-overlay {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            align-items: flex-end;
+        }
+
+        .scanner-toggle {
+            background: #0f3460;
+            color: #fff;
+            border: none;
+            padding: 10px 18px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 700;
+            box-shadow: 0 4px 16px rgba(15, 52, 96, 0.4);
+        }
+
+        .scanner-panel {
+            background: #0d1117;
+            border: 1px solid #30363d;
+            border-radius: 10px;
+            width: 560px;
+            max-height: 72vh;
+            display: none;
+            flex-direction: column;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+        }
+
+        .scanner-panel.open {
+            display: flex;
+        }
+
+        .scanner-tabs {
+            display: flex;
+            border-bottom: 1px solid #21262d;
+        }
+
+        .stab {
+            flex: 1;
+            padding: 10px;
+            font-size: 11px;
+            text-align: center;
+            cursor: pointer;
+            color: #6b7280;
+            border: none;
+            border-bottom: 2px solid transparent;
+            background: none;
+            font-family: monospace;
+            font-weight: 700;
+        }
+
+        .stab.active {
+            color: #58a6ff;
+            border-bottom-color: #58a6ff;
+        }
+
+        .stab-content {
+            display: none;
+            flex: 1;
+            overflow-y: auto;
+            padding: 14px;
+            font-family: monospace;
+            font-size: 11px;
+        }
+
+        .stab-content.active {
+            display: block;
+        }
+
+        .ep-row {
+            display: flex;
+            gap: 8px;
+            align-items: flex-start;
+            padding: 6px 8px;
+            border-radius: 5px;
+            background: #161b22;
+            margin-bottom: 5px;
+            border-left: 3px solid #79c0ff;
+        }
+
+        .ep-method {
+            font-size: 10px;
+            font-weight: bold;
+            padding: 1px 6px;
+            border-radius: 3px;
+            flex-shrink: 0;
+            margin-top: 1px;
+        }
+
+        .ep-GET {
+            background: #1a7f37;
+            color: #fff;
+        }
+
+        .ep-POST {
+            background: #9a6700;
+            color: #fff;
+        }
+
+        .ep-url {
+            color: #79c0ff;
+            flex: 1;
+            word-break: break-all;
+        }
+
+        .ep-tag {
+            font-size: 9px;
+            padding: 1px 5px;
+            border-radius: 3px;
+            flex-shrink: 0;
+        }
+
+        .ep-unauth {
+            background: #7f1d1d;
+            color: #fca5a5;
+        }
+
+        .ep-authed {
+            background: #14532d;
+            color: #86efac;
+        }
+
+        .burp-entry {
+            margin-bottom: 10px;
+        }
+
+        .burp-line {
+            color: #c9d1d9;
+            padding: 3px 6px;
+            background: #161b22;
+            border-radius: 3px;
+            margin-bottom: 2px;
+        }
+
+        .burp-req {
+            color: #79c0ff;
+        }
+
+        .burp-vuln {
+            color: #f85149;
+            font-weight: bold;
+        }
+
+        .burp-flag {
+            color: #f0883e;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- ═══════════════════════════ LOGIN PAGE ═══════════════════════════ -->
+    <div class="login-page" id="loginPage">
+        <div class="login-wrap">
+            <div class="login-box">
+                <div class="logo-area">
+                    <div class="logo-mark">N</div>
+                    <div class="logo-text">
+                        <span class="company">NEXCORP</span>
+                        <span class="sub">Employee Intranet Portal</span>
+                    </div>
+                </div>
+                <div class="field-group">
+                    <label>Corporate Email</label>
+                    <input type="email" id="inputEmail" value="john.smith@nexcorp.com">
+                </div>
+                <div class="field-group">
+                    <label>Password</label>
+                    <input type="password" id="inputPassword" value="password123">
+                </div>
+                <div class="field-row">
+                    <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:#6b7280;cursor:pointer">
+                        <input type="checkbox" checked> Remember me
+                    </label>
+                    <a href="#" class="forgot">Forgot password?</a>
+                </div>
+                <button class="btn-login" onclick="doLogin()">Sign In</button>
+                <div class="login-error" id="loginError"></div>
+                <div class="login-footer">
+                    <span>IT Support: <a href="#">helpdesk@nexcorp.com</a></span>
+                    <span>v3.4.1</span>
+                </div>
+            </div>
+            <div class="login-notice">🔒 Authorized Nexcorp employees only. Unauthorized access is monitored.</div>
+        </div>
+    </div>
+
+    <!-- ═══════════════════════════ PORTAL ═══════════════════════════ -->
+    <div class="portal-page" id="portalPage">
+        <nav class="topnav">
+            <div class="nav-logo">N</div>
+            <span class="nav-title">Nexcorp Intranet</span>
+            <div class="nav-links">
+                <a onclick="showSection('dashboard')" id="nav-dashboard" class="active">Home</a>
+                <a onclick="showSection('directory')" id="nav-directory">Directory</a>
+                <a onclick="showSection('helpdesk')" id="nav-helpdesk">Helpdesk</a>
+            </div>
+            <div class="nav-right">
+                <span class="nav-user" id="navUser"></span>
+                <button class="btn-sm" onclick="doLogout()">Sign Out</button>
+            </div>
+        </nav>
+
+        <div class="portal-body">
+            <aside class="sidebar">
+                <div>
+                    <div class="section-label">My Workspace</div>
+                    <a class="sidebar-link active" onclick="showSection('dashboard')">📊 Dashboard</a>
+                    <a class="sidebar-link" onclick="showSection('directory')">👥 Directory</a>
+                    <a class="sidebar-link" onclick="showSection('helpdesk')">🎫 Helpdesk</a>
+                    <a class="sidebar-link" onclick="showSection('profile')">👤 My Profile</a>
+                </div>
+                <div id="adminSidebar" style="display:none">
+                    <div class="section-label danger-label">Admin</div>
+                    <a class="sidebar-link danger" onclick="showSection('adminPanel')">⚙️ Admin Panel</a>
+                </div>
+            </aside>
+
+            <main class="main-content" id="mainContent"></main>
+        </div>
+    </div>
+
+    <!-- ═══════════════════════════ SCANNER PANEL ═══════════════════════════ -->
+    <div class="scanner-overlay" id="scannerOverlay" style="display:none">
+        <div class="scanner-panel" id="scannerPanel">
+            <div class="scanner-tabs">
+                <button class="stab active" onclick="switchTab(this,'tab-endpoints')">🔗 Endpoints</button>
+                <button class="stab" onclick="switchTab(this,'tab-burp')">🛡️ Burp Log</button>
+            </div>
+
+            <div class="stab-content active" id="tab-endpoints">
+                <div style="color:#6e7681;margin-bottom:10px">
+                    GoLinkFinder would extract these URLs from the JS source:
+                </div>
+                <!-- populated by renderEndpoints() -->
+            </div>
+
+            <div class="stab-content" id="tab-burp">
+                <div style="color:#6e7681;margin-bottom:6px">// Proxy Log — real HTTP requests</div>
+                <div id="burpLog"></div>
+            </div>
+        </div>
+        <button class="scanner-toggle" onclick="toggleScanner()">🔬 Scanner</button>
+    </div>
+
+
+    <script>
+        // ═══════════════════════════════════════════════════════════════
+        //  js/config.js  — hardcoded API endpoints
+        //  GoLinkFinder extracts ALL of these from the JS source
+        // ═══════════════════════════════════════════════════════════════
+        const API = {
+            login: "/api/v1/auth/login",
+            logout: "/api/v1/auth/logout",
+            refresh: "/api/v1/auth/refresh",
+            me: "/api/v1/users/me",
+            stats: "/api/v1/dashboard/stats",
+            announcements: "/api/v1/announcements",
+            tickets: "/api/v1/tickets",
+            employees: "/api/v1/employees",
+            // admin endpoints — hardcoded in JS, hidden from UI but discoverable
+            adminUsers: "/api/v1/admin/users",
+            adminAudit: "/api/v1/admin/audit-log",
+            adminConfig: "/api/v1/admin/config",
+            adminPromote: "/api/v1/admin/users/promote",
+            adminDelete: "/api/v1/admin/users/delete",
+            // internal/debug — should never be in frontend JS
+            debugStatus: "/api/debug/status",
+            internalMetrics: "/api/internal/metrics",
+            featureFlags: "/api/v1/features/flags",
+        };
+
+        // ═══════════════════════════════════════════════════════════════
+        //  HTTP client — all fetch() calls go through here
+        //  These are REAL HTTP requests interceptable by Burp Suite
+        // ═══════════════════════════════════════════════════════════════
+        let _token = null;
+
+        async function http(method, url, body = null) {
+            const headers = {
+                "Content-Type": "application/json",
+                "X-Portal-Version": "3.4.1",
+            };
+            if (_token) headers["Authorization"] = "Bearer " + _token;
+
+            burpLogRequest(method, url, headers, body);
+
+            const opts = { method, headers };
+            if (body) opts.body = JSON.stringify(body);
+
+            try {
+                const res = await fetch(url, opts);
+                const data = await res.json();
+                burpLogResponse(res.status, url, data);
+                return { ok: res.ok, status: res.status, data };
+            } catch (e) {
+                return { ok: false, error: e.message };
+            }
+        }
+
+        const get = (url) => http("GET", url);
+        const post = (url, body) => http("POST", url, body);
+
+        // ═══════════════════════════════════════════════════════════════
+        //  AUTH
+        // ═══════════════════════════════════════════════════════════════
+        let currentUser = null;
+
+        async function doLogin() {
+            const email = document.getElementById("inputEmail").value;
+            const password = document.getElementById("inputPassword").value;
+            const errEl = document.getElementById("loginError");
+            errEl.textContent = "";
+
+            const res = await post(API.login, { email, password });
+            if (res.ok) {
+                _token = res.data.token;
+                currentUser = res.data.user;
+                document.getElementById("loginPage").style.display = "none";
+                document.getElementById("portalPage").classList.add("visible");
+                document.getElementById("scannerOverlay").style.display = "flex";
+                document.getElementById("navUser").textContent = currentUser.name;
+                if (currentUser.role === "admin") {
+                    document.getElementById("adminSidebar").style.display = "block";
+                }
+                renderEndpoints();
+                showSection("dashboard");
+            } else {
+                errEl.textContent = res.data?.error || "Login failed.";
+            }
+        }
+
+        async function doLogout() {
+            await post(API.logout, {});
+            _token = null;
+            currentUser = null;
+            document.getElementById("portalPage").classList.remove("visible");
+            document.getElementById("loginPage").style.display = "flex";
+            document.getElementById("scannerOverlay").style.display = "none";
+        }
+
+        // ═══════════════════════════════════════════════════════════════
+        //  SECTIONS
+        // ═══════════════════════════════════════════════════════════════
+        function showSection(name) {
+            document.querySelectorAll(".nav-links a").forEach(a => a.classList.remove("active"));
+            const navEl = document.getElementById("nav-" + name);
+            if (navEl) navEl.classList.add("active");
+
+            const sections = {
+                dashboard: renderDashboard,
+                directory: renderDirectory,
+                helpdesk: renderHelpdesk,
+                profile: renderProfile,
+                adminPanel: renderAdminPanel,
+            };
+            if (sections[name]) sections[name]();
+        }
+
+        // ── Dashboard ──────────────────────────────────────────────────
+        async function renderDashboard() {
+            const mc = document.getElementById("mainContent");
+            mc.innerHTML = `
+    <div class="page-header">
+      <h1>Good morning, ${currentUser.name.split(" ")[0]} 👋</h1>
+      <p class="page-sub">Here's what's happening at Nexcorp today.</p>
+    </div>
+    <div class="card-grid">
+      <div class="card"><div class="card-icon">📬</div><div class="card-label">Open Tickets</div><div class="card-value" id="c-tickets">—</div></div>
+      <div class="card"><div class="card-icon">👥</div><div class="card-label">Employees</div><div class="card-value" id="c-employees">—</div></div>
+      <div class="card"><div class="card-icon">📢</div><div class="card-label">Announcements</div><div class="card-value" id="c-announcements">—</div></div>
+      <div class="card"><div class="card-icon">🖥️</div><div class="card-label">Assets</div><div class="card-value" id="c-assets">—</div></div>
+    </div>
+    <div class="two-col">
+      <div class="panel"><div class="panel-header">Announcements</div><div class="feed" id="annFeed">Loading...</div></div>
+      <div class="panel"><div class="panel-header">My Tickets</div><div class="feed" id="tkFeed">Loading...</div></div>
+    </div>`;
+
+            const [stats, ann, tk] = await Promise.all([
+                get(API.stats),
+                get(API.announcements),
+                get(API.tickets),
+            ]);
+
+            if (stats.ok) {
+                document.getElementById("c-tickets").textContent = stats.data.tickets;
+                document.getElementById("c-employees").textContent = stats.data.employees;
+                document.getElementById("c-announcements").textContent = stats.data.announcements;
+                document.getElementById("c-assets").textContent = stats.data.assets;
+            }
+            if (ann.ok) {
+                document.getElementById("annFeed").innerHTML = ann.data.map(a =>
+                    `<div class="feed-item"><div class="feed-title">${a.title}</div><div class="feed-meta">${a.author} · ${a.date}</div></div>`
+                ).join("");
+            }
+            if (tk.ok) {
+                document.getElementById("tkFeed").innerHTML = tk.data.length
+                    ? tk.data.map(t =>
+                        `<div class="feed-item"><div class="feed-title">${t.title}</div><div class="feed-meta"><span class="badge badge-${t.status}">${t.status}</span> · ${t.priority} priority</div></div>`
+                    ).join("")
+                    : `<div style="padding:12px;color:#9ca3af;font-size:13px">No open tickets.</div>`;
+            }
+        }
+
+        // ── Directory ──────────────────────────────────────────────────
+        async function renderDirectory() {
+            const mc = document.getElementById("mainContent");
+            mc.innerHTML = `<div class="page-header"><h1>Employee Directory</h1><p class="page-sub">Search Nexcorp employees.</p></div><div class="panel"><div class="panel-header">All Employees</div><div style="padding:12px" id="dirTable">Loading...</div></div>`;
+
+            const res = await get(API.employees);
+            if (!res.ok) { document.getElementById("dirTable").textContent = "Error loading directory."; return; }
+
+            document.getElementById("dirTable").innerHTML = `
+    <table>
+      <thead><tr><th>Name</th><th>Email</th><th>Department</th><th></th></tr></thead>
+      <tbody>${res.data.map(e =>
+                `<tr>
+          <td><strong>${e.name}</strong></td>
+          <td style="color:#6b7280">${e.email}</td>
+          <td>${e.dept}</td>
+          <td><button class="link-btn" onclick="viewEmployee(${e.id})">View Profile</button></td>
+        </tr>`
+            ).join("")}</tbody>
+    </table>`;
+        }
+
+        async function viewEmployee(id) {
+            // VULNERABILITY: IDOR — fetches any employee ID, no object-level check
+            const res = await get(API.employees + "/" + id);
+            if (res.ok) {
+                const mc = document.getElementById("mainContent");
+                mc.innerHTML = `
+      <div class="page-header">
+        <h1>👤 ${res.data.name}</h1>
+        <p class="page-sub">Employee profile — <button class="link-btn" onclick="renderDirectory()">← Back to directory</button></p>
+      </div>
+      <div class="panel">
+        <div class="panel-header">Profile Data <span style="font-size:11px;color:#dc2626;font-weight:400">(full DB row returned — excessive data exposure)</span></div>
+        <div class="response-box">${JSON.stringify(res.data, null, 2)}</div>
+      </div>`;
+            }
+        }
+
+        // ── Helpdesk ───────────────────────────────────────────────────
+        async function renderHelpdesk() {
+            const mc = document.getElementById("mainContent");
+            mc.innerHTML = `<div class="page-header"><h1>🎫 Helpdesk</h1><p class="page-sub">Your support tickets.</p></div><div class="panel"><div class="panel-header">My Tickets</div><div style="padding:12px" id="tkTable">Loading...</div></div>`;
+
+            const res = await get(API.tickets);
+            if (!res.ok) { document.getElementById("tkTable").textContent = "Error."; return; }
+
+            document.getElementById("tkTable").innerHTML = res.data.length
+                ? `<table><thead><tr><th>#</th><th>Title</th><th>Priority</th><th>Status</th><th>Created</th></tr></thead><tbody>
+        ${res.data.map(t =>
+                    `<tr><td style="color:#9ca3af">${t.id}</td><td>${t.title}</td><td>${t.priority}</td><td><span class="badge badge-${t.status}">${t.status}</span></td><td>${t.created}</td></tr>`
+                ).join("")}
+      </tbody></table>`
+                : `<p style="color:#9ca3af;font-size:13px;padding:8px">No tickets found.</p>`;
+        }
+
+        // ── Profile ────────────────────────────────────────────────────
+        async function renderProfile() {
+            const mc = document.getElementById("mainContent");
+            mc.innerHTML = `<div class="page-header"><h1>👤 My Profile</h1></div><div class="panel"><div class="panel-header">Account</div><div class="response-box" id="profileBox">Loading...</div></div>`;
+            const res = await get(API.me);
+            document.getElementById("profileBox").textContent = JSON.stringify(res.data, null, 2);
+        }
+
+        // ── Admin Panel ────────────────────────────────────────────────
+        function renderAdminPanel() {
+            document.getElementById("mainContent").innerHTML = `
+    <div class="page-header"><h1>⚙️ Admin Panel</h1><p class="page-sub">Vulnerable admin endpoints — discovered via GoLinkFinder.</p></div>
+    <div class="endpoint-grid">
+      <button class="btn-action" onclick="callAdmin('users')">👥 List All Users<small>GET /api/v1/admin/users</small></button>
+      <button class="btn-action" onclick="callAdmin('audit')">📋 Audit Log<small>GET /api/v1/admin/audit-log</small></button>
+      <button class="btn-action" onclick="callAdmin('config')">⚙️ Server Config<small>GET /api/v1/admin/config</small></button>
+      <button class="btn-action" onclick="callAdmin('debug')">🐛 Debug Status<small>GET /api/debug/status</small></button>
+      <button class="btn-action" onclick="callAdmin('metrics')">📊 Internal Metrics<small>GET /api/internal/metrics</small></button>
+      <button class="btn-action danger" onclick="callAdmin('promote')">🔑 Promote Self to Admin<small>POST /api/v1/admin/users/promote</small></button>
+    </div>
+    <div class="panel"><div class="panel-header">Response</div><div class="response-box" id="adminResp">Click an endpoint above...</div></div>`;
+        }
+
+        async function callAdmin(type) {
+            const el = document.getElementById("adminResp");
+            el.textContent = "Loading...";
+            let res;
+            if (type === "users") res = await get(API.adminUsers);
+            if (type === "audit") res = await get(API.adminAudit);
+            if (type === "config") res = await get(API.adminConfig);
+            if (type === "debug") res = await get(API.debugStatus);
+            if (type === "metrics") res = await get(API.internalMetrics);
+            if (type === "promote") res = await post(API.adminPromote, { userId: currentUser.id, role: "admin" });
+            el.textContent = JSON.stringify(res.data, null, 2);
+        }
+
+        // ═══════════════════════════════════════════════════════════════
+        //  SCANNER PANEL
+        // ═══════════════════════════════════════════════════════════════
+        const ENDPOINTS = [
+            { method: "POST", url: "/api/v1/auth/login", auth: true, vuln: false },
+            { method: "POST", url: "/api/v1/auth/logout", auth: true, vuln: false },
+            { method: "GET", url: "/api/v1/users/me", auth: true, vuln: false },
+            { method: "GET", url: "/api/v1/dashboard/stats", auth: true, vuln: false },
+            { method: "GET", url: "/api/v1/announcements", auth: true, vuln: false },
+            { method: "GET", url: "/api/v1/tickets", auth: true, vuln: false },
+            { method: "GET", url: "/api/v1/employees", auth: true, vuln: false },
+            { method: "GET", url: "/api/v1/employees/:id", auth: true, vuln: true, note: "IDOR — no object-level auth check" },
+            { method: "GET", url: "/api/v1/admin/users", auth: true, vuln: true, note: "Role not verified — any employee can call this" },
+            { method: "GET", url: "/api/v1/admin/audit-log", auth: false, vuln: true, note: "No authentication at all" },
+            { method: "GET", url: "/api/v1/admin/config", auth: false, vuln: true, note: "Unauthenticated + returns DB creds and JWT secret" },
+            { method: "POST", url: "/api/v1/admin/users/promote", auth: true, vuln: true, note: "Token checked, role not verified" },
+            { method: "GET", url: "/api/debug/status", auth: false, vuln: true, note: "Debug route active in production" },
+            { method: "GET", url: "/api/internal/metrics", auth: false, vuln: true, note: "Internal endpoint on public network" },
+        ];
+
+        function renderEndpoints() {
+            const el = document.getElementById("tab-endpoints");
+            const vulns = ENDPOINTS.filter(e => e.vuln).length;
+            el.innerHTML = `<div style="color:#6e7681;margin-bottom:10px">Found <strong style="color:#c9d1d9">${ENDPOINTS.length}</strong> endpoints — <strong style="color:#f85149">${vulns} vulnerable</strong></div>`
+                + ENDPOINTS.map(e => `
+      <div class="ep-row">
+        <span class="ep-method ep-${e.method}">${e.method}</span>
+        <div style="flex:1">
+          <span class="ep-url">${e.url}</span>
+          ${e.note ? `<div style="font-size:10px;color:#f85149;margin-top:2px">⚠ ${e.note}</div>` : ""}
+        </div>
+        <span class="ep-tag ${e.auth ? 'ep-authed' : 'ep-unauth'}">${e.auth ? "auth" : "NO AUTH"}</span>
+      </div>`
+                ).join("");
+        }
+
+        function burpLogRequest(method, url, headers, body) {
+            const log = document.getElementById("burpLog");
+            if (!log) return;
+            const vuln = ENDPOINTS.find(e => url.includes(e.url.replace("/:id", "")) && e.vuln);
+            const div = document.createElement("div");
+            div.className = "burp-entry";
+            div.innerHTML = `
+    <div class="burp-line"><span style="color:#6e7681">${new Date().toLocaleTimeString()}</span> <span class="burp-req">${method} ${url}</span></div>
+    <div class="burp-line" style="color:#6e7681">  Authorization: ${headers["Authorization"] || "(none)"}</div>
+    ${body ? `<div class="burp-line" style="color:#6e7681">  Body: ${JSON.stringify(body)}</div>` : ""}
+    ${vuln ? `<div class="burp-line burp-vuln">  ⚠ VULN: ${vuln.note}</div>` : ""}`;
+            log.prepend(div);
+        }
+
+        function burpLogResponse(status, url, data) {
+            const log = document.getElementById("burpLog");
+            if (!log) return;
+            const flag = JSON.stringify(data).match(/DIABLE\{[^}]+\}/);
+            if (flag) {
+                const div = document.createElement("div");
+                div.className = "burp-entry";
+                div.innerHTML = `<div class="burp-line burp-flag">  🚩 FLAG FOUND: ${flag[0]}</div>`;
+                log.prepend(div);
+            }
+        }
+
+        function toggleScanner() {
+            document.getElementById("scannerPanel").classList.toggle("open");
+        }
+
+        function switchTab(btn, tabId) {
+            document.querySelectorAll(".stab").forEach(t => t.classList.remove("active"));
+            document.querySelectorAll(".stab-content").forEach(t => t.classList.remove("active"));
+            btn.classList.add("active");
+            document.getElementById(tabId).classList.add("active");
+        }
+    </script>
+</body>
+
+</html>
