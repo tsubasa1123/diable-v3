@@ -1,0 +1,38 @@
+# Git
+.git
+.gitignore
+
+# Python
+venv/
+__pycache__/
+*.pyc
+
+# Java / Gradle
+.gradle/
+build/
+*.class
+
+# Logs
+*.log
+
+# OS
+.DS_Store
+
+# Docker
+docker-compose.yml
+
+# IDE
+.vscode/
+.idea/
+
+# Screenshots
+*.png
+
+# Cache
+node_modules/
+
+# Marshalsec build
+marshalsec/target/
+
+# Attacker sources inutiles en build
+attacker-webserver/*.java
