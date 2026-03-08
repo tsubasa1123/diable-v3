@@ -36,7 +36,30 @@ build_one() {
         return 1
     fi
 
-    # Cas 1 — Dockerfile présent → build local
+    # Cas 1 — docker-compose.yml présent → priorité absolue
+    # Couvre les labs multi-conteneurs même s'ils ont aussi un Dockerfile
+    # (ex: log4shell a Dockerfile + Dockerfile.ldap + docker-compose.yml)
+    if [ -f "$path/docker-compose.yml" ]; then
+        echo "[...] Pré-build des images compose pour $lab..."
+        # Variables factices pour satisfaire Docker Compose pendant le build
+        # Aucun impact sur les images — juste pour éviter les erreurs "variable non définie"
+        if USER_ID=0 \
+           LAB_PORT=9999 \
+           VULN_PORT=9998 \
+           VICTIM_PORT=9997 \
+           N8N_PORT=9996 \
+           docker compose -f "$path/docker-compose.yml" build; then
+            ok "$lab — toutes les images compose buildées"
+            ((COUNT_BUILD++))
+        else
+            err "Échec du build compose : $lab"
+            ((COUNT_ERROR++))
+            return 1
+        fi
+        return 0
+    fi
+
+    # Cas 2 — Dockerfile seul → build simple (single container)
     if [ -f "$path/Dockerfile" ]; then
         echo "[...] Build de sec-lab-$lab..."
         if docker build -t "sec-lab-$lab" "$path"; then
@@ -50,7 +73,7 @@ build_one() {
         return 0
     fi
 
-    # Cas 2 — Fichier .image présent → pull depuis Docker Hub
+    # Cas 3 — Fichier .image présent → pull depuis Docker Hub
     if [ -f "$path/.image" ]; then
         local image
         image=$(cat "$path/.image" | tr -d '[:space:]')
@@ -60,22 +83,6 @@ build_one() {
             ((COUNT_PULL++))
         else
             err "Échec du pull : $image"
-            ((COUNT_ERROR++))
-            return 1
-        fi
-        return 0
-    fi
-
-    # Cas 3 — docker-compose.yml présent → pré-builder toutes les images via compose
-    # Couvre les labs multi-conteneurs : log4shell (Dockerfile.vulnerable + Dockerfile.ldap),
-    # n8n, nosql-injection, mitm-attack, etc.
-    if [ -f "$path/docker-compose.yml" ]; then
-        echo "[...] Pré-build des images compose pour $lab..."
-        if docker compose -f "$path/docker-compose.yml" build; then
-            ok "$lab — toutes les images compose buildées"
-            ((COUNT_BUILD++))
-        else
-            err "Échec du build compose : $lab"
             ((COUNT_ERROR++))
             return 1
         fi

@@ -8,7 +8,7 @@ services:
       - internal
     volumes:
       - ./init-mongo.js:/docker-entrypoint-initdb.d/init-mongo.js:ro
-      - mongodb-data-user-${USER_ID}:/data/db 
+      - mongodb-data:/data/db   # ← volume anonyme, préfixé par le projet
 
   app:
     image: diable/nosql-injection-lab:latest
@@ -34,5 +34,4 @@ networks:
     name: lab-network
 
 volumes:
-  mongodb-data-user-${USER_ID}:
-    name: mongodb-data-user-${USER_ID}
+  mongodb-data:   # ← simple, Docker le préfixe automatiquement avec le nom du projet

@@ -14,7 +14,7 @@ public class MainController {
     private static final Logger logger = LogManager.getLogger("HelloWorld");
 
     @GetMapping("/")
-    public String index(@RequestHeader("X-Api-Version") String apiVersion) {
+    public String index(@RequestHeader(value="X-Api-Version", required=false) String apiVersion) {
         logger.info("Received a request for API version " + apiVersion);
         return "Hello, world!";
     }

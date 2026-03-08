@@ -1,7 +1,7 @@
 FROM node:20-alpine
 
-# Installer Docker CLI pour piloter le daemon Docker de l'hôte
-RUN apk add --no-cache docker-cli
+# Installer Docker CLI + plugin compose
+RUN apk add --no-cache docker-cli docker-cli-compose
 
 WORKDIR /app
 

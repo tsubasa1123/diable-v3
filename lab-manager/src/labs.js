@@ -79,18 +79,22 @@ const LABS = {
     'jwt-lab': {
         id: 'jwt-lab',
         title: 'Jwt lab',
-        portSuffix: 10,           // 8[user_id][suffix] → ex: user 5 = port 8051
+        portSuffix: 10,           // 10[user_id][suffix] → ex: user 5 = port 8051
         composeDir: 'jwt-lab',       // sous-dossier dans LABS_DIR
         exercises: 4,
         internalPort: 3000
     },
-    'log4shell-dockerlab-main-vulnerable': {
-        id: 'log4shell-dockerlab-main-vulnerable',
+    'log4shell-dockerlab-main': {
+        id: 'log4shell-dockerlab-main',
         title: 'Log4Shell (CVE-2021-44228)',
         portSuffix: 11,
-        composeDir: 'log4shell-dockerlab-main-vulnerable',
+        composeDir: 'log4shell-dockerlab-main',
         exercises: 3,
         compose: true,   // http://IP:8071 un IP, serveur vulnerable
+        internalPort: 5000,
+        extraPorts: {
+            vulnerable: 1,
+        },
     },
     'mitm-attack-lab': {
         id: 'mitm-attack-lab',
@@ -234,7 +238,7 @@ function getPort(userId, labId) {
  * Ex : lab-xss-user-42
  */
 function getContainerName(userId, labId) {
-    return `lab-${labId}-user-${userId}`;
+    return `${labId}-u-${userId}`;
 }
 
 module.exports = { LABS, getPort, getContainerName };

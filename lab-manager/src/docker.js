@@ -1,15 +1,16 @@
 // src/docker.js
 const Dockerode = require('dockerode');
 const path = require('path');
-const { execSync } = require('child_process');
-const fs = require('fs');
 const { LABS, getPort, getContainerName } = require('./labs');
 
 const docker = new Dockerode({ socketPath: '/var/run/docker.sock' });
-const LABS_DIR = process.env.LABS_DIR || '../labs';
+const LABS_DIR = process.env.LABS_DIR || '../../attacks';
 const NETWORK = process.env.DOCKER_NETWORK || 'lab-network';
 const BASE_HOST = process.env.BASE_HOST || 'localhost';
 
+const { execFileSync } = require('child_process');
+const fs = require('fs');
+const DOCKER_BIN = process.env.DOCKER_BIN || '/usr/bin/docker';
 
 async function waitForPort(port, retries = 15, delayMs = 2000) {
     const net = require('net');
@@ -43,9 +44,12 @@ async function waitForPort(port, retries = 15, delayMs = 2000) {
 async function spawnLab(userId, labId) {
     const lab = LABS[labId];
     const labPath = path.join(LABS_DIR, lab.composeDir);
-    const hasCompose = fs.existsSync(path.join(labPath, 'docker-compose.yml'));
 
-    if (hasCompose) return spawnComposeLab(userId, labId, labPath);
+    console.log(`[Docker] labId     = ${labId}`);
+    console.log(`[Docker] lab.compose   = ${lab.compose}`);
+    console.log(`[Docker] labPath   = ${labPath}`);
+
+    if (lab.compose) return spawnComposeLab(userId, labId, labPath);
     return spawnSingleLab(userId, labId);
 }
 
@@ -102,7 +106,17 @@ async function spawnComposeLab(userId, labId, labPath) {
 
     console.log(`[Docker] Compose spawn : ${containerName} → port ${port}`);
 
-    const env = { ...process.env, USER_ID: String(userId), LAB_PORT: String(port) };
+    console.log(`[Docker] labPath absolu = ${path.resolve(labPath)}`);
+    console.log(`[Docker] DOCKER_BIN = ${DOCKER_BIN}`);
+    console.log(`[Docker] cwd existe = ${fs.existsSync(labPath)}`)
+
+    const env = {
+        ...process.env,
+        PATH: '/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin',
+        USER_ID: String(userId),
+        LAB_PORT: String(port),
+        VULN_PORT: String(port)
+    };
     const urls = { main: buildUrl(port) };
 
     if (lab.extraPorts) {
@@ -112,9 +126,9 @@ async function spawnComposeLab(userId, labId, labPath) {
         }
     }
 
-    execSync(
-        // ← retirer --build car images déjà buildées par build_lab.sh
-        `docker compose -p ${containerName} up -d`,
+    execFileSync(
+        DOCKER_BIN,
+        ['compose', '-p', containerName, 'up', '-d'],
         { cwd: labPath, env }
     );
 
@@ -137,10 +151,8 @@ async function spawnComposeLab(userId, labId, labPath) {
 
 async function destroyLab(userId, labId) {
     const lab = LABS[labId];
-    const labPath = path.join(LABS_DIR, lab.composeDir);
-    const hasCompose = fs.existsSync(path.join(labPath, 'docker-compose.yml'));
 
-    if (hasCompose) return destroyComposeLab(userId, labId);
+    if (lab.compose) return destroyComposeLab(userId, labId);
 
     const containerName = getContainerName(userId, labId);
     const container = await findContainer(containerName);
@@ -161,8 +173,9 @@ async function destroyComposeLab(userId, labId) {
     const labPath = path.join(LABS_DIR, lab.composeDir);
     const containerName = getContainerName(userId, labId);
 
-    execSync(
-        `docker compose -p ${containerName} down --remove-orphans --volumes`,
+    execFileSync(
+        DOCKER_BIN,
+        ['compose', '-p', containerName, 'down', '--remove-orphans', '--volumes'],
         { cwd: labPath }
     );
 
@@ -173,6 +186,11 @@ async function destroyComposeLab(userId, labId) {
 // ── Status ────────────────────────────────────────────────────────────
 
 async function getLabStatus(userId, labId) {
+    const lab = LABS[labId];
+
+    if (lab.compose) return getComposeLabStatus(userId, labId);
+
+    // Cas single container
     const containerName = getContainerName(userId, labId);
     const container = await findContainer(containerName);
 
@@ -186,6 +204,47 @@ async function getLabStatus(userId, labId) {
         url: buildUrl(getPort(userId, labId)),
         startedAt: info.State.StartedAt,
     };
+}
+
+async function getComposeLabStatus(userId, labId) {
+    const projectName = `${labId}-u${userId}`;
+
+    try {
+        const result = execFileSync(
+            DOCKER_BIN,
+            ['compose', '-p', projectName, 'ps', '--format', 'json'],
+            { cwd: labPath, encoding: 'utf8' }
+        );
+
+        // Docker retourne un JSON par ligne
+        const containers = result.trim().split('\n')
+            .filter(Boolean)
+            .map(line => {
+                try { return JSON.parse(line); }
+                catch (e) { return null; }
+            })
+            .filter(Boolean);
+
+        if (containers.length === 0) return { running: false };
+
+        const anyRunning = containers.some(c =>
+            c.State === 'running' || c.Status?.startsWith('Up')
+        );
+        const allRunning = containers.every(c =>
+            c.State === 'running' || c.Status?.startsWith('Up')
+        );
+
+        return {
+            running: anyRunning,
+            allHealthy: allRunning,
+            port: getPort(userId, labId),
+            url: buildUrl(getPort(userId, labId)),
+        };
+
+    } catch (e) {
+        // Le projet compose n'existe pas ou erreur
+        return { running: false };
+    }
 }
 
 // ── Cleanup ───────────────────────────────────────────────────────────

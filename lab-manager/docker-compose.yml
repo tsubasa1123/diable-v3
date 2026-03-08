@@ -7,10 +7,10 @@ services:
     ports:
       - "3000:3000"
     volumes:
-      - ./data:/app/data                           # Persistance SQLite
-      #- /var/run/docker.sock:/var/run/docker.sock  # Accès au daemon Docker de l'hôte (ubuntu)
-      - //var/run/docker.sock:/var/run/docker.sock #windows à modifier
-      - ../labs:/opt/labs:ro       # Labs en lecture seule
+      - ./data:/app/data
+      - //var/run/docker.sock:/var/run/docker.sock  # Windows
+      #- /var/run/docker.sock:/var/run/docker.sock  # Ubuntu
+      - ../attacks:/attacks:ro                       # ← corrigé
     env_file:
       - .env
     restart: unless-stopped
@@ -19,6 +19,5 @@ services:
 
 networks:
   lab-network:
+    external: true   # ← juste external, pas de driver/name
     name: lab-network
-    driver: bridge
-    external: true  # Réseau partagé avec les conteneurs labs
