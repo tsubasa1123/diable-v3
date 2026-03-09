@@ -1,2 +1,6 @@
 lab-manager/.env
 lab-manager/data/sessions.db
+attacks/blind-sqli/venv/
+attacks/blind-sqli/__pycache__/
+attacks/blind-sqli/*.pyc
+attacks/blind-sqli/users.db
