@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Blind SQLi Lab</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --green: #00ff88;
+    --green-dim: #00cc66;
+    --green-glow: rgba(0,255,136,0.3);
+    --red: #ff3366;
+    --bg: #050d0a;
+    --panel: #081510;
+    --border: #0f3022;
+    --text: #a0ffcc;
+    --muted: #2a5c42;
+    --font-mono: 'Share Tech Mono', monospace;
+    --font-display: 'Orbitron', sans-serif;
+  }
+
+  body {
+    font-family: var(--font-mono);
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    position: relative;
+  }
+
+  /* Scanline overlay */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(0,0,0,0.08) 2px,
+      rgba(0,0,0,0.08) 4px
+    );
+    pointer-events: none;
+    z-index: 100;
+  }
+
+  /* Matrix rain canvas */
+  #matrix-canvas {
+    position: fixed;
+    inset: 0;
+    opacity: 0.07;
+    z-index: 0;
+  }
+
+  .container {
+    position: relative;
+    z-index: 10;
+    width: 480px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-top: 2px solid var(--green);
+    padding: 0;
+    box-shadow:
+      0 0 40px rgba(0,255,136,0.08),
+      0 0 80px rgba(0,255,136,0.03),
+      inset 0 1px 0 rgba(0,255,136,0.1);
+    animation: fadeIn 0.8s ease forwards;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Top bar */
+  .topbar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 16px;
+    background: #060f0b;
+    border-bottom: 1px solid var(--border);
+    font-size: 11px;
+    color: var(--muted);
+  }
+
+  .dot {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+  }
+  .dot.red   { background: #ff4444; box-shadow: 0 0 4px #ff4444; }
+  .dot.yellow{ background: #ffcc00; box-shadow: 0 0 4px #ffcc00; }
+  .dot.green { background: var(--green); box-shadow: 0 0 4px var(--green); }
+
+  .topbar span { margin-left: auto; letter-spacing: 1px; }
+
+  /* Content */
+  .content { padding: 32px 36px 36px; }
+
+  .badge {
+    display: inline-block;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: var(--green);
+    border: 1px solid var(--green);
+    padding: 3px 10px;
+    margin-bottom: 16px;
+    text-transform: uppercase;
+    animation: blink-border 2s infinite;
+  }
+
+  @keyframes blink-border {
+    0%, 100% { border-color: var(--green); }
+    50% { border-color: var(--green-dim); }
+  }
+
+  h1 {
+    font-family: var(--font-display);
+    font-size: 20px;
+    font-weight: 900;
+    letter-spacing: 2px;
+    color: #fff;
+    text-shadow: 0 0 20px var(--green-glow);
+    margin-bottom: 6px;
+    text-transform: uppercase;
+  }
+
+  .subtitle {
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 1px;
+    margin-bottom: 28px;
+  }
+
+  .subtitle::before { content: '> '; color: var(--green); }
+
+  /* Input group */
+  .input-group {
+    position: relative;
+    margin-bottom: 16px;
+  }
+
+  .input-label {
+    display: block;
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: var(--muted);
+    margin-bottom: 8px;
+    text-transform: uppercase;
+  }
+
+  .input-wrapper {
+    display: flex;
+    align-items: center;
+    border: 1px solid var(--border);
+    background: #040c08;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+
+  .input-wrapper:focus-within {
+    border-color: var(--green);
+    box-shadow: 0 0 0 3px rgba(0,255,136,0.07), inset 0 0 12px rgba(0,255,136,0.04);
+  }
+
+  .input-prefix {
+    padding: 0 12px;
+    color: var(--green);
+    font-size: 14px;
+    user-select: none;
+  }
+
+  input[type="text"] {
+    flex: 1;
+    background: transparent;
+    border: none;
+    outline: none;
+    padding: 12px 12px 12px 0;
+    font-family: var(--font-mono);
+    font-size: 14px;
+    color: var(--green);
+    caret-color: var(--green);
+  }
+
+  input::placeholder { color: var(--muted); }
+
+  /* Button */
+  button[type="submit"] {
+    width: 100%;
+    padding: 13px;
+    background: transparent;
+    border: 1px solid var(--green);
+    color: var(--green);
+    font-family: var(--font-display);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    transition: color 0.2s, box-shadow 0.2s;
+    margin-top: 8px;
+  }
+
+  button[type="submit"]::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: var(--green);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.25s ease;
+    z-index: -1;
+  }
+
+  button[type="submit"]:hover {
+    color: #000;
+    box-shadow: 0 0 20px var(--green-glow);
+  }
+
+  button[type="submit"]:hover::before { transform: scaleX(1); }
+
+  /* Result */
+  .result {
+    margin-top: 24px;
+    border: 1px solid var(--border);
+    background: #040c08;
+    padding: 14px 16px;
+    font-size: 13px;
+    min-height: 48px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--text);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .result::before {
+    content: '//';
+    color: var(--muted);
+    font-size: 12px;
+    flex-shrink: 0;
+  }
+
+  .result.success { border-color: var(--green); color: var(--green); }
+  .result.error   { border-color: var(--red);   color: var(--red);   }
+
+  /* Footer */
+  .footer {
+    padding: 10px 36px 18px;
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 1px;
+    display: flex;
+    justify-content: space-between;
+  }
+
+  .footer .status-dot {
+    display: inline-block;
+    width: 6px; height: 6px;
+    background: var(--green);
+    border-radius: 50%;
+    margin-right: 6px;
+    animation: pulse 1.5s infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+</style>
+</head>
+<body>
+
+<canvas id="matrix-canvas"></canvas>
+
+<div class="container">
+  <div class="topbar">
+    <span class="dot red"></span>
+    <span class="dot yellow"></span>
+    <span class="dot green"></span>
+    <span>blind_sqli_lab v1.0 — localhost:5000</span>
+  </div>
+
+  <div class="content">
+    <div class="badge">⚡ Lab Actif</div>
+    <h1>Blind SQLi</h1>
+    <p class="subtitle">Injection SQL aveugle — environnement isolé</p>
+
+    <form method="POST">
+      <div class="input-group">
+        <label class="input-label" for="username">Paramètre cible</label>
+        <div class="input-wrapper">
+          <span class="input-prefix">›_</span>
+          <input type="text" id="username" name="username" placeholder="Entrer un username..." autocomplete="off">
+        </div>
+      </div>
+      <button type="submit">Exécuter la requête</button>
+    </form>
+
+    <div class="result">
+      {{ message }}
+    </div>
+  </div>
+
+  <div class="footer">
+    <span><span class="status-dot"></span>SYSTÈME OPÉRATIONNEL</span>
+    <span>PENTESTING ENV</span>
+  </div>
+</div>
+
+<script>
+// Matrix rain background
+const canvas = document.getElementById('matrix-canvas');
+const ctx = canvas.getContext('2d');
+
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
+
+const chars = '01アイウエオカキクケコサシスセソタチツテトナニヌネノ';
+const fontSize = 13;
+const cols = Math.floor(canvas.width / fontSize);
+const drops = Array(cols).fill(1);
+
+function drawMatrix() {
+  ctx.fillStyle = 'rgba(5,13,10,0.05)';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.fillStyle = '#00ff88';
+  ctx.font = fontSize + 'px Share Tech Mono';
+  drops.forEach((y, i) => {
+    const char = chars[Math.floor(Math.random() * chars.length)];
+    ctx.fillText(char, i * fontSize, y * fontSize);
+    if (y * fontSize > canvas.height && Math.random() > 0.975) drops[i] = 0;
+    drops[i]++;
+  });
+}
+setInterval(drawMatrix, 60);
+
+window.addEventListener('resize', () => {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+});
+</script>
+</body>
+</html>
