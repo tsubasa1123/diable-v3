@@ -1,0 +1,1 @@
+FLAG=DIABLE{CVE_2014_6287_null_byte_macro_injection_pwned}

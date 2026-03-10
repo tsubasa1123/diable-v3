@@ -660,7 +660,7 @@
       <!-- Config -->
       <div class="config-panel">
         <label>API URL</label>
-        <input type="text" id="cfg-url" value="http://localhost:3000" placeholder="http://localhost:3000">
+        <input type="text" id="cfg-url" value="http://localhost:4000" placeholder="http://localhost:4000">
         <label>X-API-Key</label>
         <input type="text" id="cfg-key" value="" placeholder="ta_cle_api">
       </div>
@@ -668,19 +668,19 @@
       <div class="sidebar-section">Endpoints</div>
 
       <button class="endpoint-btn active" onclick="showSection('health')">
-        <span class="method get">GET</span> /api/health
+        <span class="method get">GET</span> /api-lab/health
       </button>
       <button class="endpoint-btn" onclick="showSection('labs')">
-        <span class="method get">GET</span> /api/labs
+        <span class="method get">GET</span> /api-lab/labs
       </button>
       <button class="endpoint-btn" onclick="showSection('spawn')">
-        <span class="method post">POST</span> /api/spawn
+        <span class="method post">POST</span> /api-lab/spawn
       </button>
       <button class="endpoint-btn" onclick="showSection('status')">
-        <span class="method get">GET</span> /api/status
+        <span class="method get">GET</span> /api-lab/status
       </button>
       <button class="endpoint-btn" onclick="showSection('destroy')">
-        <span class="method post">POST</span> /api/destroy
+        <span class="method post">POST</span> /api-lab/destroy
       </button>
 
       <div class="sidebar-section" style="margin-top:auto;">Scénario complet</div>
@@ -697,7 +697,7 @@
 
       <!-- ── HEALTH ── -->
       <div id="section-health" class="section active">
-        <div class="section-title"><span class="method get">GET</span> /api/health <span
+        <div class="section-title"><span class="method get">GET</span> /api-lab/health <span
             style="color:var(--muted);font-size:.75em;font-weight:400;">— Vérifie que le service tourne</span></div>
 
         <div class="panel">
@@ -741,7 +741,7 @@
 
       <!-- ── LABS ── -->
       <div id="section-labs" class="section">
-        <div class="section-title"><span class="method get">GET</span> /api/labs <span
+        <div class="section-title"><span class="method get">GET</span> /api-lab/labs <span
             style="color:var(--muted);font-size:.75em;font-weight:400;">— Liste des labs disponibles</span></div>
 
         <div class="panel">
@@ -764,7 +764,7 @@
 
       <!-- ── SPAWN ── -->
       <div id="section-spawn" class="section">
-        <div class="section-title"><span class="method post">POST</span> /api/spawn <span
+        <div class="section-title"><span class="method post">POST</span> /api-lab/spawn <span
             style="color:var(--muted);font-size:.75em;font-weight:400;">— Démarrer un lab</span></div>
 
         <div class="panel">
@@ -781,12 +781,32 @@
               <div class="field">
                 <label>lab</label>
                 <select id="spawn-lab">
-                  <option value="xss-lab">xss</option>
-                  <option value="sqli-lab">sqli</option>
-                  <option value="xpath-lab">xpath</option>
+                  <option value="app-cve-2025-68613">app-cve-2025-68613</option>
+                  <option value="app-idor">app-idor</option>
+                  <option value="app-mfa-bypass">app-mfa-bypass</option>
+                  <option value="broken-auth-lab">broken-auth-lab</option>
+                  <option value="csrf">csrf</option>
+                  <option value="email_header_injection">email_header_injection</option>
+                  <option value="file-upload-lab">file-upload-lab</option>
+                  <option value="graphql-lab">graphql-lab</option>
+                  <option value="heartbleed-lab">heartbleed-lab</option>
+                  <option value="injection_sql_temporell">injection_sql_temporell</option>
+                  <option value="jwt-lab">jwt-lab</option>
+                  <option value="log4shell-dockerlab-main">log4shell-dockerlab-main</option>
+                  <option value="mitm-attack-lab">mitm-attack-lab</option>
+                  <option value="nosql-injection-lab">nosql-injection-lab</option>
+                  <option value="path-traversal-lab">path-traversal-lab</option>
                   <option value="phishing">phishing</option>
-                  <option value="nosql-injection-lab">nosql injection</option>
-                  <option value="path-traversal-lab">path traversal</option>
+                  <option value="shellshock">shellshock</option>
+                  <option value="sqli-auth-lab">sqli-auth-lab</option>
+                  <option value="sqli-error-based-lab">sqli-error-based-lab</option>
+                  <option value="sqli-lab">sqli-lab</option>
+                  <option value="ssrf">ssrf</option>
+                  <option value="xpath-lab">xpath-lab</option>
+                  <option value="xss-lab">xss-lab</option>
+                  <option value="xxe-lab">xxe-lab</option>
+                  <option value="api_scanning">api_scanning</option>
+                  <option value="blind-sqli">blind-sqli</option>
                 </select>
               </div>
             </div>
@@ -820,7 +840,7 @@
 
       <!-- ── STATUS ── -->
       <div id="section-status" class="section">
-        <div class="section-title"><span class="method get">GET</span> /api/status <span
+        <div class="section-title"><span class="method get">GET</span> /api-lab/status <span
             style="color:var(--muted);font-size:.75em;font-weight:400;">— Vérifier si un lab tourne</span></div>
 
         <div class="panel">
@@ -836,12 +856,32 @@
               <div class="field">
                 <label>lab</label>
                 <select id="status-lab">
-                  <option value="xss-lab">xss</option>
-                  <option value="sqli-lab">sqli</option>
-                  <option value="xpath-lab">xpath</option>
+                  <option value="app-cve-2025-68613">app-cve-2025-68613</option>
+                  <option value="app-idor">app-idor</option>
+                  <option value="app-mfa-bypass">app-mfa-bypass</option>
+                  <option value="broken-auth-lab">broken-auth-lab</option>
+                  <option value="csrf">csrf</option>
+                  <option value="email_header_injection">email_header_injection</option>
+                  <option value="file-upload-lab">file-upload-lab</option>
+                  <option value="graphql-lab">graphql-lab</option>
+                  <option value="heartbleed-lab">heartbleed-lab</option>
+                  <option value="injection_sql_temporell">injection_sql_temporell</option>
+                  <option value="jwt-lab">jwt-lab</option>
+                  <option value="log4shell-dockerlab-main">log4shell-dockerlab-main</option>
+                  <option value="mitm-attack-lab">mitm-attack-lab</option>
+                  <option value="nosql-injection-lab">nosql-injection-lab</option>
+                  <option value="path-traversal-lab">path-traversal-lab</option>
                   <option value="phishing">phishing</option>
-                  <option value="nosql-injection-lab">nosql injection</option>
-                  <option value="path-traversal-lab">path traversal</option>
+                  <option value="shellshock">shellshock</option>
+                  <option value="sqli-auth-lab">sqli-auth-lab</option>
+                  <option value="sqli-error-based-lab">sqli-error-based-lab</option>
+                  <option value="sqli-lab">sqli-lab</option>
+                  <option value="ssrf">ssrf</option>
+                  <option value="xpath-lab">xpath-lab</option>
+                  <option value="xss-lab">xss-lab</option>
+                  <option value="xxe-lab">xxe-lab</option>
+                  <option value="api_scanning">api_scanning</option>
+                  <option value="blind-sqli">blind-sqli</option>
                 </select>
               </div>
             </div>
@@ -863,7 +903,7 @@
 
       <!-- ── DESTROY ── -->
       <div id="section-destroy" class="section">
-        <div class="section-title"><span class="method post">POST</span> /api/destroy <span
+        <div class="section-title"><span class="method post">POST</span> /api-lab/destroy <span
             style="color:var(--muted);font-size:.75em;font-weight:400;">— Arrêter un lab</span></div>
 
         <div class="panel">
@@ -876,12 +916,32 @@
               <div class="field">
                 <label>lab</label>
                 <select id="destroy-lab">
-                  <option value="xss-lab">xss</option>
-                  <option value="sqli-lab">sqli</option>
-                  <option value="xpath-lab">xpath</option>
+                  <option value="app-cve-2025-68613">app-cve-2025-68613</option>
+                  <option value="app-idor">app-idor</option>
+                  <option value="app-mfa-bypass">app-mfa-bypass</option>
+                  <option value="broken-auth-lab">broken-auth-lab</option>
+                  <option value="csrf">csrf</option>
+                  <option value="email_header_injection">email_header_injection</option>
+                  <option value="file-upload-lab">file-upload-lab</option>
+                  <option value="graphql-lab">graphql-lab</option>
+                  <option value="heartbleed-lab">heartbleed-lab</option>
+                  <option value="injection_sql_temporell">injection_sql_temporell</option>
+                  <option value="jwt-lab">jwt-lab</option>
+                  <option value="log4shell-dockerlab-main">log4shell-dockerlab-main</option>
+                  <option value="mitm-attack-lab">mitm-attack-lab</option>
+                  <option value="nosql-injection-lab">nosql-injection-lab</option>
+                  <option value="path-traversal-lab">path-traversal-lab</option>
                   <option value="phishing">phishing</option>
-                  <option value="nosql-injection-lab">nosql injection</option>
-                  <option value="path-traversal-lab">path traversal</option>
+                  <option value="shellshock">shellshock</option>
+                  <option value="sqli-auth-lab">sqli-auth-lab</option>
+                  <option value="sqli-error-based-lab">sqli-error-based-lab</option>
+                  <option value="sqli-lab">sqli-lab</option>
+                  <option value="ssrf">ssrf</option>
+                  <option value="xpath-lab">xpath-lab</option>
+                  <option value="xss-lab">xss-lab</option>
+                  <option value="xxe-lab">xxe-lab</option>
+                  <option value="api_scanning">api_scanning</option>
+                  <option value="blind-sqli">blind-sqli</option>
                 </select>
               </div>
             </div>
@@ -922,12 +982,32 @@
               <div class="field">
                 <label>lab à tester</label>
                 <select id="sc-lab">
-                  <option value="xss-lab">xss</option>
-                  <option value="sqli-lab">sqli</option>
-                  <option value="xpath-lab">xpath</option>
+                  <option value="app-cve-2025-68613">app-cve-2025-68613</option>
+                  <option value="app-idor">app-idor</option>
+                  <option value="app-mfa-bypass">app-mfa-bypass</option>
+                  <option value="broken-auth-lab">broken-auth-lab</option>
+                  <option value="csrf">csrf</option>
+                  <option value="email_header_injection">email_header_injection</option>
+                  <option value="file-upload-lab">file-upload-lab</option>
+                  <option value="graphql-lab">graphql-lab</option>
+                  <option value="heartbleed-lab">heartbleed-lab</option>
+                  <option value="injection_sql_temporell">injection_sql_temporell</option>
+                  <option value="jwt-lab">jwt-lab</option>
+                  <option value="log4shell-dockerlab-main">log4shell-dockerlab-main</option>
+                  <option value="mitm-attack-lab">mitm-attack-lab</option>
+                  <option value="nosql-injection-lab">nosql-injection-lab</option>
+                  <option value="path-traversal-lab">path-traversal-lab</option>
                   <option value="phishing">phishing</option>
-                  <option value="nosql-injection-lab">nosql injection</option>
-                  <option value="path-traversal-lab">path traversal</option>
+                  <option value="shellshock">shellshock</option>
+                  <option value="sqli-auth-lab">sqli-auth-lab</option>
+                  <option value="sqli-error-based-lab">sqli-error-based-lab</option>
+                  <option value="sqli-lab">sqli-lab</option>
+                  <option value="ssrf">ssrf</option>
+                  <option value="xpath-lab">xpath-lab</option>
+                  <option value="xss-lab">xss-lab</option>
+                  <option value="xxe-lab">xxe-lab</option>
+                  <option value="api_scanning">api_scanning</option>
+                  <option value="blind-sqli">blind-sqli</option>
                 </select>
               </div>
             </div>
@@ -1021,9 +1101,9 @@
     // ── API calls ──────────────────────────────────────────────────────────
     async function callHealth() {
       const logId = 'log-health';
-      appendLog(logId, 'req', `GET ${cfg.url()}/api/health`);
+      appendLog(logId, 'req', `GET ${cfg.url()}/api-lab/health`);
       try {
-        const { ok, status, data, ms } = await apiCall('GET', '/api/health');
+        const { ok, status, data, ms } = await apiCall('GET', '/api-lab/health');
 
         // Update cards
         document.getElementById('health-cards').style.display = 'grid';
@@ -1052,9 +1132,9 @@
 
     async function callLabs() {
       const logId = 'log-labs';
-      appendLog(logId, 'req', `GET ${cfg.url()}/api/labs`);
+      appendLog(logId, 'req', `GET ${cfg.url()}/api-lab/labs`);
       try {
-        const { ok, status, data, ms } = await apiCall('GET', '/api/labs');
+        const { ok, status, data, ms } = await apiCall('GET', '/api-lab/labs');
         appendLog(logId, ok ? 'ok' : 'err', `HTTP ${status} — ${ms}ms — ${data.labs?.length ?? 0} labs`, data);
       } catch (e) {
         appendLog(logId, 'err', e.message);
@@ -1067,9 +1147,9 @@
       const lab = document.getElementById('spawn-lab').value;
       const body = { user_id: uid, lab };
 
-      appendLog(logId, 'req', `POST /api/spawn`, body);
+      appendLog(logId, 'req', `POST /api-lab/spawn`, body);
       try {
-        const { ok, status, data, ms } = await apiCall('POST', '/api/spawn', body);
+        const { ok, status, data, ms } = await apiCall('POST', '/api-lab/spawn', body);
         appendLog(logId, ok ? 'ok' : 'err', `HTTP ${status} — ${ms}ms`, data);
 
         if (ok && data.url) {
@@ -1095,9 +1175,9 @@
       const uid = document.getElementById('status-uid').value;
       const lab = document.getElementById('status-lab').value;
 
-      appendLog(logId, 'req', `GET /api/status?user_id=${uid}&lab=${lab}`);
+      appendLog(logId, 'req', `GET /api-lab/status?user_id=${uid}&lab=${lab}`);
       try {
-        const { ok, status, data, ms } = await apiCall('GET', `/api/status?user_id=${uid}&lab=${lab}`);
+        const { ok, status, data, ms } = await apiCall('GET', `/api-lab/status?user_id=${uid}&lab=${lab}`);
         appendLog(logId, ok ? 'ok' : 'err', `HTTP ${status} — ${ms}ms — running: ${data.running}`, data);
       } catch (e) {
         appendLog(logId, 'err', e.message);
@@ -1110,9 +1190,9 @@
       const lab = document.getElementById('destroy-lab').value;
       const body = { user_id: uid, lab };
 
-      appendLog(logId, 'req', `POST /api/destroy`, body);
+      appendLog(logId, 'req', `POST /api-lab/destroy`, body);
       try {
-        const { ok, status, data, ms } = await apiCall('POST', '/api/destroy', body);
+        const { ok, status, data, ms } = await apiCall('POST', '/api-lab/destroy', body);
         appendLog(logId, ok ? 'ok' : 'err', `HTTP ${status} — ${ms}ms`, data);
       } catch (e) {
         appendLog(logId, 'err', e.message);
@@ -1138,7 +1218,7 @@
         // Étape 1 : Health
         step(1, 4, 'Vérification API...');
         appendLog(logId, 'info', '══ ÉTAPE 1/4 — Vérification que l\'API est en ligne ══');
-        const h = await apiCall('GET', '/api/health');
+        const h = await apiCall('GET', '/api-lab/health');
         if (!h.ok) throw new Error('API hors ligne');
         appendLog(logId, 'ok', `API en ligne (${h.ms}ms)`, h.data);
         await wait(600);
@@ -1146,7 +1226,7 @@
         // Étape 2 : Spawn
         step(2, 4, `Spawn du lab ${lab} pour user ${uid}...`);
         appendLog(logId, 'info', `══ ÉTAPE 2/4 — Spawn du lab "${lab}" pour l\'apprenant #${uid} ══`);
-        const s = await apiCall('POST', '/api/spawn', { user_id: uid, lab });
+        const s = await apiCall('POST', '/api-lab/spawn', { user_id: uid, lab });
         if (!s.ok) throw new Error(s.data.error || 'Spawn échoué');
         appendLog(logId, 'ok', `Conteneur démarré → ${s.data.url} (TTL: ${Math.round(s.data.expires_in / 60)}min)`, s.data);
         await wait(800);
@@ -1154,14 +1234,14 @@
         // Étape 3 : Status
         step(3, 4, 'Vérification du statut...');
         appendLog(logId, 'info', '══ ÉTAPE 3/4 — Vérification du statut (comme ferait le frontend) ══');
-        const st = await apiCall('GET', `/api/status?user_id=${uid}&lab=${lab}`);
+        const st = await apiCall('GET', `/api-lab/status?user_id=${uid}&lab=${lab}`);
         appendLog(logId, st.data.running ? 'ok' : 'err', `running: ${st.data.running}`, st.data);
         await wait(1000);
 
         // Étape 4 : Destroy
         step(4, 4, 'Destruction du conteneur...');
         appendLog(logId, 'info', '══ ÉTAPE 4/4 — Destruction du conteneur (fin de session) ══');
-        const d = await apiCall('POST', '/api/destroy', { user_id: uid, lab });
+        const d = await apiCall('POST', '/api-lab/destroy', { user_id: uid, lab });
         appendLog(logId, d.ok ? 'ok' : 'err', `success: ${d.data.success}`, d.data);
 
         prog.textContent = '';

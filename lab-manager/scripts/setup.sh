@@ -72,7 +72,7 @@ cp -r . "$MANAGER_DIR/"
 # Créer le .env
 cat > "$MANAGER_DIR/.env" <<EOF
 BASE_HOST=$BASE_HOST
-API_PORT=3000
+API_PORT=4000
 API_SECRET=$API_SECRET
 LAB_TTL=2700
 LABS_DIR=$LABS_DIR
@@ -85,22 +85,22 @@ log ".env créé dans $MANAGER_DIR"
 # Démarrer le Lab Manager
 cd "$MANAGER_DIR"
 docker compose up -d --build
-log "Lab Manager démarré sur le port 3000"
+log "Lab Manager démarré sur le port 4000"
 
 # ── 7. Ouvrir les ports firewall ──────────────────────────────────────
 if command -v ufw &> /dev/null; then
-    ufw allow 3000/tcp comment "Lab Manager API"   2>/dev/null || true
+    ufw allow 4000/tcp comment "Lab Manager API"   2>/dev/null || true
     ufw allow 8000:8999/tcp comment "Labs apprenants" 2>/dev/null || true
-    log "Ports ouverts dans UFW (3000 et 8000-8999)"
+    log "Ports ouverts dans UFW (4000 et 8000-8999)"
 fi
 
 # ── 8. Test de l'API ──────────────────────────────────────────────────
 sleep 3
-if curl -sf "http://localhost:3000/api/health" > /dev/null; then
+if curl -sf "http://localhost:4000/api/health" > /dev/null; then
     log "API Lab Manager répond correctement ✓"
 else
     warn "L'API ne répond pas encore — attends quelques secondes puis teste :"
-    warn "  curl http://localhost:3000/api/health"
+    warn "  curl http://localhost:4000/api/health"
 fi
 
 # ── Résumé ────────────────────────────────────────────────────────────
@@ -108,10 +108,10 @@ echo ""
 echo "╔══════════════════════════════════════════════════════╗"
 echo "║                    SETUP TERMINÉ                    ║"
 echo "╠══════════════════════════════════════════════════════╣"
-printf "║  API Lab Manager : http://%-27s║\n" "$BASE_HOST:3000"
+printf "║  API Lab Manager : http://%-27s║\n" "$BASE_HOST:4000"
 printf "║  Clé API         : %-31s║\n" "$API_SECRET"
 echo "║                                                      ║"
 echo "║  → Donne la clé API à l'autre développeur           ║"
-echo "║  → Vérifie : curl http://$BASE_HOST:3000/api/health  ║"
+echo "║  → Vérifie : curl http://$BASE_HOST:4000/api/health  ║"
 echo "╚══════════════════════════════════════════════════════╝"
 echo ""

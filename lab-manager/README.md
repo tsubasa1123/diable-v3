@@ -19,7 +19,7 @@ bash scripts/build_lab.sh all
 docker compose up -d --build
 
 # 5. Vérifier
-curl http://localhost:3000/api/health
+curl http://localhost:4000/api/health
 ```
 
 ## Structure

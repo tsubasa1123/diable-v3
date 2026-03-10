@@ -13,7 +13,7 @@ Dossier contenant tous les labs de cybersécurité conteneurisés. Chaque lab es
 ## 📦 Labs Disponibles
 
 ### ✅ sqli-lab/ - SQL Injection
-**Auteur:** Kennedy NGOKIA  
+**Auteur:** Kennedy   
 **Difficulté:** Moyen  
 **Tag:** DB  
 **Port:** 8080
@@ -26,7 +26,7 @@ Dossier contenant tous les labs de cybersécurité conteneurisés. Chaque lab es
 ---
 
 ### ✅ xpath-lab/ - XPath Injection
-**Auteur:** Kennedy NGOKIA  
+**Auteur:** Kennedy   
 **Difficulté:** Moyen  
 **Tag:** XML  
 **Port:** 8081
@@ -74,6 +74,12 @@ Dossier contenant tous les labs de cybersécurité conteneurisés. Chaque lab es
 1. CSRF simple
 2. CSRF avec token bypassable
 3. CSRF avec SameSite cookies
+
+### ✅ nosql-injection-lab/ - NoSQL Injection
+**Auteur:** Celia IMAKHLOUFEN
+**Difficulté:** Moyen  
+**Tag:** WEB  
+**Port:** 3000
 
 ---
 
@@ -124,22 +130,9 @@ docker-compose up -d
 5. **Documenter** complètement
 6. **Ajouter** l'entrée dans `../docker-compose.yml`
 
----
-
-## 📊 Progression
-
-| Lab | Auteur | Statut | Scénarios |
-|-----|--------|--------|-----------|
-| sqli-lab | Kennedy NGOKIA | ✅ Complet | 3/3 |
-| xpath-lab | Kennedy NGOKIA | ✅ Complet | 3/3 |
-| xxe-lab | [À assigner] | 🔨 À développer | 0/3 |
-| xss-lab | [À assigner] | 🔨 À développer | 0/3 |
-| csrf-lab | [À assigner] | 🔨 À développer | 0/3 |
-
----
 
 ## 📞 Contact
 
-**Responsable WP3:** Kennedy NGOKIA  
-**Email:** ngokiakennedy@gmail.com  
+**Responsable WP3:** Kennedy  
+**Email:**  
 **GitHub:** [@tsubasa1123](https://github.com/tsubasa1123)

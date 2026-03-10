@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Scénario 1 — GraphQL Introspection</title>
+<style>
+  :root { --bg-global:#0B0F14; --bg-header:#0F1A2B; --bg-card:#141B26; --btn-primary:#D41414; --btn-primary-hover:#FF2A2A; --glow-color:#00C2FF; --text-primary:#F2F4F8; --text-secondary:#8A8F98; --border:#1E2A3A; }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { background:var(--bg-global); color:var(--text-primary); font-family:'Segoe UI',system-ui,sans-serif; min-height:100vh; }
+  header { background:var(--bg-header); border-bottom:1px solid var(--border); padding:1rem 2rem; display:flex; align-items:center; gap:1rem; }
+  header a { color:var(--glow-color); text-decoration:none; font-size:0.85rem; }
+  main { max-width:950px; margin:0 auto; padding:2rem; }
+  h2 { font-size:1.6rem; margin-bottom:0.5rem; }
+  h2 span { color:var(--glow-color); }
+  .subtitle { color:var(--text-secondary); margin-bottom:2rem; line-height:1.6; }
+  .theory { background:var(--bg-card); border:1px solid var(--border); border-radius:12px; padding:1.5rem; margin-bottom:1.5rem; }
+  .theory h3 { color:var(--glow-color); margin-bottom:0.8rem; }
+  .theory p { color:var(--text-secondary); font-size:0.88rem; line-height:1.6; }
+  .panel { background:var(--bg-card); border:1px solid var(--border); border-radius:12px; padding:1.5rem; margin-bottom:1.5rem; }
+  .panel h3 { color:var(--glow-color); margin-bottom:1rem; }
+  .code { background:#0a0a0a; border:1px solid #222; border-left:3px solid var(--glow-color); border-radius:6px; padding:1rem; font-family:'Courier New',monospace; font-size:0.78rem; margin:0.8rem 0; overflow-x:auto; white-space:pre; color:#a0f0a0; }
+  .btn { background:var(--btn-primary); color:white; padding:0.65rem 1.4rem; border-radius:6px; font-weight:600; font-size:0.9rem; cursor:pointer; border:none; transition:background 0.2s; }
+  .btn:hover { background:var(--btn-primary-hover); }
+  .btn-ghost { background:#1A2A3A; color:var(--glow-color); border:1px solid var(--border); }
+  .btn-ghost:hover { background:#243444; }
+  .result { margin-top:1rem; padding:1rem; border-radius:8px; font-size:0.82rem; display:none; word-break:break-all; font-family:'Courier New',monospace; max-height:300px; overflow-y:auto; }
+  .result.success { background:#001A15; border:1px solid #00AA77; color:#00FF99; display:block; }
+  .result.error { background:#1A0000; border:1px solid #AA0000; color:#FF6666; display:block; }
+  .result.info { background:#001220; border:1px solid #003366; color:#66AAFF; display:block; }
+  .flag { background:#001A15; border:1px solid #00AA77; border-radius:8px; padding:1rem; margin-top:1rem; font-family:monospace; color:#00FF99; font-size:1rem; text-align:center; display:none; }
+  .hint { background:#1A1500; border:1px solid #554400; border-radius:8px; padding:1rem; margin-top:1rem; font-size:0.82rem; color:#FFCC44; }
+  textarea { width:100%; background:#0F1A2B; border:1px solid var(--border); color:#a0f0a0; padding:0.8rem; border-radius:6px; font-family:'Courier New',monospace; font-size:0.8rem; resize:vertical; min-height:120px; }
+  .fields-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(140px,1fr)); gap:0.5rem; margin-top:0.8rem; }
+  .field-tag { background:#0F1A2B; border:1px solid var(--border); border-radius:6px; padding:0.4rem 0.8rem; font-family:'Courier New',monospace; font-size:0.78rem; color:#FFB800; }
+  .field-tag.sensitive { border-color:#D41414; color:#FF6666; }
+</style>
+</head>
+<body>
+<header>
+  <a href="/">← Retour au lab</a>
+  <h1 style="font-size:1.2rem;">🕸️ Scénario 1 — <span style="color:var(--glow-color)">Introspection Attack</span></h1>
+</header>
+<main>
+  <h2>GraphQL <span>Introspection</span></h2>
+  <p class="subtitle">L'introspection GraphQL est une fonctionnalité permettant d'interroger le schéma d'une API pour connaître tous ses types, champs et opérations. Activée en production, elle devient un outil de reconnaissance puissant pour un attaquant.</p>
+
+  <div class="theory">
+    <h3>📚 Qu'est-ce que l'introspection ?</h3>
+    <p>GraphQL expose une requête spéciale <code>__schema</code> qui retourne la structure complète de l'API. Elle révèle des champs sensibles que le développeur croyait "cachés" car non documentés.</p>
+    <div class="code">query IntrospectionQuery {
+  __schema {
+    types {
+      name
+      fields {
+        name
+        type { name }
+      }
+    }
+  }
+}</div>
+    <p style="margin-top:0.5rem;">Résultat : l'attaquant découvre des champs comme <code>password</code>, <code>creditCard</code>, <code>salary</code> non documentés mais bien présents dans l'API.</p>
+  </div>
+
+  <div class="panel">
+    <h3>Étape 1 — Lancer l'introspection</h3>
+    <p style="font-size:0.85rem; color:var(--text-secondary); margin-bottom:1rem;">Envoyez la requête d'introspection pour découvrir tous les champs disponibles :</p>
+    <button class="btn" onclick="runIntrospection()">🔍 Lancer l'introspection</button>
+    <div class="result" id="intro-result"></div>
+  </div>
+
+  <div class="panel" id="fields-panel" style="display:none;">
+    <h3>Étape 2 — Champs découverts sur le type User</h3>
+    <p style="font-size:0.85rem; color:var(--text-secondary); margin-bottom:0.5rem;">Champs normaux :</p>
+    <div class="fields-grid" id="normal-fields"></div>
+    <p style="font-size:0.85rem; color:var(--text-secondary); margin-top:1rem; margin-bottom:0.5rem;">⚠️ Champs sensibles découverts (non documentés !) :</p>
+    <div class="fields-grid" id="sensitive-fields"></div>
+  </div>
+
+  <div class="panel">
+    <h3>Étape 3 — Requête personnalisée</h3>
+    <p style="font-size:0.85rem; color:var(--text-secondary); margin-bottom:0.8rem;">Maintenant que vous connaissez le schéma, construisez une requête ciblant les champs sensibles :</p>
+    <textarea id="custom-query">{
+  users {
+    id
+    username
+    email
+    password
+    salary
+    creditCard
+  }
+}</textarea>
+    <div style="display:flex; gap:0.8rem; margin-top:0.8rem;">
+      <button class="btn" onclick="runQuery()">▶ Exécuter</button>
+      <button class="btn btn-ghost" onclick="claimFlag()">🏴 Valider (flag)</button>
+    </div>
+    <div class="result" id="query-result"></div>
+    <div class="flag" id="flag1"></div>
+  </div>
+
+  <div class="hint">💡 <strong>Contre-mesure :</strong> Désactiver l'introspection en production. Avec Apollo Server : <code>introspection: false</code>. Implémenter une liste blanche des champs accessibles par rôle.</div>
+</main>
+
+<script>
+async function graphql(query) {
+  const res = await fetch('/graphql', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ query })
+  });
+  return res.json();
+}
+
+async function runIntrospection() {
+  const el = document.getElementById('intro-result');
+  el.className = 'result info';
+  el.textContent = 'Envoi de la requête d\'introspection...';
+
+  const data = await graphql(`{
+    __schema {
+      types {
+        name
+        kind
+        fields {
+          name
+          type { name kind }
+        }
+      }
+    }
+  }`);
+
+  const userType = data.data.__schema.types.find(t => t.name === 'User');
+  const normalFields = ['id','username','email','role','orders'];
+  const sensitiveFields = ['password','salary','creditCard'];
+
+  el.className = 'result success';
+  el.textContent = `✅ Introspection réussie ! Type "User" découvert avec ${userType.fields.length} champs.\n\nDont des champs NON DOCUMENTÉS : password, salary, creditCard`;
+
+  // Afficher les champs
+  document.getElementById('fields-panel').style.display = 'block';
+  const nf = document.getElementById('normal-fields');
+  const sf = document.getElementById('sensitive-fields');
+  nf.innerHTML = '';
+  sf.innerHTML = '';
+  userType.fields.forEach(f => {
+    const div = document.createElement('div');
+    div.textContent = f.name;
+    if (sensitiveFields.includes(f.name)) {
+      div.className = 'field-tag sensitive';
+      sf.appendChild(div);
+    } else {
+      div.className = 'field-tag';
+      nf.appendChild(div);
+    }
+  });
+}
+
+async function runQuery() {
+  const query = document.getElementById('custom-query').value;
+  const data = await graphql(query);
+  const el = document.getElementById('query-result');
+  el.className = 'result info';
+  el.textContent = JSON.stringify(data, null, 2);
+}
+
+async function claimFlag() {
+  const data = await graphql('{ flag1 }');
+  if (data.data && data.data.flag1) {
+    const flag = document.getElementById('flag1');
+    flag.style.display = 'block';
+    flag.textContent = '🏴 ' + data.data.flag1;
+  }
+}
+</script>
+</body>
+</html>

@@ -34,7 +34,7 @@ diable/
 ## 🎯 Work Packages
 
 ### WP1 - Infrastructure & Orchestration
-**Responsables:** [Noms des étudiants]
+**Responsables:** Lucien
 
 **Contenu:**
 - `backend/` : API REST pour la gestion des labs
@@ -47,7 +47,7 @@ diable/
 ---
 
 ### WP2 - Interface Web
-**Responsables:** [Noms des étudiants]
+**Responsables:** Kans
 
 **Contenu:**
 - `frontend/` : Application React pour les utilisateurs
@@ -60,7 +60,7 @@ diable/
 ---
 
 ### WP3 - Containers & Documentation
-**Responsables:** Kennedy NGOKIA, [Autres étudiants]
+**Responsables:** Kennedy, [Autres étudiants]
 
 **Contenu:**
 - `attacks/` : Labs de cybersécurité conteneurisés
@@ -76,7 +76,7 @@ diable/
 ### 1. SQL Injection Lab (`attacks/sqli-lab/`)
 **Difficulté:** Moyen  
 **Tag:** DB  
-**Auteur:** Kennedy NGOKIA
+**Auteur:** Kennedy 
 
 **Scénarios:**
 - Login Bypass avec commentaires SQL
@@ -88,7 +88,7 @@ diable/
 ### 2. XPath Injection Lab (`attacks/xpath-lab/`)
 **Difficulté:** Moyen  
 **Tag:** XML  
-**Auteur:** Kennedy NGOKIA
+**Auteur:** Kennedy 
 
 **Scénarios:**
 - Login Bypass avec `or`
@@ -100,7 +100,7 @@ diable/
 ### 3. XXE Lab (`attacks/xxe-lab/`)
 **Difficulté:** Difficile  
 **Tag:** XML  
-**Auteur:** [À assigner]
+**Auteur:** Hamed
 
 **Scénarios:**
 - File Read local
@@ -112,7 +112,7 @@ diable/
 ### 4. XSS Lab (`attacks/xss-lab/`)
 **Difficulté:** Facile à Moyen  
 **Tag:** WEB  
-**Auteur:** [À assigner]
+**Auteur:** Kantame
 
 **Scénarios:**
 - Reflected XSS
@@ -124,13 +124,110 @@ diable/
 ### 5. CSRF Lab (`attacks/csrf-lab/`)
 **Difficulté:** Moyen  
 **Tag:** WEB  
-**Auteur:** [À assigner]
+**Auteur:** Chaimae
 
 **Scénarios:**
 - CSRF simple
 - CSRF avec token bypassable
 - CSRF avec SameSite cookies
 
+---
+
+### 6. JWT Vulnerabilities Lab (`attacks/jwt-lab/`)
+**Difficulté:** Moyen → Difficile  
+**Tag:** JWT  
+**Auteur:** Thiané   
+
+**Scénarios:**
+- alg:none Bypass (CVE-2015-9235)
+- Weak Secret Brute Force
+- RS256 → HS256 Algorithm Confusion
+- kid Header Injection
+
+---
+### 7. NoSQL injection Lab (`attacks/nosql-injection-lab/`)
+**Difficulté:** Moyen  
+**Tag:** WEB  
+**Auteur:** Celia
+
+**Scénarios:**
+- Bypass d'authentification basique
+- Énumération des utilisateurs
+- Extraction de données sensibles
+- JavaScript Injection avec $where
+- Opérateurs de comparaison
+- Combinaison d'opérateurs
+
+---
+### 8. Man-in-the-middle Lab (`attacks/mitm-attack-lab/`)
+**Difficulté:** Moyen  
+**Tag:** WEB  
+**Auteur:** Celia
+
+**Scénarios:**
+- Interception de credentials basique
+- Session Hijacking complet
+- Cookie Stealing et réutilisation
+- Data Exfiltration
+- Transaction Monitoring
+- Traffic Modification
+---
+### 9. Shellshock Lab (`attacks/shellshock/`)
+**Difficulté:** Inconnue
+**Tag:** RCE
+**Auteur:** Imane
+---
+### 10. API Scanning Lab (`attacks/api_scanning/`)
+**Difficulté:** Facile → Moyen  
+**Tag:** WEB  
+**Auteur:** Imane
+---
+### 11. CVE-2025-68613 Lab (`attacks/app-cve-2025-68613/`)
+**Difficulté:** Moyen  
+**Tag:** WEB  
+**Auteur:** Hamza
+---
+### 12. IDOR Lab (`attacks/app-IDOR/`)
+**Difficulté:** Moyen  
+**Tag:** WEB  
+**Auteur:** Hamza
+---
+### 12. MFA Bypass Lab (`attacks/app-mfa-bypass/`)
+**Difficulté:** Moyen  
+**Tag:** WEB  
+**Auteur:** Hamza
+---
+### 13. Broken Authentification Lab (`attacks/broken-auth-lab/`)
+**Difficulté:** Moyen  
+**Tag:** AUTH  
+**Auteur:** Hamed
+---
+### 14. Email Header Injection Lab (`attacks/email_header_injection/`)
+**Difficulté:** Moyen  
+**Tag:** WEB  
+**Auteur:** Emma
+---
+### 15. File Upload to RCE Lab (`attacks/file-upload-lab/`)
+**Difficulté:** Moyen  
+**Tag:** WEB  
+**Auteur:** Hamed
+---
+### 16. GraphQL Injection Lab (`attacks/file-upload-lab/`)
+**Difficulté:** Moyen  
+**Tag:** API  
+**Auteur:** Thiané
+---
+### 17. Heartbleed Lab (`attacks/heartbleed-lab/`)
+**Difficulté:** Difficile  
+**Tag:** TLS
+**Auteur:** Imane
+---
+### 17. Log4Shell Lab (`attacks/log4shell-dockerlab-main/`)
+**Difficulté:** Difficile  
+**Tag:** HTML  
+**Auteur:** Farah
+---
+```
 ---
 
 ## 🚀 Installation Complète
@@ -157,7 +254,9 @@ docker-compose up -d
 http://localhost:3000  # Frontend
 http://localhost:5000  # Backend API
 http://localhost:8080  # SQL Injection Lab
-http://localhost:8081  # XPath Injection Lab
+http://localhost:8081  # XPath 
+http://localhost:8084  # JWT Vulnerabilities Lab
+Injection Lab
 ```
 
 ### Installation d'un Lab Individuel
@@ -308,6 +407,18 @@ services:
     networks:
       - diable-network
 
+  # JWT Vulnerabilities Lab
+  jwt-lab:
+    build: ./attacks/jwt-lab
+    ports:
+      - "8084:3000"
+    labels:
+      - "diable.lab=jwt-vulnerabilities"
+      - "diable.difficulty=medium-hard"
+      - "diable.tag=JWT"
+    networks:
+      - diable-network
+
 networks:
   diable-network:
     driver: bridge
@@ -391,7 +502,7 @@ Tous les labs partagent le thème DIABLE standardisé :
 - Email: wp2@diable-project.fr (fictif)
 
 **WP3 - Containers:**
-- Kennedy NGOKIA: ngokiakennedy@gmail.com
+- Kennedy : 
 - Email général: wp3@diable-project.fr (fictif)
 
 ---
@@ -406,7 +517,7 @@ Projet pédagogique - DSI ISFA 2025-2026
 
 ## 📊 Statistiques
 
-- **Labs disponibles:** 2
+- **Labs disponibles:** 3
 - **Labs en développement:** 3+
 - **Work Packages:** 3
 - **Contributeurs:** 10+

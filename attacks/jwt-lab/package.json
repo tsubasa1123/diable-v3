@@ -1,0 +1,16 @@
+{
+  "name": "diable-jwt-lab",
+  "version": "1.0.0",
+  "description": "DIABLE v3.0 - JWT Vulnerabilities Lab by Thiané DIA",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "nodemon src/server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "jsonwebtoken": "^9.0.2"
+  },
+  "author": "Thiané DIA - DSI ISFA 2025-2026",
+  "license": "MIT"
+}

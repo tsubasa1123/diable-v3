@@ -1,7 +1,8 @@
 # Lab DIABLE - XPath Injection
 
 **Version:** 1.0  
-**Auteur:** Kennedy NGOKIA  
+**Auteur:** Kennedy
+
 **Projet:** Lab DIABLE v3.0 - DSI ISFA 2025-2026  
 **Tag:** XML  
 **Difficulté:** Moyen
@@ -443,9 +444,8 @@ Ce lab a été développé dans un cadre pédagogique pour le projet DIABLE v3.0
 
 ## 👤 Auteur
 
-**Kennedy NGOKIA**  
+**Kennedy**  
 DSI ISFA 2025-2026  
-ngokiakennedy@gmail.com
 
 ---
 

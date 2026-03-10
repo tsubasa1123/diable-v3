@@ -1,115 +1,255 @@
-// src/docker.js — Gestion des conteneurs Docker via dockerode
+// src/docker.js
 const Dockerode = require('dockerode');
-const path      = require('path');
+const path = require('path');
 const { LABS, getPort, getContainerName } = require('./labs');
 
-const docker   = new Dockerode({ socketPath: '/var/run/docker.sock' });
-const LABS_DIR = process.env.LABS_DIR || '/opt/labs';
-const NETWORK  = process.env.DOCKER_NETWORK || 'lab-network';
+const docker = new Dockerode({ socketPath: '/var/run/docker.sock' });
+const LABS_DIR = process.env.LABS_DIR || '../../attacks';
+const NETWORK = process.env.DOCKER_NETWORK || 'lab-network';
 const BASE_HOST = process.env.BASE_HOST || 'localhost';
 
-/**
- * Spawne un conteneur pour un apprenant.
- * Si un conteneur existe déjà pour cet user+lab, le retourne directement.
- */
-async function spawnLab(userId, labId) {
-    const lab           = LABS[labId];
-    if (!lab) throw new Error(`Lab inconnu : ${labId}`);
+const { execFileSync } = require('child_process');
+const fs = require('fs');
+const DOCKER_BIN = process.env.DOCKER_BIN || '/usr/bin/docker';
 
-    const containerName = getContainerName(userId, labId);
-    const port          = getPort(userId, labId);
-    const imageName     = `sec-lab-${labId}`;  // image buildée depuis les labs existants
+async function waitForPort(port, retries = 15, delayMs = 2000) {
+    const net = require('net');
 
-    // Vérifier si le conteneur existe déjà
-    const existing = await findContainer(containerName);
-    if (existing) {
-        // S'il est arrêté, le redémarrer
-        const info = await existing.inspect();
-        if (!info.State.Running) {
-            await existing.start();
-            console.log(`[Docker] Conteneur redémarré : ${containerName}`);
-        } else {
-            console.log(`[Docker] Conteneur déjà actif : ${containerName}`);
+    for (let i = 0; i < retries; i++) {
+        const available = await new Promise(resolve => {
+            const socket = new net.Socket();
+            socket.setTimeout(1000);
+            socket
+                .on('connect', () => { socket.destroy(); resolve(true); })
+                .on('error', () => { socket.destroy(); resolve(false); })
+                .on('timeout', () => { socket.destroy(); resolve(false); })
+                .connect(port, '127.0.0.1');
+        });
+
+        if (available) {
+            console.log(`[Docker] Port ${port} prêt après ${i + 1} tentative(s)`);
+            return true;
         }
-        return { containerName, port, url: buildUrl(port) };
+
+        console.log(`[Docker] Port ${port} pas encore prêt, attente ${delayMs}ms... (${i + 1}/${retries})`);
+        await new Promise(r => setTimeout(r, delayMs));
     }
 
-    // Créer et démarrer le nouveau conteneur
-    console.log(`[Docker] Création du conteneur ${containerName} sur le port ${port}...`);
+    console.warn(`[Docker] Port ${port} toujours indisponible après ${retries} tentatives`);
+    return false;
+}
+
+// ── Spawn ─────────────────────────────────────────────────────────────
+
+async function spawnLab(userId, labId) {
+    const lab = LABS[labId];
+    const labPath = path.join(LABS_DIR, lab.composeDir);
+
+    console.log(`[Docker] labId     = ${labId}`);
+    console.log(`[Docker] lab.compose   = ${lab.compose}`);
+    console.log(`[Docker] labPath   = ${labPath}`);
+
+    if (lab.compose) return spawnComposeLab(userId, labId, labPath);
+    return spawnSingleLab(userId, labId);
+}
+
+async function spawnSingleLab(userId, labId) {
+    const lab = LABS[labId];
+    const containerName = getContainerName(userId, labId);
+    const port = getPort(userId, labId);
+    await waitForPort(port);
+    const imageName = lab.image || `sec-lab-${labId}`;
+
+    const existing = await findContainer(containerName);
+    if (existing) {
+        const info = await existing.inspect();
+        if (!info.State.Running) await existing.start();
+        console.log(`[Docker] Conteneur réutilisé : ${containerName}`);
+        return { containerName, port, url: buildUrl(port, lab) };
+    }
+
+    console.log(`[Docker] Création : ${containerName} → port ${port}`);
 
     const container = await docker.createContainer({
-        name:  containerName,
+        name: containerName,
         Image: imageName,
-        ExposedPorts: { '80/tcp': {} },
+        Tty: lab.tty || false,
+        OpenStdin: lab.tty || false,
+        ExposedPorts: { [`${lab.internalPort || 80}/tcp`]: {} },
         HostConfig: {
             PortBindings: {
-                '80/tcp': [{ HostPort: String(port) }]
+                [`${lab.internalPort || 80}/tcp`]: [{ HostPort: String(port) }]
             },
             NetworkMode: NETWORK,
-            // Limites de ressources par conteneur
-            Memory:    256 * 1024 * 1024,  // 256 Mo max
-            NanoCpus:  500000000,           // 0.5 CPU max
-            // Sécurité : lecture seule sauf /tmp
-            ReadonlyRootfs: false,          // mettre true si les labs le permettent
+            Memory: 256 * 1024 * 1024,
+            NanoCpus: 500000000,
         },
         Env: [
             `LAB_ID=${labId}`,
             `USER_ID=${userId}`,
+            ...Object.entries(lab.env || {}).map(([k, v]) => `${k}=${v}`),
         ],
+        Binds: lab.volume
+            ? [`lab-data-${labId}-user-${userId}:${lab.volume}`]  // volume Docker nommé par apprenant
+            : [],
     });
 
     await container.start();
-    console.log(`[Docker] Conteneur démarré : ${containerName} → port ${port}`);
-
-    return { containerName, port, url: buildUrl(port) };
+    console.log(`[Docker] Démarré : ${containerName} → port ${port}`);
+    return { containerName, port, url: buildUrl(port, lab) };
 }
 
-/**
- * Détruit le conteneur d'un apprenant pour un lab donné.
- */
-async function destroyLab(userId, labId) {
+async function spawnComposeLab(userId, labId, labPath) {
+    const lab = LABS[labId];
+    const port = getPort(userId, labId);
     const containerName = getContainerName(userId, labId);
-    const container     = await findContainer(containerName);
+
+    console.log(`[Docker] Compose spawn : ${containerName} → port ${port}`);
+
+    console.log(`[Docker] labPath absolu = ${path.resolve(labPath)}`);
+    console.log(`[Docker] DOCKER_BIN = ${DOCKER_BIN}`);
+    console.log(`[Docker] cwd existe = ${fs.existsSync(labPath)}`)
+
+    const env = {
+        ...process.env,
+        PATH: '/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin',
+        USER_ID: String(userId),
+        LAB_PORT: String(port),
+        VULN_PORT: String(port)
+    };
+    const urls = { main: buildUrl(port, lab) };
+
+    if (lab.extraPorts) {
+        for (const [name, offset] of Object.entries(lab.extraPorts)) {
+            env[`${name.toUpperCase()}_PORT`] = String(port + offset);
+            urls[name] = buildUrl(port + offset, lab);
+        }
+    }
+
+    execFileSync(
+        DOCKER_BIN,
+        ['compose', '-p', containerName, 'up', '-d'],
+        { cwd: labPath, env }
+    );
+
+    // Attendre que le service principal soit prêt
+    await waitForPort(port);
+
+    // Attendre aussi les ports supplémentaires si nécessaire
+    if (lab.extraPorts) {
+        const waitPromises = [];
+        for (const [, offset] of Object.entries(lab.extraPorts)) {
+            waitPromises.push(waitForPort(port + offset));
+        }
+        await Promise.all(waitPromises);
+    }
+
+    return { containerName, port, url: buildUrl(port, lab), urls };
+}
+
+// ── Destroy ───────────────────────────────────────────────────────────
+
+async function destroyLab(userId, labId) {
+    const lab = LABS[labId];
+
+    if (lab.compose) return destroyComposeLab(userId, labId);
+
+    const containerName = getContainerName(userId, labId);
+    const container = await findContainer(containerName);
 
     if (!container) {
-        console.log(`[Docker] Conteneur introuvable (déjà détruit ?) : ${containerName}`);
+        console.log(`[Docker] Introuvable (déjà détruit ?) : ${containerName}`);
         return false;
     }
 
-    try {
-        await container.stop({ t: 5 });   // 5 secondes pour s'arrêter proprement
-    } catch (e) {
-        // Peut échouer si déjà arrêté — pas grave
-    }
-
+    try { await container.stop({ t: 5 }); } catch (e) { }
     await container.remove({ force: true });
-    console.log(`[Docker] Conteneur détruit : ${containerName}`);
+    console.log(`[Docker] Détruit : ${containerName}`);
     return true;
 }
 
-/**
- * Vérifie si un conteneur tourne pour cet apprenant + lab.
- */
-async function getLabStatus(userId, labId) {
+async function destroyComposeLab(userId, labId) {
+    const lab = LABS[labId];
+    const labPath = path.join(LABS_DIR, lab.composeDir);
     const containerName = getContainerName(userId, labId);
-    const container     = await findContainer(containerName);
+
+    execFileSync(
+        DOCKER_BIN,
+        ['compose', '-p', containerName, 'down', '--remove-orphans', '--volumes'],
+        { cwd: labPath }
+    );
+
+    console.log(`[Docker] Compose détruit : ${containerName}`);
+    return true;
+}
+
+// ── Status ────────────────────────────────────────────────────────────
+
+async function getLabStatus(userId, labId) {
+    const lab = LABS[labId];
+
+    if (lab.compose) return getComposeLabStatus(userId, labId);
+
+    // Cas single container
+    const containerName = getContainerName(userId, labId);
+    const container = await findContainer(containerName);
 
     if (!container) return { running: false };
 
     const info = await container.inspect();
     return {
-        running:       info.State.Running,
+        running: info.State.Running,
         containerName,
-        port:          getPort(userId, labId),
-        url:           buildUrl(getPort(userId, labId)),
-        startedAt:     info.State.StartedAt,
+        port: getPort(userId, labId),
+        url: buildUrl(getPort(userId, labId), lab),
+        startedAt: info.State.StartedAt,
     };
 }
 
-/**
- * Nettoie tous les conteneurs expirés (appelé par le cron).
- * Retourne la liste des conteneurs détruits.
- */
+async function getComposeLabStatus(userId, labId) {
+    const projectName = `${labId}-u${userId}`;
+    const lab = LABS[labId];
+
+    try {
+        const result = execFileSync(
+            DOCKER_BIN,
+            ['compose', '-p', projectName, 'ps', '--format', 'json'],
+            { cwd: labPath, encoding: 'utf8' }
+        );
+
+        // Docker retourne un JSON par ligne
+        const containers = result.trim().split('\n')
+            .filter(Boolean)
+            .map(line => {
+                try { return JSON.parse(line); }
+                catch (e) { return null; }
+            })
+            .filter(Boolean);
+
+        if (containers.length === 0) return { running: false };
+
+        const anyRunning = containers.some(c =>
+            c.State === 'running' || c.Status?.startsWith('Up')
+        );
+        const allRunning = containers.every(c =>
+            c.State === 'running' || c.Status?.startsWith('Up')
+        );
+
+        return {
+            running: anyRunning,
+            allHealthy: allRunning,
+            port: getPort(userId, labId),
+            url: buildUrl(getPort(userId, labId), lab),
+        };
+
+    } catch (e) {
+        // Le projet compose n'existe pas ou erreur
+        return { running: false };
+    }
+}
+
+// ── Cleanup ───────────────────────────────────────────────────────────
+
 async function cleanupExpired(sessions) {
     const destroyed = [];
     for (const session of sessions) {
@@ -123,35 +263,7 @@ async function cleanupExpired(sessions) {
     return destroyed;
 }
 
-/**
- * Construit l'image Docker d'un lab depuis son Dockerfile.
- * À appeler une fois lors du déploiement, pas à chaque spawn.
- */
-async function buildLabImage(labId) {
-    const lab       = LABS[labId];
-    if (!lab) throw new Error(`Lab inconnu : ${labId}`);
-    const labPath   = path.join(LABS_DIR, lab.composeDir);
-    const imageName = `sec-lab-${labId}`;
-
-    console.log(`[Docker] Build de l'image ${imageName} depuis ${labPath}...`);
-
-    return new Promise((resolve, reject) => {
-        docker.buildImage(
-            { context: labPath, src: ['.'] },
-            { t: imageName },
-            (err, stream) => {
-                if (err) return reject(err);
-                docker.modem.followProgress(stream, (err, output) => {
-                    if (err) return reject(err);
-                    console.log(`[Docker] Image ${imageName} buildée avec succès`);
-                    resolve(output);
-                });
-            }
-        );
-    });
-}
-
-// ── Helpers privés ────────────────────────────────────────────────────
+// ── Helpers ───────────────────────────────────────────────────────────
 
 async function findContainer(name) {
     try {
@@ -164,8 +276,9 @@ async function findContainer(name) {
     }
 }
 
-function buildUrl(port) {
-    return `http://${BASE_HOST}:${port}`;
+function buildUrl(port, lab) {
+    const protocol = lab?.https ? 'https' : 'http';
+    return `${protocol}://${BASE_HOST}:${port}`;
 }
 
-module.exports = { spawnLab, destroyLab, getLabStatus, cleanupExpired, buildLabImage };
+module.exports = { spawnLab, destroyLab, getLabStatus, cleanupExpired };

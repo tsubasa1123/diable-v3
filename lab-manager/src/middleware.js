@@ -7,7 +7,7 @@ const API_SECRET = process.env.API_SECRET || 'change_me';
  * Le site d'apprentissage doit envoyer ce header à chaque requête.
  *
  * Exemple côté site d'apprentissage :
- *   fetch('http://lab-manager:3000/api/spawn', {
+ *   fetch('http://lab-manager:4000/api/spawn', {
  *     method: 'POST',
  *     headers: {
  *       'Content-Type': 'application/json',

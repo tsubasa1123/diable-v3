@@ -8,7 +8,7 @@ const routes  = require('./routes');
 const { runCleanup } = require('./cleanup');
 
 const app  = express();
-const PORT = process.env.API_PORT || 3000;
+const PORT = process.env.API_PORT || 5000;
 
 // ── Middlewares ───────────────────────────────────────────────────────
 app.use(express.json());
@@ -21,7 +21,7 @@ app.use(cors({
 }));
 
 // ── Routes ────────────────────────────────────────────────────────────
-app.use('/api', routes);
+app.use('/api-lab', routes);
 
 // Route racine — documentation rapide des endpoints
 app.get('/', (req, res) => {
@@ -29,11 +29,11 @@ app.get('/', (req, res) => {
         name:    'Lab Manager API',
         version: '1.0.0',
         endpoints: {
-            'GET  /api/health':                          'Vérifier que le service tourne',
-            'GET  /api/labs':                            'Liste des labs disponibles',
-            'POST /api/spawn   { user_id, lab }':        'Démarrer un lab pour un apprenant',
-            'POST /api/destroy { user_id, lab }':        'Arrêter un lab',
-            'GET  /api/status?user_id=X&lab=Y':          'Statut d\'un lab',
+            'GET  /api-lab/health':                          'Vérifier que le service tourne',
+            'GET  /api-lab/labs':                            'Liste des labs disponibles',
+            'POST /api-lab/spawn   { user_id, lab }':        'Démarrer un lab pour un apprenant',
+            'POST /api-lab/destroy { user_id, lab }':        'Arrêter un lab',
+            'GET  /api-lab/status?user_id=X&lab=Y':          'Statut d\'un lab',
         },
         auth: 'Header X-API-Key requis sur tous les endpoints sauf /health et /labs',
     });

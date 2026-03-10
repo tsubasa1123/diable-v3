@@ -1,0 +1,16 @@
+{
+  "name": "diable-graphql-lab",
+  "version": "1.0.0",
+  "description": "DIABLE v3.0 - GraphQL Injection Lab by Thiané DIA",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "express-graphql": "^0.12.0",
+    "graphql": "^15.8.0"
+  },
+  "author": "Thiané DIA - DSI ISFA 2025-2026",
+  "license": "MIT"
+}

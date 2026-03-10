@@ -1,0 +1,47 @@
+services:
+  victim-server:
+    image: diable/mitm-victim-server:latest
+    container_name: mitm-victim-user-${USER_ID}
+    ports:
+      - "${VICTIM_PORT}:8080"
+    environment:
+      - NODE_ENV=production
+    networks:
+      - internal
+
+  mitm-proxy:
+    image: diable/mitm-proxy:latest
+    container_name: mitm-proxy-user-${USER_ID}
+    environment:
+      - TARGET_HOST=victim-server
+      - TARGET_PORT=8080
+      - DEBUG_MODE=false
+    depends_on:
+      - victim-server
+    networks:
+      - internal
+
+  app:
+    image: diable/mitm-attack-lab:latest
+    container_name: mitm-app-user-${USER_ID}
+    ports:
+      - "${LAB_PORT}:3000"
+    environment:
+      - VICTIM_SERVER=http://victim-server:8080
+      - MITM_PROXY=http://mitm-proxy:8888
+      - NODE_ENV=production
+      - DEBUG_MODE=false
+    depends_on:
+      - victim-server
+      - mitm-proxy
+    networks:
+      - internal
+      - lab-network
+
+networks:
+  internal:
+    name: mitm-internal-user-${USER_ID}
+    driver: bridge
+  lab-network:
+    external: true
+    name: lab-network

