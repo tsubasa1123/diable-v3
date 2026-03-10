@@ -1,9 +1,5 @@
 FROM php:8.1-apache
 
-LABEL maintainer="DIABLE Team"
-LABEL description="Lab Docker DIABLE - Injection SQL avec authentification et recherche vulnérables"
-LABEL version="1.0"
-
 RUN apt-get update && apt-get install -y \
     sqlite3 \
     libsqlite3-dev \
