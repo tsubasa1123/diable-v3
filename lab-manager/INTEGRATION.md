@@ -10,7 +10,7 @@
 ```
 Site d'apprentissage          Lab Manager (cette API)        Docker
         |                              |                        |
-        |  1. POST /api/spawn  ──────> |                        |
+        |  1. POST /api-lab/spawn  ──────> |                        |
         |                              |  docker run ────────>  |
         |  2. { url, urls, expires_in} |                        |
         |     <─────────────────────── |                        |
@@ -36,22 +36,22 @@ LAB_MANAGER_SECRET=la_cle_api_partagee   # Fournie par l'admin du VPS
 
 ## Les 4 endpoints
 
-### `GET /api/health` — Vérifier que le service tourne
+### `GET /api-lab/health` — Vérifier que le service tourne
 Pas d'authentification requise.
 
 ```js
-const res  = await fetch(`${LAB_MANAGER_URL}/api/health`);
+const res  = await fetch(`${LAB_MANAGER_URL}/api-lab/health`);
 const data = await res.json();
 // { "status": "ok", "timestamp": "2025-01-15T10:30:00.000Z" }
 ```
 
 ---
 
-### `GET /api/labs` — Liste des labs disponibles
+### `GET /api-lab/labs` — Liste des labs disponibles
 Pas d'authentification requise. Utile pour afficher le catalogue.
 
 ```js
-const res  = await fetch(`${LAB_MANAGER_URL}/api/labs`);
+const res  = await fetch(`${LAB_MANAGER_URL}/api-lab/labs`);
 const data = await res.json();
 // {
 //   "labs": [
@@ -73,12 +73,12 @@ const data = await res.json();
 
 ---
 
-### `POST /api/spawn` — Démarrer un lab ⭐
+### `POST /api-lab/spawn` — Démarrer un lab ⭐
 Header requis : `X-API-Key`
 
 ```js
 async function startLab(userId, labId) {
-    const res = await fetch(`${LAB_MANAGER_URL}/api/spawn`, {
+    const res = await fetch(`${LAB_MANAGER_URL}/api-lab/spawn`, {
         method:  'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -133,13 +133,13 @@ async function startLab(userId, labId) {
 
 ---
 
-### `POST /api/destroy` — Arrêter un lab
+### `POST /api-lab/destroy` — Arrêter un lab
 Header requis : `X-API-Key`  
 Appeler quand l'apprenant clique "Terminer le lab" ou quand il se déconnecte.
 
 ```js
 async function stopLab(userId, labId) {
-    await fetch(`${LAB_MANAGER_URL}/api/destroy`, {
+    await fetch(`${LAB_MANAGER_URL}/api-lab/destroy`, {
         method:  'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -152,14 +152,14 @@ async function stopLab(userId, labId) {
 
 ---
 
-### `GET /api/status` — Vérifier si un lab tourne
+### `GET /api-lab/status` — Vérifier si un lab tourne
 Header requis : `X-API-Key`  
 Utile pour afficher "Reprendre le lab" si l'apprenant revient sur la page.
 
 ```js
 async function getLabStatus(userId, labId) {
     const res = await fetch(
-        `${LAB_MANAGER_URL}/api/status?user_id=${userId}&lab=${labId}`,
+        `${LAB_MANAGER_URL}/api-lab/status?user_id=${userId}&lab=${labId}`,
         { headers: { 'X-API-Key': LAB_MANAGER_SECRET } }
     );
     return await res.json();
