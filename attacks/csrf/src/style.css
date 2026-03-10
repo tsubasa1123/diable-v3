@@ -1,0 +1,13 @@
+:root {
+  --bg-global:#0B0F14; --bg-card:#141B26; --btn-primary:#D41414; --btn-primary-hover:#FF2A2A;
+  --text-primary:#F2F4F8; --text-secondary:#8A8F98; --border-color:#1F2937;
+  --error-color:#dc2626;
+}
+body{background:var(--bg-global);color:var(--text-primary);font-family:system-ui;margin:0;padding:30px}
+.card{max-width:720px;margin:auto;background:var(--bg-card);padding:24px;border:1px solid var(--border-color);border-radius:12px}
+input{width:100%;padding:10px;margin:6px 0 14px 0;border-radius:10px;border:1px solid var(--border-color);background:#0F1A2B;color:var(--text-primary)}
+.btn{display:inline-block;background:var(--btn-primary);color:white;padding:10px 14px;border-radius:10px;text-decoration:none;border:none;cursor:pointer}
+.btn:hover{background:var(--btn-primary-hover)}
+.error{color:var(--error-color)}
+hr{border:0;border-top:1px solid var(--border-color);margin:18px 0}
+code{color:#1F6AFF}
