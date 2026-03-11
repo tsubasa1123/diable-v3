@@ -32,7 +32,7 @@ const users = [
     email: 'admin@bank.local',
     role: 'admin',
     balance: 50000,
-    secret: 'FLAG{mitm_attack_master}'
+    secret: 'FLAG{U4EoBR3oA1IJ1XnHWy}'
   },
   { 
     id: 2, 
@@ -77,7 +77,7 @@ app.post('/api/login', (req, res) => {
 
     res.json({
       success: true,
-      message: 'Login successful',
+      message: 'Connexion réussie',
       user: {
         id: user.id,
         username: user.username,
@@ -90,7 +90,7 @@ app.post('/api/login', (req, res) => {
   } else {
     res.status(401).json({
       success: false,
-      message: 'Invalid credentials'
+      message: 'Identifiants invalides'
     });
   }
 });
@@ -100,7 +100,7 @@ app.post('/api/transfer', (req, res) => {
   if (!req.session.userId) {
     return res.status(401).json({
       success: false,
-      message: 'Not authenticated'
+      message: 'Non authentifié'
     });
   }
 
@@ -111,14 +111,14 @@ app.post('/api/transfer', (req, res) => {
   if (!fromUser || !toUser) {
     return res.status(400).json({
       success: false,
-      message: 'Invalid users'
+      message: 'Utilisateurs invalides'
     });
   }
 
   if (fromUser.balance < amount) {
     return res.status(400).json({
       success: false,
-      message: 'Insufficient funds'
+      message: 'Fonds insuffisants'
     });
   }
 
@@ -138,7 +138,7 @@ app.post('/api/transfer', (req, res) => {
 
   res.json({
     success: true,
-    message: 'Transfer successful',
+    message: 'Transfert réussi',
     transaction: transaction,
     newBalance: fromUser.balance
   });
@@ -149,7 +149,7 @@ app.get('/api/account', (req, res) => {
   if (!req.session.userId) {
     return res.status(401).json({
       success: false,
-      message: 'Not authenticated'
+      message: 'Non authentifié'
     });
   }
 
@@ -158,7 +158,7 @@ app.get('/api/account', (req, res) => {
   if (!user) {
     return res.status(404).json({
       success: false,
-      message: 'User not found'
+      message: 'Utilisateur introuvable'
     });
   }
 
@@ -181,7 +181,7 @@ app.get('/api/transactions', (req, res) => {
   if (!req.session.userId) {
     return res.status(401).json({
       success: false,
-      message: 'Not authenticated'
+      message: 'Non authentifié'
     });
   }
 
@@ -202,7 +202,7 @@ app.post('/api/logout', (req, res) => {
   res.clearCookie('auth_token');
   res.json({
     success: true,
-    message: 'Logged out successfully'
+    message: 'Déconnexion réussie'
   });
 });
 
@@ -240,15 +240,15 @@ app.post('/reset', (req, res) => {
 
   res.json({
     success: true,
-    message: 'Database reset successfully'
+    message: 'Base de données réinitialisée avec succès'
   });
 });
 
 app.listen(PORT, () => {
-  console.log(`🎯 Victim Server running on HTTP port ${PORT}`);
-  console.log(`⚠️  WARNING: This server is intentionally INSECURE for educational purposes`);
-  console.log(`   - No HTTPS encryption`);
-  console.log(`   - Weak session management`);
-  console.log(`   - No CSRF protection`);
-  console.log(`   - Sensitive data in clear text`);
+  console.log(`Serveur Victime en cours d'exécution sur le port HTTP ${PORT}`);
+  console.log(`ATTENTION: Ce serveur est intentionnellement NON SÉCURISÉ à des fins éducatives`);
+  console.log(`   - Pas de chiffrement HTTPS`);
+  console.log(`   - Gestion de session faible`);
+  console.log(`   - Pas de protection CSRF`);
+  console.log(`   - Données sensibles en clair`);
 });

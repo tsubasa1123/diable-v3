@@ -52,13 +52,13 @@ app.post('/reset', async (req, res) => {
     // Ici on pourrait reset les données si nécessaire
     res.json({
       success: true,
-      message: 'Lab reset successfully',
+      message: 'Lab réinitialisé avec succès',
       timestamp: new Date().toISOString()
     });
   } catch (err) {
     res.status(500).json({
       success: false,
-      message: 'Reset failed',
+      message: 'Échec de la réinitialisation',
       error: err.message
     });
   }
@@ -67,13 +67,11 @@ app.post('/reset', async (req, res) => {
 app.listen(PORT, () => {
   console.log(`
 ╔═══════════════════════════════════════════════════════╗
-║  🔓 MITM Attack Lab - DIABLE v3.0                     ║
+║  MITM Attack Lab - DIABLE v3.0                        ║
 ╠═══════════════════════════════════════════════════════╣
-║  Lab Interface: http://localhost:${PORT}                ║
-║  Victim Server: ${VICTIM_SERVER}              ║
-║  MITM Proxy: ${MITM_PROXY}                 ║
-╠═══════════════════════════════════════════════════════╣
-║  ⚠️  Educational Lab - DO NOT USE IN PRODUCTION!       ║
+║  Interface Lab: http://localhost:${PORT}                ║
+║  Serveur Victime: ${VICTIM_SERVER}              ║
+║  Proxy MITM: ${MITM_PROXY}                 ║
 ╚═══════════════════════════════════════════════════════╝
   `);
 });
