@@ -1,15 +1,22 @@
-version: "3.9"  # optional since v1.27.0
+version: "3.9"
+
 services:
   targetweb:
     build: 
       context: .
       dockerfile: ./log4shell-vulnerable-app/Dockerfile
     ports:
-      - "8080:8080"
-    
+      - "${APP_PORT:-8080}:8080"   # défaut 8080, modifiable via variable
+    labels:
+      - "lab.author=Farah"
+      - "lab.name=Farah Log4Shell CTF"
+
   jndi:
     build:
       context: .
       dockerfile: ./marshalsec/Dockerfile
     ports:
-      - "1389:1389"
+      - "${LDAP_PORT:-1389}:1389"  # défaut 1389, modifiable via variable
+    labels:
+      - "lab.author=Farah"
+      - "lab.name=Farah Log4Shell CTF"
