@@ -2,7 +2,7 @@
 // Ajouter un lab ici suffit pour l'intégrer dans la plateforme
 
 const LABS = {
-    'app-cve-2025-68613': {
+    'n8n': {
         id: 'app-cve-2025-68613',
         title: 'n8n Workflow Automation',
         portSuffix: 1,
@@ -11,7 +11,7 @@ const LABS = {
         compose: true,   // ← docker compose car multi-conteneurs
         internalPort: 5678
     },
-    'app-idor': {
+    'idor': {
         id: 'app-idor',
         title: 'App Idor',
         portSuffix: 2,
@@ -19,15 +19,15 @@ const LABS = {
         exercises: 4,
         internalPort: 5000
     },
-    'app-mfa-bypass': {
+    'mfa_bypass': {
         id: 'app-mfa-bypass',
         title: 'MFA Bypass',
         portSuffix: 3,
         composeDir: 'app-mfa-bypass',
         internalPort: 5000,
-        tty: true,   // ← indique que le conteneur a besoin d'un terminal
+        tty: true,
     },
-    'broken-auth-lab': {
+    'broken_auth': {
         id: 'broken-auth-lab',
         title: 'Broken auth lab',
         portSuffix: 4,
@@ -41,26 +41,27 @@ const LABS = {
         composeDir: 'csrf',
         exercises: 4,
     },
-    'email_header_injection': {
+    'emailheaderinj': {
         id: 'email_header_injection',
         title: 'Email header Injection',
         portSuffix: 6,
         composeDir: 'email_header_injection',
         internalPort: 5000,
+        volume: '/data',
         env: {
             FLASK_ENV: 'production',
+            DEBUG_MODE: 'false',
             DB_PATH: '/data/events.db',
         },
-        volume: '/data',   // ← chemin interne à monter
     },
-    'file-upload-lab': {
+    'file_upload': {
         id: 'file-upload-lab',
         title: 'File upload lab',
         portSuffix: 7,           // 8[user_id][suffix] → ex: user 5 = port 8051
         composeDir: 'file-upload-lab',       // sous-dossier dans LABS_DIR
         exercises: 4,
     },
-    'graphql-lab': {
+    'graphql_injection': {
         id: 'graphql-lab',
         title: 'Graphql Lab',
         portSuffix: 8,           // 8[user_id][suffix] → ex: user 5 = port 8051
@@ -68,7 +69,7 @@ const LABS = {
         exercises: 4,
         internalPort: 3000
     },
-    'heartbleed-lab': {
+    'heartbleed': {
         id: 'heartbleed-lab',
         title: 'Heartbleed (CVE-2014-0160)',
         portSuffix: 9,
@@ -88,7 +89,7 @@ const LABS = {
             PYTHONUNBUFFERED: '1',
         },
     },
-    'jwt-lab': {
+    'jwt_vulnerabilities': {
         id: 'jwt-lab',
         title: 'Jwt lab',
         portSuffix: 11,           // 10[user_id][suffix] → ex: user 5 = port 8051
@@ -96,7 +97,7 @@ const LABS = {
         exercises: 4,
         internalPort: 3000
     },
-    'log4shell-dockerlab-main': {
+    'log4shell': {
         id: 'log4shell-dockerlab-main',
         title: 'Log4Shell (CVE-2021-44228)',
         portSuffix: 12,
@@ -108,7 +109,7 @@ const LABS = {
             vulnerable: 1,
         },
     },
-    'mitm-attack-lab': {
+    'mitm': {
         id: 'mitm-attack-lab',
         title: 'MITM Attack',
         portSuffix: 13,
@@ -119,7 +120,7 @@ const LABS = {
             victim: 1,   // ← port + 1 = victim-server
         }, //http://IP:8071  → interface principale du lab http://IP:8072  → victim-server, // ← port + 1 = victim-server
     },
-    'nosql-injection-lab': {
+    'nosqlinjection': {
         id: 'nosql-injection-lab',
         title: 'NoSQL Injection Lab',
         portSuffix: 14,
@@ -127,7 +128,7 @@ const LABS = {
         compose: true,
         internalPort: 3000
     },
-    'path-traversal-lab': {
+    'path_traversal': {
         id: 'path-traversal-lab',
         title: 'Path traversal',
         portSuffix: 15,
@@ -141,8 +142,11 @@ const LABS = {
         portSuffix: 16,
         composeDir: 'phishing',
         internalPort: 5000,
+        volume: '/data',
         env: {
-            FLASK_ENV: 'production'
+            FLASK_ENV: 'production',
+            DEBUG_MODE: 'false',
+            DB_PATH: '/data/events.db',
         },
     },
     'shellshock': {
@@ -157,7 +161,7 @@ const LABS = {
             FLASK_ENV: 'production',
         },
     },
-    'sqli-auth-lab': {
+    'injection_sql_commentaire': {
         id: 'sqli-auth-lab',
         title: 'SQL Injection - Auth Bypass',
         portSuffix: 18,
@@ -170,8 +174,8 @@ const LABS = {
             LAB_NAME: 'sqli-auth-lab',
         },
     },
-    'sqli-error-based-lab': {
-        id: 'sqli-error-based',
+    'injection_sql_erreur': {
+        id: 'sqli-error-based-lab',
         title: 'SQL Injection - Error Based',
         portSuffix: 19,
         composeDir: 'sqli-error-based-lab',
@@ -185,7 +189,7 @@ const LABS = {
             LAB_FLAG: 'DIABLE{SQLI_ERROR_BASED_OK}',
         },
     },
-    'sqli-lab': {
+    'injection_sql': {
         id: 'sqli-lab',
         title: 'SQL Injection - lab',
         portSuffix: 20,
@@ -204,7 +208,7 @@ const LABS = {
         composeDir: 'ssrf',
         exercises: 4,
     },
-    'xpath-lab': {
+    'injection_xpath': {
         id: 'xpath-lab',
         title: 'XPath Injection',
         portSuffix: 22,
@@ -216,7 +220,7 @@ const LABS = {
             DATA_PATH: '/var/www/html/data',
         },
     },
-    'xss-lab': {
+    'xss': {
         id: 'xss-lab',
         title: 'Cross-Site Scripting (XSS)',
         portSuffix: 23,           // 8[user_id][suffix] → ex: user 5 = port 8051
@@ -226,14 +230,14 @@ const LABS = {
             LAB_FLAG: 'DIABLE{XSS_LAB_COMPLETED_2026}',
         },
     },
-    'xxe-lab': {
+    'xxe': {
         id: 'xxe-lab',
         title: 'XXE Lab',
         portSuffix: 24,
         composeDir: 'xxe-lab',
         exercises: 3,
     },
-    'api_scanning': {
+    'nexcorpapi': {
         id: 'api_scanning',
         title: 'Broken Auth / IDOR / Exposed Admin',
         portSuffix: 25,
@@ -244,7 +248,7 @@ const LABS = {
             SECRET_KEY: 'dev-secret-change-in-prod',
         },
     },
-    'blind-sqli': {
+    'injection_blind_sql': {
         id: 'blind-sqli',
         title: 'Blind Sqli',
         portSuffix: 26,

@@ -58,7 +58,7 @@ async function spawnSingleLab(userId, labId) {
     const containerName = getContainerName(userId, labId);
     const port = getPort(userId, labId);
     await waitForPort(port);
-    const imageName = lab.image || `sec-lab-${labId}`;
+    const imageName = lab.image || `sec-lab-${lab?.id}`;
 
     const existing = await findContainer(containerName);
     if (existing) {
@@ -207,8 +207,9 @@ async function getLabStatus(userId, labId) {
 }
 
 async function getComposeLabStatus(userId, labId) {
-    const projectName = `${labId}-u${userId}`;
     const lab = LABS[labId];
+    const labPath = path.join(LABS_DIR, lab.composeDir);
+    const projectName = getContainerName(userId, labId);
 
     try {
         const result = execFileSync(
