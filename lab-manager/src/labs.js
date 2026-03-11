@@ -222,6 +222,9 @@ const LABS = {
         portSuffix: 23,           // 8[user_id][suffix] → ex: user 5 = port 8051
         composeDir: 'xss-lab',       // sous-dossier dans LABS_DIR
         exercises: 4,
+        env: {
+            LAB_FLAG: 'DIABLE{XSS_LAB_COMPLETED_2026}',
+        },
     },
     'xxe-lab': {
         id: 'xxe-lab',
