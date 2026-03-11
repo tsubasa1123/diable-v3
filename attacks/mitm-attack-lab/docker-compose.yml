@@ -1,6 +1,8 @@
 services:
   victim-server:
-    image: diable/mitm-victim-server:latest
+    build:
+      context: .
+      dockerfile: Dockerfile.victim
     container_name: mitm-victim-user-${USER_ID}
     ports:
       - "${VICTIM_PORT}:8080"
@@ -10,7 +12,9 @@ services:
       - internal
 
   mitm-proxy:
-    image: diable/mitm-proxy:latest
+    build:
+      context: .
+      dockerfile: Dockerfile.proxy
     container_name: mitm-proxy-user-${USER_ID}
     environment:
       - TARGET_HOST=victim-server
@@ -22,7 +26,9 @@ services:
       - internal
 
   app:
-    image: diable/mitm-attack-lab:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
     container_name: mitm-app-user-${USER_ID}
     ports:
       - "${LAB_PORT}:3000"
