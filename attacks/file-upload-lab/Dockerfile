@@ -29,6 +29,9 @@ RUN chown -R www-data:www-data /var/www/html \
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
     CMD curl -f http://localhost/health.php || exit 1
 
+# Créer un fichier flag avec un code unique
+RUN echo "FLAG{UPLOAD_SUCCESS_2026}" > /tmp/flag.txt
+
 # Exposition du port
 EXPOSE 80
 
