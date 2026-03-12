@@ -95,7 +95,7 @@
         
                 <!-- 🏆 SECTION FLAG DE VALIDATION -->
         <section class="info-section" style="margin-top: 30px; border-left: 4px solid #FFD700; background: rgba(255, 215, 0, 0.05);">
-            <details open>
+            <details>
                 <summary style="color: #FFD700; font-weight: bold;">🏆 VALIDATION - Flag à trouver</summary>
                 <div class="info-content">
                     <p><strong>Objectif :</strong> Lire le fichier <code>/tmp/flag.txt</code> sur le serveur via XXE.</p>
@@ -129,7 +129,7 @@
                     
                     <div style="background: #1a1a1a; padding: 15px; border-radius: 5px; margin-top: 15px;">
                         <p style="color: #ff9999; margin-bottom: 5px;">⚠️ À faire après avoir trouvé le flag :</p>
-                        <p>Envoyer <strong style="color: #FFD700;">FLAG{XXE_SUCCESS_2026}</strong> dans le groupe pour valider que l'attaque fonctionne.</p>
+                        <p>saisir <strong style="color: #FFD700;">FLAG{xxxxxxxxx}</strong> dans la zone pour valider que l'attaque fonctionne.</p>
                     </div>
                 </div>
             </details>
