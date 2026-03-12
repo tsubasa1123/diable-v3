@@ -161,7 +161,7 @@ const LABS = {
             FLASK_ENV: 'production',
         },
     },
-    'injection_sql_commentaire': {
+    'injection_sql': {
         id: 'sqli-auth-lab',
         title: 'SQL Injection - Auth Bypass',
         portSuffix: 18,
@@ -189,7 +189,7 @@ const LABS = {
             LAB_FLAG: 'DIABLE{SQLI_ERROR_BASED_OK}',
         },
     },
-    'injection_sql': {
+    'injection_sql_commentaire': {
         id: 'sqli-lab',
         title: 'SQL Injection - lab',
         portSuffix: 20,
