@@ -1,7 +1,7 @@
 FROM php:8.1-apache
 
 LABEL maintainer="DIABLE Team"
-LABEL description="CSRF lab - weak static CSRF token protection"
+LABEL description="CSRF lab - static predictable CSRF token vulnerable to forgery"
 LABEL version="1.0"
 
 RUN apt-get update && apt-get install -y curl && apt-get clean && rm -rf /var/lib/apt/lists/*

@@ -1,6 +1,6 @@
-# 🌐 SSRF — Server-Side URL Fetch
+# 🌐 SSRF — Local Resource Discovery and Access
 
-A lab demonstrating a simple Server-Side Request Forgery (SSRF) vulnerability where the server fetches a user-controlled URL without validation.
+A lab demonstrating a Server-Side Request Forgery (SSRF) vulnerability where the server fetches a user-controlled URL without validation, allowing access to local resources from the server itself.
 
 ---
 
@@ -14,6 +14,7 @@ A lab demonstrating a simple Server-Side Request Forgery (SSRF) vulnerability wh
         ├── fetch.php
         ├── health.php
         ├── index.php
+        ├── private-status.php
         ├── reset.php
         └── style.css
 
@@ -55,22 +56,62 @@ Example:
 The application allows the user to provide any URL to the server.
 The server then fetches this URL directly, without applying any validation or restriction.
 
-Because the request is executed server-side, an attacker may force the application to access unintended or internal resources.
+Because the request is executed server-side, an attacker may force the application to access unintended, local, or internal resources.
 
 ---
 
-## ✅ Example SSRF Attack
+## 🧪 Exploitation Flow
 
-Example using a local resource inside the same container:
+This lab is designed as a progressive SSRF scenario.
 
-    http://localhost:8083/fetch.php?url=http://localhost/health.php
+### Step 1 — External URL fetch
+
+Try a public URL such as:
+
+    http://example.com
 
 Expected result:
-- The request is executed by the server
-- The response from `health.php` is returned
-- This shows that the server can access local resources from its own environment
+- The server fetches the external resource
+- The response headers and content are displayed
+- This confirms that the user controls the destination
 
-In this scenario, `localhost` refers to the vulnerable server itself (or the Docker container), not to the attacker's machine.
+### Step 2 — Local resource discovery
+
+Try a local endpoint such as:
+
+    http://localhost/health.php
+
+or:
+
+    http://127.0.0.1/health.php
+
+Expected result:
+- The server accesses its own local resource
+- A response from `health.php` is returned
+- A hint indicates that another internal endpoint exists
+
+### Step 3 — Internal target access
+
+Use the hint to reach the more sensitive local endpoint:
+
+    http://localhost/private-status.php
+
+or:
+
+    http://127.0.0.1/private-status.php
+
+Expected result:
+- The response from the internal resource is displayed
+- The exploitation is considered successful
+- A success popup displays the flag
+
+---
+
+## ✅ Important Note
+
+In this lab, `localhost` refers to the vulnerable server itself (the container), not to the attacker’s machine.
+
+This is what makes the SSRF interesting: the attacker provides the destination, but the request is sent by the server from its own execution context.
 
 ---
 
