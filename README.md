@@ -98,7 +98,7 @@ diable/
 ---
 
 ### 3. XXE Lab (`attacks/xxe-lab/`)
-**Difficulté:** Difficile  
+**Difficulté:** Moyen  
 **Tag:** XML  
 **Auteur:** Hamed
 
@@ -172,62 +172,197 @@ diable/
 - Transaction Monitoring
 - Traffic Modification
 ---
-### 9. Shellshock Lab (`attacks/shellshock/`)
-**Difficulté:** Inconnue
-**Tag:** RCE
+### 9. Shellshock Lab (`attacks/Shellshock/`)
+**Difficulté:** Facile → Moyen  
+**Tag:** Web / RCE  
 **Auteur:** Imane
+
+**Scénarios:**
+- Rejection HFS - Injection de macro par octet nul (CVE-2014-6287)
+- Exécution de commandes à distance
+- Lecture de fichiers sensibles
+
 ---
 ### 10. API Scanning Lab (`attacks/api_scanning/`)
 **Difficulté:** Facile → Moyen  
 **Tag:** WEB  
 **Auteur:** Imane
+
 ---
 ### 11. CVE-2025-68613 Lab (`attacks/app-cve-2025-68613/`)
 **Difficulté:** Moyen  
 **Tag:** WEB  
 **Auteur:** Hamza
+
 ---
-### 12. IDOR Lab (`attacks/app-IDOR/`)
+### 12. IDOR Lab (`attacks/app-idor/`)
 **Difficulté:** Moyen  
-**Tag:** WEB  
+**Tag:** WEB / Access Control  
 **Auteur:** Hamza
+
+**Scénarios:**
+- Profile Access sans autorisation
+- API Endpoint sans vérification
+- Enumération d'utilisateurs
+
 ---
-### 12. MFA Bypass Lab (`attacks/app-mfa-bypass/`)
+### 13. MFA Bypass Lab (`attacks/app-mfa-bypass/`)
 **Difficulté:** Moyen  
-**Tag:** WEB  
+**Tag:** WEB / Auth  
 **Auteur:** Hamza
+
+**Scénarios:**
+- Meet-In-The-Middle Attack
+- OTP Brute Force (4 digits)
+- Pas de rate limiting
+
 ---
-### 13. Broken Authentification Lab (`attacks/broken-auth-lab/`)
+### 14. Broken Authentification Lab (`attacks/broken-auth-lab/`)
 **Difficulté:** Moyen  
 **Tag:** AUTH  
 **Auteur:** Hamed
+
 ---
-### 14. Email Header Injection Lab (`attacks/email_header_injection/`)
-**Difficulté:** Moyen  
-**Tag:** WEB  
+### 15. Email Header Injection Lab (`attacks/email_header_injection/`)
+**Difficulté:** Facile  
+**Tag:** AppSec / Email  
 **Auteur:** Emma
+
+**Scénarios:**
+- Injection de headers CRLF
+- Modification d'en-têtes email
+- Redirection de réponses
+
 ---
-### 15. File Upload to RCE Lab (`attacks/file-upload-lab/`)
+### 16. File Upload to RCE Lab (`attacks/file-upload-lab/`)
 **Difficulté:** Moyen  
-**Tag:** WEB  
+**Tag:** WEB / RCE  
 **Auteur:** Hamed
+
+**Scénarios:**
+- Upload de fichier malveillant
+- Bypass de validation
+- Exécution de code à distance
+
 ---
-### 16. GraphQL Injection Lab (`attacks/file-upload-lab/`)
-**Difficulté:** Moyen  
-**Tag:** API  
+### 17. GraphQL Injection Lab (`attacks/graphql-lab/`)
+**Difficulté:** Moyen → Difficile  
+**Tag:** GraphQL / API  
 **Auteur:** Thiané
+
+**Scénarios:**
+- Introspection Attack
+- Data Exfiltration
+- Auth Bypass via Mutation
+
 ---
-### 17. Heartbleed Lab (`attacks/heartbleed-lab/`)
-**Difficulté:** Difficile  
-**Tag:** TLS
+### 18. Heartbleed Lab (`attacks/heartbleed-lab/`)
+**Difficulté:** Moyen  
+**Tag:** Crypto / TLS  
 **Auteur:** Imane
+
+**Scénarios:**
+- CVE-2014-0160
+- Buffer over-read dans OpenSSL
+- Lecture de mémoire sensible
+- Extraction de clés privées
+
 ---
-### 17. Log4Shell Lab (`attacks/log4shell-dockerlab-main/`)
-**Difficulté:** Difficile  
-**Tag:** HTML  
+### 19. Log4Shell Lab (`attacks/log4shell-dockerlab-main/`)
+**Difficulté:** Avancé  
+**Tag:** RCE / Java  
 **Auteur:** Farah
+
+**Scénarios:**
+- CVE-2021-44228
+- JNDI Injection
+- LDAP malveillant
+- Remote Code Execution
+
 ---
-```
+
+### 20. SQL Injection Auth Lab (`attacks/sqli-auth-lab/`)
+**Difficulté:** Moyen  
+**Tag:** DB  
+**Auteur:** Lucien
+
+**Scénarios:**
+- Bypass d'authentification (Easy)
+- Exfiltration via UNION SELECT (Medium)
+- Blind SQLi booléenne (Hard)
+
+---
+
+### 21. SQL Injection Error-Based Lab (`attacks/sqli-error-based-lab/`)
+**Difficulté:** Moyen  
+**Tag:** Web  
+**Auteur:** Rachid
+
+**Scénarios:**
+- SQL Injection basée sur les erreurs
+- Divulgation d'informations via erreurs SQL
+- Comparaison vulnérable vs sécurisé
+
+---
+
+### 22. Path Traversal Lab (`attacks/path-traversal-lab/`)
+**Difficulté:** Facile  
+**Tag:** Web  
+**Auteur:** Tarik
+
+**Scénarios:**
+- Directory Traversal simple
+- Accès aux fichiers sensibles
+- Bypass de validation
+
+---
+
+### 23. Phishing Lab (`attacks/phishing/`)
+**Difficulté:** Facile  
+**Tag:** Social Engineering  
+**Auteur:** Emma
+
+**Scénarios:**
+- Détection d'emails de phishing
+- Analyse des signaux faibles
+- Sensibilisation utilisateurs
+
+---
+
+### 24. SSRF Lab (`attacks/ssrf/`)
+**Difficulté:** Moyen  
+**Tag:** Web  
+**Auteur:** Chaimae
+
+**Scénarios:**
+- Server-Side Request Forgery
+- Fetch d'URL non validée
+- Accès aux services internes
+
+---
+
+### 25. Blind SQL Injection Lab (`attacks/blind-sqli/`)
+**Difficulté:** Moyen  
+**Tag:** DB  
+**Auteur:** Farah
+
+**Scénarios:**
+- Blind SQLi avec réponses booléennes
+- Extraction caractère par caractère
+- Automatisation de l'exploitation
+
+---
+
+### 26. Time-Based SQL Injection Lab (`attacks/injection_sql_temporell/`)
+**Difficulté:** Moyen  
+**Tag:** DB  
+**Auteur:** Mohamed
+
+**Scénarios:**
+- Time-Based Blind SQL Injection
+- Utilisation de SLEEP() / WAITFOR
+- Extraction de données via timing
+
 ---
 
 ## 🚀 Installation Complète
@@ -491,22 +626,6 @@ Tous les labs partagent le thème DIABLE standardisé :
 
 ---
 
-## 📞 Contact
-
-### Responsables par Work Package
-
-**WP1 - Infrastructure:**
-- Email: wp1@diable-project.fr (fictif)
-
-**WP2 - Frontend:**
-- Email: wp2@diable-project.fr (fictif)
-
-**WP3 - Containers:**
-- Kennedy : 
-- Email général: wp3@diable-project.fr (fictif)
-
----
-
 ## 📜 Licence
 
 Projet pédagogique - DSI ISFA 2025-2026
@@ -517,11 +636,11 @@ Projet pédagogique - DSI ISFA 2025-2026
 
 ## 📊 Statistiques
 
-- **Labs disponibles:** 3
-- **Labs en développement:** 3+
+- **Labs disponibles:** 26
 - **Work Packages:** 3
-- **Contributeurs:** 10+
-- **Lignes de code:** 5000+
+- **Contributeurs:** 15+
+- **Technologies:** Docker, Python, PHP, Node.js, Java
+- **Catégories de vulnérabilités:** Injection, Auth, Crypto, API, Social Engineering
 
 ---
 
