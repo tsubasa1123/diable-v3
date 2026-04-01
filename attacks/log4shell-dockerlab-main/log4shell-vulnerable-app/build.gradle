@@ -4,7 +4,7 @@ plugins {
 	id 'java'
 }
 
-group = 'fr.christophetd.log4shell'
+group = 'fr.farah.log4shell'
 version = '0.0.1-SNAPSHOT'
 sourceCompatibility = '1.8'
 

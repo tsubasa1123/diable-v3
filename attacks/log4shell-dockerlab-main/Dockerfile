@@ -15,5 +15,6 @@ WORKDIR /app
 COPY --from=builder /home/gradle/src/build/libs/*.jar /app/app.jar
 
 ENV JAVA_OPTS=""
+ENV VULNERABLE_PORT=8080
 
-CMD ["sh","-c","java $JAVA_OPTS -jar /app/app.jar"]
+CMD ["sh","-c","java $JAVA_OPTS -jar /app/app.jar --server.port=${VULNERABLE_PORT}"]

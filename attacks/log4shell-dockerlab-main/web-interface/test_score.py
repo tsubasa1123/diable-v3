@@ -1,8 +1,9 @@
+import os
 import requests
 
-# Login
-login_url = 'http://192.168.126.131:5000/login'
-score_url = 'http://192.168.126.131:5000/api/user/score'
+base_url = os.environ.get('BASE_URL', 'http://127.0.0.1:5000').rstrip('/')
+login_url = f'{base_url}/login'
+score_url = f'{base_url}/api/user/score'
 
 session = requests.Session()
 
