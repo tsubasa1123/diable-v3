@@ -8,15 +8,18 @@
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
   :root {
-    --green: #00ff88;
-    --green-dim: #00cc66;
-    --green-glow: rgba(0,255,136,0.3);
-    --red: #ff3366;
-    --bg: #050d0a;
-    --panel: #081510;
-    --border: #0f3022;
-    --text: #a0ffcc;
-    --muted: #2a5c42;
+    --primary: #d41414;
+    --primary-hover: #ff2a2a;
+    --link: #1f6aff;
+    --glow: #00c2ff;
+    --glow-soft: rgba(0, 194, 255, 0.28);
+    --danger: #ff5a5a;
+    --bg: #0b0f14;
+    --panel: #101722;
+    --header: #0f1a2b;
+    --border: #1b2a40;
+    --text: #f2f4f8;
+    --muted: #8a8f98;
     --font-mono: 'Share Tech Mono', monospace;
     --font-display: 'Orbitron', sans-serif;
   }
@@ -63,12 +66,12 @@
     width: 480px;
     background: var(--panel);
     border: 1px solid var(--border);
-    border-top: 2px solid var(--green);
+    border-top: 2px solid var(--primary);
     padding: 0;
     box-shadow:
-      0 0 40px rgba(0,255,136,0.08),
-      0 0 80px rgba(0,255,136,0.03),
-      inset 0 1px 0 rgba(0,255,136,0.1);
+      0 0 40px rgba(0, 194, 255, 0.08),
+      0 0 80px rgba(212, 20, 20, 0.05),
+      inset 0 1px 0 rgba(0, 194, 255, 0.08);
     animation: fadeIn 0.8s ease forwards;
   }
 
@@ -83,7 +86,7 @@
     align-items: center;
     gap: 8px;
     padding: 10px 16px;
-    background: #060f0b;
+    background: var(--header);
     border-bottom: 1px solid var(--border);
     font-size: 11px;
     color: var(--muted);
@@ -93,9 +96,9 @@
     width: 10px; height: 10px;
     border-radius: 50%;
   }
-  .dot.red   { background: #ff4444; box-shadow: 0 0 4px #ff4444; }
-  .dot.yellow{ background: #ffcc00; box-shadow: 0 0 4px #ffcc00; }
-  .dot.green { background: var(--green); box-shadow: 0 0 4px var(--green); }
+  .dot.red   { background: var(--primary); box-shadow: 0 0 8px rgba(212, 20, 20, 0.7); }
+  .dot.yellow{ background: #ffb020; box-shadow: 0 0 8px rgba(255, 176, 32, 0.65); }
+  .dot.green { background: var(--glow); box-shadow: 0 0 8px rgba(0, 194, 255, 0.7); }
 
   .topbar span { margin-left: auto; letter-spacing: 1px; }
 
@@ -107,8 +110,8 @@
     font-family: var(--font-mono);
     font-size: 10px;
     letter-spacing: 2px;
-    color: var(--green);
-    border: 1px solid var(--green);
+    color: var(--glow);
+    border: 1px solid var(--glow);
     padding: 3px 10px;
     margin-bottom: 16px;
     text-transform: uppercase;
@@ -116,8 +119,8 @@
   }
 
   @keyframes blink-border {
-    0%, 100% { border-color: var(--green); }
-    50% { border-color: var(--green-dim); }
+    0%, 100% { border-color: var(--glow); }
+    50% { border-color: var(--link); }
   }
 
   h1 {
@@ -126,7 +129,7 @@
     font-weight: 900;
     letter-spacing: 2px;
     color: #fff;
-    text-shadow: 0 0 20px var(--green-glow);
+    text-shadow: 0 0 20px var(--glow-soft);
     margin-bottom: 6px;
     text-transform: uppercase;
   }
@@ -138,7 +141,7 @@
     margin-bottom: 28px;
   }
 
-  .subtitle::before { content: '> '; color: var(--green); }
+  .subtitle::before { content: '> '; color: var(--glow); }
 
   /* Input group */
   .input-group {
@@ -159,18 +162,18 @@
     display: flex;
     align-items: center;
     border: 1px solid var(--border);
-    background: #040c08;
+    background: #0c131d;
     transition: border-color 0.2s, box-shadow 0.2s;
   }
 
   .input-wrapper:focus-within {
-    border-color: var(--green);
-    box-shadow: 0 0 0 3px rgba(0,255,136,0.07), inset 0 0 12px rgba(0,255,136,0.04);
+    border-color: var(--glow);
+    box-shadow: 0 0 0 3px rgba(0, 194, 255, 0.1), inset 0 0 12px rgba(0, 194, 255, 0.06);
   }
 
   .input-prefix {
     padding: 0 12px;
-    color: var(--green);
+    color: var(--glow);
     font-size: 14px;
     user-select: none;
   }
@@ -183,8 +186,8 @@
     padding: 12px 12px 12px 0;
     font-family: var(--font-mono);
     font-size: 14px;
-    color: var(--green);
-    caret-color: var(--green);
+    color: var(--text);
+    caret-color: var(--glow);
   }
 
   input::placeholder { color: var(--muted); }
@@ -193,9 +196,9 @@
   button[type="submit"] {
     width: 100%;
     padding: 13px;
-    background: transparent;
-    border: 1px solid var(--green);
-    color: var(--green);
+    background: linear-gradient(135deg, var(--primary), #b10f0f);
+    border: 1px solid var(--primary);
+    color: var(--text);
     font-family: var(--font-display);
     font-size: 12px;
     font-weight: 700;
@@ -204,7 +207,7 @@
     cursor: pointer;
     position: relative;
     overflow: hidden;
-    transition: color 0.2s, box-shadow 0.2s;
+    transition: color 0.2s, box-shadow 0.2s, border-color 0.2s, background 0.2s;
     margin-top: 8px;
   }
 
@@ -212,7 +215,7 @@
     content: '';
     position: absolute;
     inset: 0;
-    background: var(--green);
+    background: linear-gradient(135deg, var(--primary-hover), #ff5757);
     transform: scaleX(0);
     transform-origin: left;
     transition: transform 0.25s ease;
@@ -220,8 +223,9 @@
   }
 
   button[type="submit"]:hover {
-    color: #000;
-    box-shadow: 0 0 20px var(--green-glow);
+    color: var(--text);
+    border-color: var(--primary-hover);
+    box-shadow: 0 0 20px rgba(212, 20, 20, 0.24), 0 0 28px var(--glow-soft);
   }
 
   button[type="submit"]:hover::before { transform: scaleX(1); }
@@ -230,7 +234,7 @@
   .result {
     margin-top: 24px;
     border: 1px solid var(--border);
-    background: #040c08;
+    background: #0c131d;
     padding: 14px 16px;
     font-size: 13px;
     min-height: 48px;
@@ -249,8 +253,8 @@
     flex-shrink: 0;
   }
 
-  .result.success { border-color: var(--green); color: var(--green); }
-  .result.error   { border-color: var(--red);   color: var(--red);   }
+  .result.success { border-color: var(--glow); color: var(--glow); }
+  .result.error   { border-color: var(--danger); color: var(--danger); }
 
   /* Footer */
   .footer {
@@ -265,10 +269,21 @@
   .footer .status-dot {
     display: inline-block;
     width: 6px; height: 6px;
-    background: var(--green);
+    background: var(--glow);
     border-radius: 50%;
     margin-right: 6px;
     animation: pulse 1.5s infinite;
+  }
+
+  a {
+    color: var(--link);
+    text-decoration: none;
+    transition: color 0.2s, text-shadow 0.2s;
+  }
+
+  a:hover {
+    color: var(--glow);
+    text-shadow: 0 0 12px var(--glow-soft);
   }
 
   @keyframes pulse {
@@ -330,9 +345,9 @@ const cols = Math.floor(canvas.width / fontSize);
 const drops = Array(cols).fill(1);
 
 function drawMatrix() {
-  ctx.fillStyle = 'rgba(5,13,10,0.05)';
+  ctx.fillStyle = 'rgba(11,15,20,0.08)';
   ctx.fillRect(0, 0, canvas.width, canvas.height);
-  ctx.fillStyle = '#00ff88';
+  ctx.fillStyle = '#00c2ff';
   ctx.font = fontSize + 'px Share Tech Mono';
   drops.forEach((y, i) => {
     const char = chars[Math.floor(Math.random() * chars.length)];

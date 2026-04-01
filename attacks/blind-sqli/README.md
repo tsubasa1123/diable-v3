@@ -1,229 +1,177 @@
-# Lab Blind SQL Injection (Flask + SQLite + Docker)
+# Blind SQL Injection Lab
 
-## Présentation
+Mini lab pedagogique en `Flask` + `SQLite` pour comprendre une attaque de type `boolean-based blind SQL injection`.
 
-Ce projet démontre une **vulnérabilité de Blind SQL Injection (injection SQL aveugle)** dans une application web volontairement vulnérable.
+L'application est volontairement vulnerable: elle ne montre ni erreur SQL ni resultat brut, mais elle laisse fuiter un bit d'information via sa reponse:
 
-Le lab simule un scénario réaliste où un attaquant peut **extraire des informations sensibles d'une base de données sans voir directement les résultats SQL ni les erreurs**.
+- `User exists`
+- `User not found`
 
-L'application est développée avec :
+Cette difference suffit pour reconstruire une information sensible caractere par caractere.
 
-* **Python Flask** : application web
-* **SQLite** : base de données
-* **HTML** : interface web
-* **Python** : script d'exploitation automatique
+## Objectif
 
-Ce lab montre comment un attaquant peut **reconstruire un mot de passe caractère par caractère** uniquement en analysant la réponse de l'application.
+Ce projet sert a:
 
----
+- comprendre le principe d'une `blind SQL injection`
+- observer comment une condition vraie ou fausse change la reponse applicative
+- automatiser l'extraction d'un secret avec un script Python simple
+- illustrer les bonnes pratiques de correction
 
-## Architecture du lab
+## Stack
+
+- `Python 3.10`
+- `Flask`
+- `SQLite`
+- `HTML/CSS`
+- `requests` pour le script d'exploitation
+
+## Structure du projet
 
 ```text
-blind-sqli-lab
-│
-├── app.py
-├── exploit.py
-├── users.db
-├── Dockerfile
-├── requirements.txt
-├── README.md
-├── .gitignore
-│
-├── templates
-│   ├── index.html
-│   └── about.html
-│
-└── venv/       ```
+blind-sqli/
+|-- app.py
+|-- exploit.py
+|-- Dockerfile
+|-- requirements.txt
+|-- README.md
+`-- templates/
+    |-- index.html
+    `-- about.html
+```
 
----
+Notes:
 
-## Code vulnérable
+- `users.db` est cree automatiquement au premier lancement de `app.py`
+- `exploit.py` automatise une extraction simple du mot de passe de `admin`
 
-La vulnérabilité se trouve dans la requête SQL suivante :
+## Fonctionnement de la vulnerabilite
+
+Le point faible est ici:
 
 ```python
 query = f"SELECT * FROM users WHERE username = '{username}'"
 ```
 
-L'entrée utilisateur est directement concaténée dans la requête SQL, ce qui permet une **injection SQL**.
+La valeur saisie par l'utilisateur est concatenee directement dans la requete SQL.
 
-Requête normale :
+Exemple normal:
 
 ```sql
 SELECT * FROM users WHERE username = 'admin'
 ```
 
-Si un attaquant injecte :
+Exemple injecte:
 
 ```text
 admin' OR '1'='1
 ```
 
-La requête devient :
+Ce qui donne:
 
 ```sql
 SELECT * FROM users WHERE username = 'admin' OR '1'='1'
 ```
 
-Cette condition est toujours vraie.
+La condition devient toujours vraie.
 
----
+## Pourquoi c'est une blind SQLi
 
-## Structure de la base de données
+L'application ne renvoie pas directement le contenu de la base.
+Elle retourne seulement une reponse boolenne observable:
 
-La base SQLite contient une table :
+- si la condition est vraie, on obtient `User exists`
+- si la condition est fausse, on obtient `User not found`
 
-```text
-users
-```
+Cela permet de tester des hypotheses sur les donnees sans jamais afficher la requete ni les erreurs SQL.
 
-Structure :
+## Exemples de payloads
 
-```text
-id INTEGER PRIMARY KEY
-username TEXT
-password TEXT
-```
-
-Exemple de données :
-
-```text
-1 | admin    | secret123
-2 | john     | password1
-3 | alice    | alice123
-...
-20 | robert  | robertpass
-```
-
----
-
-## Lancer le lab
-
-### 1. Activer l'environnement virtuel
-
-```bash
-source venv/bin/activate
-```
-
-### 2. Démarrer l'application
-
-```bash
-python app.py
-```
-
-Le serveur démarre sur :
-
-```text
-http://127.0.0.1:5000
-```
-
----
-
-## Interface web
-
-L'application affiche un formulaire simple :
-
-```text
-Blind SQL Injection Lab
-
-[ champ username ]
-
-[ Search ]
-```
-
-L'application retourne seulement deux réponses :
-
-```text
-User exists
-User not found
-```
-
-Aucune erreur SQL ni résultat de requête n'est affiché.
-
----
-
-## Blind SQL Injection
-
-Comme l'application ne retourne pas les résultats SQL, l'attaquant doit **déduire les informations en analysant les réponses de l'application**.
-
-### Condition vraie
-
-Payload :
+Condition vraie:
 
 ```text
 admin' AND 1=1--
 ```
 
-Requête exécutée :
-
-```sql
-SELECT * FROM users WHERE username='admin' AND 1=1
-```
-
-Réponse :
-
-```text
-User exists
-```
-
-### Condition fausse
-
-Payload :
+Condition fausse:
 
 ```text
 admin' AND 1=2--
 ```
 
-Requête exécutée :
-
-```sql
-SELECT * FROM users WHERE username='admin' AND 1=2
-```
-
-Réponse :
-
-```text
-User not found
-```
-
-L'attaquant peut donc **tester des conditions vraies ou fausses**.
-
----
-
-## Extraction du mot de passe
-
-Pour extraire le mot de passe, l'attaquant teste chaque caractère.
-
-Exemple :
+Test du premier caractere du mot de passe:
 
 ```text
 admin' AND substr(password,1,1)='s'--
 ```
 
-Si la réponse est :
+Si l'application repond `User exists`, on peut deduire que le premier caractere est `s`.
 
-```text
-User exists
+## Base de donnees
+
+Au demarrage, l'application cree une table `users` si elle n'existe pas:
+
+```sql
+CREATE TABLE IF NOT EXISTS users(
+    id INTEGER PRIMARY KEY,
+    username TEXT,
+    password TEXT
+)
 ```
 
-Alors le premier caractère du mot de passe est **s**.
+Des utilisateurs de demonstration sont inseres, dont:
 
-Cette méthode est répétée pour chaque caractère.
+```text
+admin / secret123
+john / password1
+alice / alice123
+```
 
----
+## Lancer le projet en local
+
+### 1. Installer les dependances
+
+```bash
+pip install -r requirements.txt
+```
+
+### 2. Demarrer l'application
+
+```bash
+python app.py
+```
+
+Application disponible sur:
+
+```text
+http://127.0.0.1:5000
+```
+
+## Lancer avec Docker
+
+### 1. Construire l'image
+
+```bash
+docker build -t blind-sqli-lab .
+```
+
+### 2. Demarrer le conteneur
+
+```bash
+docker run --rm -p 5000:5000 blind-sqli-lab
+```
 
 ## Exploitation automatique
 
-Le projet contient un script d'exploitation automatique.
+Le script `exploit.py` teste les caracteres un par un sur le compte `admin`.
 
-Exécuter :
+Lancement:
 
 ```bash
 python exploit.py
 ```
 
-Résultat :
+Exemple de sortie:
 
 ```text
 Found: s
@@ -239,54 +187,45 @@ Found: secret123
 Password = secret123
 ```
 
-Le script envoie plusieurs requêtes HTTP et reconstruit le mot de passe automatiquement.
+## Deroule de l'attaque
 
-Ce principe est similaire au fonctionnement d'outils comme **sqlmap** lors d'un pentest.
+1. Identifier le parametre injectable
+2. Verifier qu'une condition vraie et une condition fausse changent la reponse
+3. Cibler une valeur sensible, ici le mot de passe de `admin`
+4. Tester chaque position avec `substr(...)`
+5. Reconstituer la valeur complete
 
----
+## Limites du lab
 
-## Étapes de l'attaque
+Ce lab est volontairement simple:
 
-1. Identifier le point d'injection (champ username)
-2. Tester des conditions booléennes
-3. Déduire les réponses de la base de données
-4. Extraire les caractères un par un
-5. Reconstruire le mot de passe complet
+- une seule route principale
+- une reponse binaire facile a exploiter
+- une base SQLite locale
+- pas de filtrage d'entree
+- pas de defense applicative
 
----
+Il est donc ideal pour apprendre, mais plus simple qu'une application reelle.
 
-## Problèmes de sécurité
+## Correction recommande
 
-Cette application présente plusieurs failles :
+La mitigation de base est l'utilisation de requetes parametrees.
 
-* concaténation directe des entrées utilisateur
-* absence de validation des entrées
-* absence de requêtes préparées
-* fuite d'information via le comportement de l'application
-
----
-
-## Comment prévenir la SQL Injection
-
-La solution consiste à utiliser des **requêtes préparées (paramétrées)**.
-
-Exemple sécurisé :
+Version sure:
 
 ```python
 cursor.execute("SELECT * FROM users WHERE username = ?", (username,))
 ```
 
-Autres bonnes pratiques :
+Bonnes pratiques complementaires:
 
-* validation des entrées
-* utilisation d'ORM
-* firewall applicatif (WAF)
-* gestion sécurisée des erreurs
+- valider et normaliser les entrees
+- limiter les informations revelees par l'application
+- journaliser les comportements suspects
+- utiliser un ORM ou des acces DB parametrables
+- ajouter des tests de securite sur les points sensibles
 
----
+## Avertissement
 
-## Objectif pédagogique
-
-Ce projet est conçu **uniquement à des fins éducatives** afin de comprendre le fonctionnement des attaques SQL Injection et les méthodes de protection.
-
-Ces techniques ne doivent jamais être utilisées sur des systèmes sans autorisation.
+Projet strictement educatif.
+Ne jamais utiliser ces techniques sur un systeme reel sans autorisation explicite.
