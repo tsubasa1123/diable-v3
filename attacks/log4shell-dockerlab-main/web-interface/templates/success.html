@@ -9,14 +9,16 @@
         @import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;700&family=Inter:wght@300;400;600;700&display=swap');
 
         :root {
-            --bg-primary: #0a0e27;
-            --bg-secondary: #151932;
-            --bg-card: #1a1f3a;
-            --accent-primary: #00ff88;
-            --accent-secondary: #00d4ff;
-            --text-primary: #e4e4e7;
-            --text-secondary: #a1a1aa;
-            --border-color: #2d3250;
+            --bg-primary: #0B0F14;
+            --bg-secondary: #0F1A2B;
+            --bg-card: #121923;
+            --accent-primary: #D41414;
+            --accent-primary-hover: #FF2A2A;
+            --accent-secondary: #1F6AFF;
+            --glow-color: #00C2FF;
+            --text-primary: #F2F4F8;
+            --text-secondary: #8A8F98;
+            --border-color: #223247;
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -63,8 +65,8 @@
         }
 
         @keyframes flagGlow {
-            from { box-shadow: 0 0 20px rgba(0,255,136,0.4), 0 0 40px rgba(0,255,136,0.2); }
-            to   { box-shadow: 0 0 60px rgba(0,255,136,0.9), 0 0 100px rgba(0,255,136,0.4); }
+            from { box-shadow: 0 0 20px rgba(0,194,255,0.35), 0 0 40px rgba(0,194,255,0.18); }
+            to   { box-shadow: 0 0 60px rgba(0,194,255,0.55), 0 0 100px rgba(0,194,255,0.28); }
         }
 
         @keyframes scanline {
@@ -119,12 +121,12 @@
         }
 
         .flag-card-header {
-            background: linear-gradient(135deg, #00ff88, #00cc70);
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-primary-hover));
             padding: 24px;
         }
 
         .flag-card-header h2 {
-            color: #0a0e27;
+            color: var(--text-primary);
             font-size: 1.6em;
             font-family: 'Fira Code', monospace;
             font-weight: 700;
@@ -162,7 +164,7 @@
         .flag-value:hover {
             background: #0f1020;
             transform: scale(1.02);
-            box-shadow: 0 0 20px rgba(255,255,0,0.3);
+            box-shadow: 0 0 20px rgba(0,194,255,0.22);
         }
 
         .copy-hint {
@@ -191,7 +193,7 @@
         .stat-card:hover {
             border-color: var(--accent-primary);
             transform: translateY(-4px);
-            box-shadow: 0 8px 25px rgba(0,255,136,0.2);
+            box-shadow: 0 8px 25px rgba(0,194,255,0.2);
         }
 
         .stat-icon { font-size: 2em; margin-bottom: 10px; }
@@ -245,7 +247,7 @@
         .step-check {
             width: 32px; height: 32px;
             border-radius: 50%;
-            background: rgba(0,255,136,0.2);
+            background: rgba(212,20,20,0.16);
             border: 2px solid var(--accent-primary);
             display: flex; align-items: center; justify-content: center;
             color: var(--accent-primary);
@@ -305,14 +307,14 @@
         }
 
         .btn-primary {
-            background: linear-gradient(135deg, var(--accent-primary), #00cc70);
-            color: var(--bg-primary);
-            box-shadow: 0 6px 20px rgba(0,255,136,0.4);
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-primary-hover));
+            color: var(--text-primary);
+            box-shadow: 0 6px 20px rgba(0,194,255,0.28);
         }
 
         .btn-primary:hover {
             transform: translateY(-3px);
-            box-shadow: 0 10px 30px rgba(0,255,136,0.6);
+            box-shadow: 0 10px 30px rgba(0,194,255,0.4);
         }
 
         .btn-secondary {
@@ -418,7 +420,7 @@
             </div>
             <div class="step-item">
                 <div class="step-check"><i class="fas fa-check"></i></div>
-                <span>Lancement du serveur LDAP (marshalsec)</span>
+                <span>Lancement du serveur LDAP (farahsec)</span>
             </div>
             <div class="step-item">
                 <div class="step-check"><i class="fas fa-check"></i></div>
@@ -511,7 +513,7 @@
         function drawMatrix() {
             ctx.fillStyle = 'rgba(10, 14, 39, 0.05)';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
-            ctx.fillStyle = '#00ff88';
+            ctx.fillStyle = '#00C2FF';
             ctx.font = fontSize + 'px Fira Code, monospace';
             drops.forEach((y, i) => {
                 const char = chars[Math.floor(Math.random() * chars.length)];

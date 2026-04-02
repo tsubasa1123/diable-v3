@@ -31,8 +31,8 @@ docker-compose.yml
 # Cache
 node_modules/
 
-# Marshalsec build
-marshalsec/target/
+# FarahSec build
+farahsec/target/
 
 # Attacker sources inutiles en build
 attacker-webserver/*.java
