@@ -11,7 +11,7 @@ It uses Log4j 2.14.1 (through `spring-boot-starter-log4j2` 2.6.1) and the JDK 1.
 Run it:
 
 ```bash
-docker run --name vulnerable-app -p 8080:8080 ghcr.io/christophetd/log4shell-vulnerable-app
+docker run --name vulnerable-app -p 8080:8080 ghcr.io/farah/log4shell-vulnerable-app
 ```
 
 Build it yourself (you don't need any Java-related tooling):
@@ -72,5 +72,5 @@ https://mbechler.github.io/2021/12/10/PSA_Log4Shell_JNDI_Injection/
 
 ## Contributors
 
-[@christophetd](https://twitter.com/christophetd)
+[@farah](https://twitter.com/farah)
 [@rayhan0x01](https://twitter.com/rayhan0x01)

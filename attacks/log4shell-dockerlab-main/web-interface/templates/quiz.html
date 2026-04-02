@@ -9,16 +9,18 @@
         @import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;700&family=Inter:wght@300;400;600;700&display=swap');
         
         :root {
-            --bg-primary: #0a0e27;
-            --bg-secondary: #151932;
-            --bg-card: #1a1f3a;
-            --accent-primary: #00ff88;
-            --accent-secondary: #00d4ff;
+            --bg-primary: #0B0F14;
+            --bg-secondary: #0F1A2B;
+            --bg-card: #121923;
+            --accent-primary: #D41414;
+            --accent-primary-hover: #FF2A2A;
+            --accent-secondary: #1F6AFF;
+            --glow-color: #00C2FF;
             --accent-danger: #ff3366;
             --accent-warning: #ffaa00;
-            --text-primary: #e4e4e7;
-            --text-secondary: #a1a1aa;
-            --border-color: #2d3250;
+            --text-primary: #F2F4F8;
+            --text-secondary: #8A8F98;
+            --border-color: #223247;
         }
         
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -53,13 +55,13 @@
         }
         
         .score-badge {
-            background: linear-gradient(135deg, var(--accent-primary), #00cc70);
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-primary-hover));
             color: var(--bg-primary);
             padding: 10px 24px;
             border-radius: 20px;
             font-weight: 700;
             font-size: 1.2em;
-            box-shadow: 0 4px 15px rgba(0, 255, 136, 0.3);
+            box-shadow: 0 4px 15px rgba(0, 194, 255, 0.3);
         }
         
         .nav-link {
@@ -138,7 +140,7 @@
         
         .question-card:hover {
             border-color: var(--accent-primary);
-            box-shadow: 0 5px 20px rgba(0, 255, 136, 0.2);
+            box-shadow: 0 5px 20px rgba(0, 194, 255, 0.22);
         }
         
         .question-header {
@@ -164,7 +166,7 @@
         }
         
         .question-points {
-            background: rgba(0, 255, 136, 0.2);
+            background: rgba(212, 20, 20, 0.16);
             color: var(--accent-primary);
             padding: 6px 16px;
             border-radius: 20px;
@@ -191,13 +193,13 @@
         
         .option:hover {
             border-color: var(--accent-primary);
-            background: rgba(0, 255, 136, 0.05);
+            background: rgba(0, 194, 255, 0.06);
             transform: translateX(5px);
         }
         
         .option input[type="radio"] { width: 24px; height: 24px; cursor: pointer; accent-color: var(--accent-primary); }
         
-        .option.selected { border-color: var(--accent-primary); background: rgba(0, 255, 136, 0.1); }
+        .option.selected { border-color: var(--accent-primary); background: rgba(212, 20, 20, 0.12); }
         
         .btn {
             padding: 15px 40px;
@@ -215,12 +217,12 @@
         }
         
         .btn-primary {
-            background: linear-gradient(135deg, var(--accent-primary), #00cc70);
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-primary-hover));
             color: var(--bg-primary);
-            box-shadow: 0 6px 20px rgba(0, 255, 136, 0.4);
+            box-shadow: 0 6px 20px rgba(0, 194, 255, 0.35);
         }
         
-        .btn-primary:hover { transform: translateY(-3px); box-shadow: 0 10px 30px rgba(0, 255, 136, 0.6); }
+        .btn-primary:hover { transform: translateY(-3px); box-shadow: 0 10px 30px rgba(0, 194, 255, 0.45); }
         .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
         
         .btn-secondary {
@@ -276,7 +278,7 @@
         }
         
         .alert-success {
-            background: rgba(0, 255, 136, 0.1);
+            background: rgba(212, 20, 20, 0.12);
             border-left: 4px solid var(--accent-primary);
             color: var(--accent-primary);
         }
@@ -306,23 +308,23 @@
             margin: 30px 0;
             border-radius: 16px;
             overflow: hidden;
-            box-shadow: 0 0 40px rgba(0, 255, 136, 0.4);
+            box-shadow: 0 0 40px rgba(0, 194, 255, 0.35);
             animation: flagGlow 2s ease-in-out infinite alternate;
         }
 
         @keyframes flagGlow {
-            from { box-shadow: 0 0 20px rgba(0, 255, 136, 0.3); }
-            to   { box-shadow: 0 0 60px rgba(0, 255, 136, 0.8); }
+            from { box-shadow: 0 0 20px rgba(0, 194, 255, 0.28); }
+            to   { box-shadow: 0 0 60px rgba(0, 194, 255, 0.55); }
         }
 
         .flag-header {
-            background: linear-gradient(135deg, #00ff88, #00cc70);
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-primary-hover));
             padding: 20px 30px;
             text-align: center;
         }
 
         .flag-header h2 {
-            color: #0a0e27;
+            color: var(--text-primary);
             font-size: 1.8em;
             font-family: 'Fira Code', monospace;
             font-weight: 700;
@@ -332,7 +334,7 @@
             background: #0a0e17;
             padding: 30px;
             text-align: center;
-            border: 2px solid #00ff88;
+            border: 2px solid var(--accent-primary);
             border-top: none;
             border-radius: 0 0 14px 14px;
         }
@@ -353,7 +355,7 @@
             background: #111;
             padding: 16px 30px;
             border-radius: 10px;
-            border: 1px solid #00ff88;
+            border: 1px solid var(--accent-primary);
             display: inline-block;
             letter-spacing: 1px;
             cursor: pointer;
