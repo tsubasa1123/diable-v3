@@ -1,0 +1,16 @@
+FROM python:3.11-slim
+
+RUN pip install flask flask-login reportlab requests
+
+WORKDIR /app
+COPY web-interface/ .
+
+ENV VULNERABLE_HOST=vulnerable
+ENV VULNERABLE_PORT=8080
+ENV LDAP_HOST=ldap
+ENV LDAP_PORT=1389
+ENV ATTACKER_HOST=attacker-webserver
+ENV ATTACKER_HTTP_PORT=8888
+ENV APP_PORT=5000
+
+CMD ["python3", "app.py"]

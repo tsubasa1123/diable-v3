@@ -1,0 +1,78 @@
+version: "3.8"
+
+services:
+  vulnerable:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: log4shell-vulnerable-user-${USER_ID}
+    environment:
+      - VULNERABLE_PORT=${VULNERABLE_PORT:-8080}
+    ports:
+      - "${VULN_HOST_PORT:-8080}:${VULNERABLE_PORT:-8080}"
+    depends_on:
+      - ldap
+      - attacker-webserver
+    networks:
+      - internal
+      - lab-network
+
+  ldap:
+    build:
+      context: .
+      dockerfile: Dockerfile.ldap
+    container_name: log4shell-ldap-user-${USER_ID}
+    hostname: ldap
+    environment:
+      - HTTP_HOST=attacker-webserver
+      - HTTP_PORT=${ATTACKER_HTTP_PORT:-8888}
+      - LDAP_PORT=${LDAP_PORT:-1389}
+    ports:
+      - "${LDAP_HOST_PORT:-1389}:${LDAP_PORT:-1389}"
+    networks:
+      - internal
+
+  attacker-webserver:
+    build:
+      context: .
+      dockerfile: Dockerfile.attacker   # ← nouveau Dockerfile
+    container_name: log4shell-attacker-user-${USER_ID}
+    environment:
+      - ATTACKER_HTTP_PORT=${ATTACKER_HTTP_PORT:-8888}
+    ports:
+      - "${ATTACKER_WEB_HOST_PORT:-8888}:${ATTACKER_HTTP_PORT:-8888}"
+    networks:
+      - internal
+
+  dashboard:
+    build:
+      context: .
+      dockerfile: Dockerfile.dashboard
+    container_name: log4shell-dashboard-user-${USER_ID}
+    ports:
+      - "${LAB_PORT:-5000}:${APP_PORT:-5000}"       # ← port exposé à l'apprenant
+    environment:
+      - LAB_MANAGER_URL=${LAB_MANAGER_URL:-http://lab-manager:8000}
+      - LAB_ID=${LAB_ID:-log4shell}
+      - VULNERABLE_HOST=vulnerable
+      - VULNERABLE_PORT=${VULNERABLE_PORT:-8080}
+      - LDAP_HOST=ldap
+      - LDAP_PORT=${LDAP_PORT:-1389}
+      - ATTACKER_HOST=attacker-webserver
+      - ATTACKER_HTTP_PORT=${ATTACKER_HTTP_PORT:-8888}
+      - APP_PORT=${APP_PORT:-5000}
+    networks:
+      - internal
+      - lab-network
+    depends_on:
+      - vulnerable
+      - ldap
+      - attacker-webserver
+
+networks:
+  internal:
+    name: log4shell-internal-user-${USER_ID}
+    driver: bridge
+  lab-network:
+    external: true
+    name: lab-network

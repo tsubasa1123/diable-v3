@@ -1,0 +1,5 @@
+FROM python:3.11-slim
+WORKDIR /srv
+COPY attacker-webserver/ .
+ENV ATTACKER_HTTP_PORT=8888
+CMD ["sh", "-c", "python3 -m http.server ${ATTACKER_HTTP_PORT}"]
