@@ -1,7 +1,7 @@
 :root {
     --bg: #0B0F14;
-    --surface: #141428;
-    --surface2: #1c1c38;
+    --surface: #0B0F14;
+    --surface2: #0B0F14;
     --border: #2a2a50;
     --accent: #6c63ff;
     --danger: #e94560;
@@ -10,10 +10,10 @@
     --info: #38bdf8;
     --text: #F2F4F8;
     --muted: #8A8F98;
-    --code-bg: #090916;
+    --code-bg: #0B0F14;
     /* GLOBAL CSS */
     --bg-header: #0F1A2B;
-    --bg-card: #141B26;
+    --bg-card: #0B0F14;
     --btn-primary: #D41414;
     --btn-primary-hover: #FF2A2A;
     --link-color: #1F6AFF;
@@ -42,7 +42,7 @@ body {
 .sidebar {
     width: 260px;
     min-width: 260px;
-    background: var(--surface);
+    background: var(--bg);
     border-right: 1px solid var(--border);
     display: flex;
     flex-direction: column;

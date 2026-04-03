@@ -3,7 +3,7 @@ session_start();
 
 define("APP_NAME", "ssrf");
 
-define("FLAG_SSRF_LEVEL1", "flag{ssrf_private_status_access}");
+define("FLAG_SSRF_LEVEL1", "FLAG{ssrf_private_status_access}");
 
 define("SSRF_HEALTH_1", "http://localhost/health.php");
 define("SSRF_HEALTH_2", "http://127.0.0.1/health.php");

@@ -105,18 +105,22 @@ async function spawnComposeLab(userId, labId, labPath) {
     const containerName = getContainerName(userId, labId);
 
     console.log(`[Docker] Compose spawn : ${containerName} → port ${port}`);
-
     console.log(`[Docker] labPath absolu = ${path.resolve(labPath)}`);
     console.log(`[Docker] DOCKER_BIN = ${DOCKER_BIN}`);
-    console.log(`[Docker] cwd existe = ${fs.existsSync(labPath)}`)
+    console.log(`[Docker] cwd existe = ${fs.existsSync(labPath)}`);
 
     const env = {
         ...process.env,
         PATH: '/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin',
         USER_ID: String(userId),
         LAB_PORT: String(port),
-        VULN_PORT: String(port)
+        VULN_PORT: String(port),
+        // ← Injecter les variables du lab (LAB_FLAG, etc.)
+        ...Object.fromEntries(
+            Object.entries(lab.env || {}).map(([k, v]) => [k, String(v)])
+        ),
     };
+
     const urls = { main: buildUrl(port, lab) };
 
     if (lab.extraPorts) {
@@ -126,22 +130,27 @@ async function spawnComposeLab(userId, labId, labPath) {
         }
     }
 
+    console.log('[Docker] Variables injectées :', {
+        LAB_PORT: env['LAB_PORT'],
+        VULN_PORT: env['VULN_PORT'],
+        LDAP_PORT: env['LDAP_PORT'],
+        ATTACKER_PORT: env['ATTACKER_PORT'],
+        LAB_FLAG: env['LAB_FLAG'],
+        USER_ID: env['USER_ID'],
+    });
+
     execFileSync(
         DOCKER_BIN,
         ['compose', '-p', containerName, 'up', '-d'],
         { cwd: labPath, env }
     );
 
-    // Attendre que le service principal soit prêt
     await waitForPort(port);
 
-    // Attendre aussi les ports supplémentaires si nécessaire
     if (lab.extraPorts) {
-        const waitPromises = [];
-        for (const [, offset] of Object.entries(lab.extraPorts)) {
-            waitPromises.push(waitForPort(port + offset));
-        }
-        await Promise.all(waitPromises);
+        await Promise.all(
+            Object.values(lab.extraPorts).map(offset => waitForPort(port + offset))
+        );
     }
 
     return { containerName, port, url: buildUrl(port, lab), urls };

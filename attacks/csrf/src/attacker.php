@@ -1,3 +1,7 @@
+<?php
+$base_url = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' ? 'https' : 'http')
+  . '://' . $_SERVER['HTTP_HOST'];
+?>
 <!doctype html>
 <html>
 <head>
@@ -26,6 +30,7 @@
       border: 1px solid #1F2937;
       background: #0F1A2B;
       color: #F2F4F8;
+      box-sizing: border-box;
     }
     .btn {
       display: inline-block;
@@ -56,7 +61,7 @@
     <p>L’objectif est d’exploiter une protection CSRF faible basée sur un token statique et prévisible.</p>
     <p class="hint">Étape attendue : inspecter le formulaire de la victime, récupérer le token CSRF, puis le réutiliser ici.</p>
 
-    <form method="POST" action="http://localhost:8084/transfer.php">
+    <form method="POST" action="<?= htmlspecialchars($base_url, ENT_QUOTES, 'UTF-8'); ?>/transfer.php">
       <label>Destinataire</label>
       <input type="text" name="to" value="attacker" readonly>
 

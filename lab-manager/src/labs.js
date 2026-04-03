@@ -106,7 +106,12 @@ const LABS = {
         compose: true,   // http://IP:8071 un IP, serveur vulnerable
         internalPort: 5000,
         extraPorts: {
-            vulnerable: 1,
+            vuln: 1,   // LAB_PORT + 1 → VULN_PORT
+            ldap: 2,   // LAB_PORT + 2 → LDAP_PORT (optionnel)
+            attacker: 3,   // LAB_PORT + 3 → ATTACKER_PORT (optionnel)
+        },
+        env: {
+            LAB_FLAG: 'DIABLE{LOG4SHELL_RCE_2021_COMPLETED}',
         },
     },
     'mitm': {
@@ -268,8 +273,18 @@ function getPort(userId, labId) {
     const lab = LABS[labId];
     if (!lab) throw new Error(`Lab inconnu : ${labId}`);
 
-    const uid = parseInt(userId) % 3000;
-    return 10000 + (uid * 20) + lab.portSuffix;
+    const uid = parseInt(userId);
+    // ← Si userId n'est pas un nombre, utiliser un hash
+    const safeUid = isNaN(uid) ? hashUserId(userId) : uid;
+    return 10000 + (safeUid % 3000 * 20) + lab.portSuffix;
+}
+
+function hashUserId(userId) {
+    let hash = 0;
+    for (const char of String(userId)) {
+        hash = (hash * 31 + char.charCodeAt(0)) % 3000;
+    }
+    return hash;
 }
 
 /**
