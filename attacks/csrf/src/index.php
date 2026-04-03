@@ -52,11 +52,11 @@ $showFlagModal = isset($_SESSION["flag_csrf_level2"]);
 
       <p>
         <b>Scénario CSRF :</b> inspecter le formulaire, observer que le token CSRF
-        est statique, puis le réutiliser dans <code>attacker.html</code> pour lancer l’attaque.
+        est statique, puis le réutiliser dans <code>attacker.php</code> pour lancer l’attaque.
       </p>
 
       <div class="actions">
-        <a class="btn" href="attacker.html" target="_blank">Open attacker page</a>
+        <a class="btn" href="attacker.php" target="_blank">Open attacker page</a>
         <a class="btn" href="reset.php">Reset</a>
       </div>
     <?php endif; ?>

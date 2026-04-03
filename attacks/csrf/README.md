@@ -10,7 +10,7 @@ A lab demonstrating a weak CSRF protection mechanism based on a static and predi
     ├── Dockerfile
     ├── README.md
     └── src/
-        ├── attacker.html
+        ├── attacker.php
         ├── config.php
         ├── health.php
         ├── index.php
@@ -47,7 +47,7 @@ Stop:
 - GET / → Transfer form
 - GET /login.php → Login page
 - POST /transfer.php → Sensitive action
-- GET /attacker.html → Attacker page used to forge the request
+- GET /attacker.php → Attacker page used to forge the request
 - GET /reset.php → Reset session
 - GET /health.php → Health check
 
@@ -72,7 +72,7 @@ Because the token is not random and not robustly bound to the session context, t
 2. Log in using `user / password`
 3. Inspect the transfer form and identify the CSRF token
 4. Observe that the token is static and predictable
-5. Open `attacker.html`
+5. Open `attacker.php`
 6. Copy the token into the attacker form
 7. Launch the forged request
 8. Return to the main page and observe:
