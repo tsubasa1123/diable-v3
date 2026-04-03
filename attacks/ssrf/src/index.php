@@ -3,11 +3,13 @@ require_once "config.php";
 ?>
 <!doctype html>
 <html lang="fr">
+
 <head>
   <meta charset="utf-8" />
   <title>DIABLE - SSRF Lab</title>
   <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
   <div class="card">
     <h1>Lab DIABLE - SSRF</h1>
@@ -31,11 +33,12 @@ require_once "config.php";
 
     <hr>
 
-    <p><b>Types d’URL à tester :</b></p>
+    <p><b>Types d'URL à tester :</b></p>
     <ul>
       <li><code>http://example.com</code> : ressource externe publique</li>
       <li><code>http://localhost/health.php</code> : ressource locale de découverte</li>
       <li><code>http://127.0.0.1/health.php</code> : variante locale équivalente</li>
+      <li><code>http://localhost/private-status.php</code> : ressource locale sensible (permet d’obtenir le flag)</li>
     </ul>
 
     <p>
@@ -47,4 +50,5 @@ require_once "config.php";
     <a class="btn" href="reset.php">Reset</a>
   </div>
 </body>
+
 </html>
